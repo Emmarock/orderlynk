@@ -1,0 +1,21 @@
+# Render.com Blueprint for the Orderlynk frontend (React SPA, static site).
+# Lives at the root of the frontend repo, so paths are relative to it.
+#
+# The backend is a separate repo deployed as a Docker service (see
+# backend/render.yaml). Set VITE_API_URL to the backend's URL and set the
+# backend's APP_CORS_ORIGINS to this site's URL.
+
+services:
+  - type: web
+    name: orderlynk-frontend
+    runtime: static
+    plan: free
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false   # backend URL, e.g. https://orderlynk-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
