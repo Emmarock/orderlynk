@@ -59,9 +59,26 @@ function ProductForm({
   const [form, setForm] = useState<FormState>(initial ? fromProduct(initial) : EMPTY)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file after a remove
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    try {
+      const { url } = await api.uploadProductImage(file)
+      setForm((f) => ({ ...f, productImageUrl: url }))
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not upload image')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,8 +141,34 @@ function ProductForm({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Image URL</label>
-              <input className="field" value={form.productImageUrl} onChange={set('productImageUrl')} />
+              <label className="label">Product image</label>
+              {form.productImageUrl ? (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={form.productImageUrl}
+                    alt={form.name || 'Product'}
+                    className="h-16 w-16 shrink-0 rounded-lg border border-line object-cover"
+                  />
+                  <div className="flex flex-col items-start gap-1">
+                    <label className="btn-quiet cursor-pointer px-2 text-sm">
+                      {uploading ? <Spinner /> : 'Replace'}
+                      <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+                    </label>
+                    <button
+                      type="button"
+                      className="btn-quiet px-2 text-sm text-clay hover:text-clay-dark"
+                      onClick={() => setForm((f) => ({ ...f, productImageUrl: '' }))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="field flex cursor-pointer items-center justify-center gap-2 text-muted">
+                  {uploading ? <Spinner /> : 'Browse device…'}
+                  <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+                </label>
+              )}
             </div>
             <div>
               <label className="label">Origin country</label>
@@ -135,7 +178,7 @@ function ProductForm({
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" disabled={saving}>{saving ? <Spinner /> : 'Save product'}</button>
+            <button className="btn-primary" disabled={saving || uploading}>{saving ? <Spinner /> : 'Save product'}</button>
           </div>
         </form>
       </div>

@@ -88,6 +88,22 @@ export const api = {
     return request<ShareLink>('GET', `/api/vendor/share-link?${qs.toString()}`)
   },
   vendorProducts: () => request<Product[]>('GET', '/api/vendor/products'),
+  // Multipart upload — let the browser set the Content-Type (with boundary), so we don't use `request`.
+  uploadProductImage: async (file: File): Promise<{ url: string }> => {
+    const form = new FormData()
+    form.append('file', file)
+    const headers: Record<string, string> = {}
+    const token = tokenStore.get()
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch(`${BASE}/api/vendor/products/image`, { method: 'POST', headers, body: form })
+    const text = await res.text()
+    const data = text ? JSON.parse(text) : undefined
+    if (!res.ok) {
+      const message = (data && (data.message as string)) || `Upload failed (${res.status})`
+      throw new ApiError(res.status, message, data?.details)
+    }
+    return data as { url: string }
+  },
   createProduct: (b: unknown) => request<Product>('POST', '/api/vendor/products', b),
   updateProduct: (id: string, b: unknown) => request<Product>('PUT', `/api/vendor/products/${id}`, b),
   toggleProduct: (id: string, active: boolean) =>
