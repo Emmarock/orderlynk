@@ -69,13 +69,6 @@ export default function Login() {
           </p>
         </div>
       </div>
-
-      <div className="mt-6 rounded-xl border border-line bg-cream/60 p-4 text-xs text-muted">
-        <p className="font-semibold text-ink">Demo logins</p>
-        <p className="mt-1 font-mono">admin@orderlynk.app · admin12345</p>
-        <p className="font-mono">mama@orderlynk.app · vendor12345</p>
-        <p className="font-mono">customer@orderlynk.app · customer12345</p>
-      </div>
     </div>
   )
 }
