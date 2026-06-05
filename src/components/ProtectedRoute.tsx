@@ -8,7 +8,8 @@ export default function ProtectedRoute({
   role,
   children,
 }: {
-  role: UserRole
+  /** When omitted, any authenticated user is allowed. */
+  role?: UserRole
   children: ReactNode
 }) {
   const { user, loading } = useAuth()
@@ -16,6 +17,6 @@ export default function ProtectedRoute({
 
   if (loading) return <PageLoader />
   if (!user) return <Navigate to="/login" state={{ from: location.pathname }} replace />
-  if (user.role !== role) return <Navigate to="/" replace />
+  if (role && user.role !== role) return <Navigate to="/" replace />
   return <>{children}</>
 }

@@ -55,7 +55,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             <CartButton />
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="hidden text-sm text-muted sm:inline">{user.fullName.split(' ')[0]}</span>
+                <Link to="/account" className="hidden text-sm text-muted hover:text-ink sm:inline">
+                  {user.fullName.split(' ')[0]}
+                </Link>
                 <button
                   className="btn-ghost px-3"
                   onClick={() => {

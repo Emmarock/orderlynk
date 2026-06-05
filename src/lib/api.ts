@@ -59,6 +59,8 @@ export const api = {
   login: (b: { email: string; password: string }) =>
     request<AuthResponse>('POST', '/api/auth/login', b),
   me: () => request<AuthResponse>('GET', '/api/auth/me'),
+  changePassword: (b: { currentPassword: string; newPassword: string }) =>
+    request<void>('POST', '/api/auth/change-password', b),
 
   // ---- meta ----
   optionSets: () => request<Record<string, string[]>>('GET', '/api/meta/option-sets'),

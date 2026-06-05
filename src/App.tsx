@@ -12,6 +12,7 @@ import TrackOrder from './pages/TrackOrder'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import SellOnOrderlynk from './pages/SellOnOrderlynk'
+import Account from './pages/Account'
 import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorProducts from './pages/vendor/VendorProducts'
 import VendorOrders from './pages/vendor/VendorOrders'
@@ -41,6 +42,14 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/sell" element={<SellOnOrderlynk />} />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/vendor"
