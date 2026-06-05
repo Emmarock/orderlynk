@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-sand text-ink font-sans antialiased;
+  /* Warm paper grain via layered radial gradients. */
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(192, 82, 47, 0.05), transparent 38%),
+    radial-gradient(circle at 88% 8%, rgba(30, 74, 56, 0.05), transparent 34%),
+    radial-gradient(circle at 70% 92%, rgba(217, 154, 43, 0.05), transparent 40%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* The signature "rail": a thin four-colour stripe used as a brand accent. */
+  .rail {
+    @apply h-1.5 w-full;
+    background: linear-gradient(
+      90deg,
+      theme('colors.clay.DEFAULT') 0 25%,
+      theme('colors.forest.DEFAULT') 25% 50%,
+      theme('colors.gold') 50% 75%,
+      theme('colors.plum') 75% 100%
+    );
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold
+      transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+  }
+  .btn-primary {
+    @apply btn bg-clay text-cream shadow-card hover:bg-clay-dark hover:-translate-y-0.5 active:translate-y-0;
+  }
+  .btn-forest {
+    @apply btn bg-forest text-cream shadow-card hover:bg-forest-dark hover:-translate-y-0.5 active:translate-y-0;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-cream text-ink hover:border-ink/40 hover:bg-sand;
+  }
+  .btn-quiet {
+    @apply btn text-muted hover:text-ink;
+  }
+
+  .card {
+    @apply rounded-2xl border border-line bg-cream shadow-card;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-line bg-cream px-4 py-2.5 text-sm text-ink
+      placeholder:text-muted/70 outline-none transition-colors
+      focus:border-clay focus:ring-2 focus:ring-clay/20;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.22em] text-clay;
+  }
+
+  .link-underline {
+    @apply relative font-medium text-ink after:absolute after:-bottom-0.5 after:left-0 after:h-px
+      after:w-0 after:bg-ink after:transition-all hover:after:w-full;
+  }
+}
+
+/* Custom scrollbar for a more finished feel */
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(27, 25, 21, 0.18);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(27, 25, 21, 0.3);
+  background-clip: content-box;
+}
