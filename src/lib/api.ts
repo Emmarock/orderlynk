@@ -104,6 +104,8 @@ export const api = {
     }
     return data as { url: string }
   },
+  generateProductDescription: (b: { name: string; category?: string }) =>
+    request<{ description: string }>('POST', '/api/vendor/products/description', b),
   createProduct: (b: unknown) => request<Product>('POST', '/api/vendor/products', b),
   updateProduct: (id: string, b: unknown) => request<Product>('PUT', `/api/vendor/products/${id}`, b),
   toggleProduct: (id: string, active: boolean) =>

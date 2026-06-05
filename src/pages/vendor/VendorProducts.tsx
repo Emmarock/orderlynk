@@ -60,9 +60,30 @@ function ProductForm({
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const generateDescription = async () => {
+    if (!form.name.trim() || generating) return
+    setGenerating(true)
+    setError(null)
+    try {
+      const { description } = await api.generateProductDescription({ name: form.name.trim(), category: form.category })
+      setForm((f) => ({ ...f, description }))
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not generate description')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  // Auto-generate once the name is entered, but only when the description is still empty
+  // so we never clobber what the vendor has written. They can also regenerate manually.
+  const onNameBlur = () => {
+    if (form.name.trim() && !form.description.trim()) void generateDescription()
+  }
 
   const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -111,11 +132,27 @@ function ProductForm({
         <form onSubmit={submit} className="mt-4 space-y-4">
           <div>
             <label className="label">Name</label>
-            <input className="field" required value={form.name} onChange={set('name')} />
+            <input className="field" required value={form.name} onChange={set('name')} onBlur={onNameBlur} />
           </div>
           <div>
-            <label className="label">Description</label>
-            <textarea className="field min-h-20" value={form.description} onChange={set('description')} />
+            <div className="flex items-center justify-between">
+              <label className="label">Description</label>
+              <button
+                type="button"
+                className="btn-quiet px-2 text-sm text-forest disabled:opacity-50"
+                onClick={generateDescription}
+                disabled={!form.name.trim() || generating}
+                title="Write a captivating description from the product name"
+              >
+                {generating ? <Spinner /> : form.description.trim() ? '✨ Regenerate' : '✨ Generate'}
+              </button>
+            </div>
+            <textarea
+              className="field min-h-20"
+              value={form.description}
+              onChange={set('description')}
+              placeholder={generating ? 'Writing a captivating description…' : undefined}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -178,7 +215,7 @@ function ProductForm({
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" disabled={saving || uploading}>{saving ? <Spinner /> : 'Save product'}</button>
+            <button className="btn-primary" disabled={saving || uploading || generating}>{saving ? <Spinner /> : 'Save product'}</button>
           </div>
         </form>
       </div>
