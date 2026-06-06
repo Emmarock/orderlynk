@@ -213,7 +213,7 @@ export default function VendorSettings() {
           desc="Your name and contact details."
           onSave={async () => {
             const r = await api.updateProfile({ fullName: profile.fullName, phone: profile.phone || undefined, city: profile.city || undefined, country: profile.country || undefined })
-            applySession(tokenStore.get() ?? '', { userId: r.userId, fullName: r.fullName, email: r.email, role: r.role, vendorId: r.vendorId })
+            applySession(tokenStore.get() ?? '', { userId: r.userId, fullName: r.fullName, email: r.email, role: r.role, vendorId: r.vendorId, emailVerified: r.emailVerified })
           }}
         >
           <Field label="Full name"><input className="field" required value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} /></Field>
@@ -231,7 +231,7 @@ export default function VendorSettings() {
           submitLabel="Change email"
           onSave={async () => {
             const r = await api.changeEmail({ newEmail: emailForm.newEmail, currentPassword: emailForm.currentPassword })
-            if (r.token) applySession(r.token, { userId: r.userId, fullName: r.fullName, email: r.email, role: r.role, vendorId: r.vendorId })
+            if (r.token) applySession(r.token, { userId: r.userId, fullName: r.fullName, email: r.email, role: r.role, vendorId: r.vendorId, emailVerified: r.emailVerified })
             setEmailForm({ newEmail: '', currentPassword: '' })
           }}
         >

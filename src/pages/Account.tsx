@@ -10,6 +10,17 @@ export default function Account() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [resend, setResend] = useState<'idle' | 'sending' | 'sent'>('idle')
+
+  const resendVerification = async () => {
+    setResend('sending')
+    try {
+      await api.resendVerification()
+      setResend('sent')
+    } catch {
+      setResend('idle')
+    }
+  }
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -44,6 +55,19 @@ export default function Account() {
     <div className="mx-auto max-w-3xl px-5 py-12">
       <p className="eyebrow">Account</p>
       <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Your account</h1>
+
+      {user && !user.emailVerified && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-[#8a5d0c]">
+          <span>Your email isn't verified yet. Check your inbox for the verification link.</span>
+          {resend === 'sent' ? (
+            <span className="font-medium">Sent ✓</span>
+          ) : (
+            <button className="btn-ghost px-3 py-1.5" disabled={resend === 'sending'} onClick={resendVerification}>
+              {resend === 'sending' ? <Spinner /> : 'Resend email'}
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="mt-8 grid gap-6 md:grid-cols-[1fr_1.3fr]">
         {/* Profile summary */}

@@ -11,6 +11,9 @@ import OrderConfirmation from './pages/OrderConfirmation'
 import TrackOrder from './pages/TrackOrder'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import VerifyEmail from './pages/VerifyEmail'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import SellOnOrderlynk from './pages/SellOnOrderlynk'
 import Account from './pages/Account'
 import VendorDashboard from './pages/vendor/VendorDashboard'
@@ -45,6 +48,9 @@ export default function App() {
         <Route path="/track" element={<TrackOrder />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/sell" element={<SellOnOrderlynk />} />
         <Route
           path="/account"

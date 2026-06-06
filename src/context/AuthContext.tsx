@@ -8,6 +8,7 @@ interface AuthUser {
   email: string
   role: UserRole
   vendorId: string | null
+  emailVerified: boolean
 }
 
 interface AuthState {
@@ -22,7 +23,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | undefined>(undefined)
 
 function toUser(r: AuthResponse): AuthUser {
-  return { userId: r.userId, fullName: r.fullName, email: r.email, role: r.role, vendorId: r.vendorId }
+  return { userId: r.userId, fullName: r.fullName, email: r.email, role: r.role, vendorId: r.vendorId, emailVerified: r.emailVerified }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

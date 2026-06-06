@@ -63,6 +63,7 @@ export interface AuthResponse {
   email: string
   role: UserRole
   vendorId: string | null
+  emailVerified: boolean
 }
 
 export interface Vendor {

@@ -48,7 +48,10 @@ export default function Login() {
               <input className="field" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
-              <label className="label">Password</label>
+              <div className="flex items-center justify-between">
+                <label className="label">Password</label>
+                <Link to="/forgot-password" className="text-xs text-clay hover:underline">Forgot password?</Link>
+              </div>
               <input
                 className="field"
                 type="password"

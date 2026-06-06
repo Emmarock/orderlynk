@@ -66,6 +66,7 @@ export default function SellOnOrderlynk() {
         email: user.email,
         role: 'VENDOR',
         vendorId: res.vendor.id,
+        emailVerified: user.emailVerified,
       })
       navigate('/vendor', { replace: true })
     } catch (err) {

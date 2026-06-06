@@ -76,6 +76,11 @@ export const api = {
   me: () => request<AuthResponse>('GET', '/api/auth/me'),
   changePassword: (b: { currentPassword: string; newPassword: string }) =>
     request<void>('POST', '/api/auth/change-password', b),
+  verifyEmail: (token: string) => request<void>('POST', '/api/auth/verify-email', { token }),
+  resendVerification: () => request<void>('POST', '/api/auth/resend-verification'),
+  forgotPassword: (email: string) => request<void>('POST', '/api/auth/forgot-password', { email }),
+  resetPassword: (token: string, newPassword: string) =>
+    request<void>('POST', '/api/auth/reset-password', { token, newPassword }),
   updateProfile: (b: { fullName: string; phone?: string; city?: string; country?: string }) =>
     request<AuthResponse>('PUT', '/api/auth/profile', b),
   changeEmail: (b: { newEmail: string; currentPassword: string }) =>
