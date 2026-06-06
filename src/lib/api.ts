@@ -2,6 +2,7 @@ import type {
   AuthResponse,
   BroadcastResult,
   CustomerSummary,
+  EarningsSummary,
   Order,
   Payout,
   Product,
@@ -9,6 +10,7 @@ import type {
   RatingSummary,
   ShareLink,
   Storefront,
+  SupportTicket,
   Vendor,
   VendorAnalytics,
 } from './types'
@@ -74,6 +76,10 @@ export const api = {
   me: () => request<AuthResponse>('GET', '/api/auth/me'),
   changePassword: (b: { currentPassword: string; newPassword: string }) =>
     request<void>('POST', '/api/auth/change-password', b),
+  updateProfile: (b: { fullName: string; phone?: string; city?: string; country?: string }) =>
+    request<AuthResponse>('PUT', '/api/auth/profile', b),
+  changeEmail: (b: { newEmail: string; currentPassword: string }) =>
+    request<AuthResponse>('POST', '/api/auth/change-email', b),
 
   // ---- meta ----
   optionSets: () => request<Record<string, string[]>>('GET', '/api/meta/option-sets'),
@@ -141,6 +147,11 @@ export const api = {
     request<VendorAnalytics>('GET', `/api/vendor/analytics${dateRangeQuery(from, to)}`),
   vendorBroadcast: (b: { subject: string; message: string }, from?: string, to?: string) =>
     request<BroadcastResult>('POST', `/api/vendor/customers/broadcast${dateRangeQuery(from, to)}`, b),
+  vendorEarnings: (from?: string, to?: string) =>
+    request<EarningsSummary>('GET', `/api/vendor/earnings${dateRangeQuery(from, to)}`),
+  vendorSupportTickets: () => request<SupportTicket[]>('GET', '/api/vendor/support'),
+  createSupportTicket: (b: { category: string; subject: string; message: string }) =>
+    request<SupportTicket>('POST', '/api/vendor/support', b),
   updateFulfillment: (id: string, status: string, note?: string) =>
     request<Order>('PATCH', `/api/vendor/orders/${id}/fulfillment`, { status, note }),
   vendorUpdatePayment: (id: string, b: unknown) =>

@@ -17,6 +17,9 @@ import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorProducts from './pages/vendor/VendorProducts'
 import VendorOrders from './pages/vendor/VendorOrders'
 import VendorCustomers from './pages/vendor/VendorCustomers'
+import VendorEarnings from './pages/vendor/VendorEarnings'
+import VendorSettings from './pages/vendor/VendorSettings'
+import VendorSupport from './pages/vendor/VendorSupport'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminVendors from './pages/admin/AdminVendors'
 import AdminOrders from './pages/admin/AdminOrders'
@@ -81,6 +84,30 @@ export default function App() {
           element={
             <ProtectedRoute role="VENDOR">
               <VendorCustomers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/earnings"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorEarnings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/settings"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/support"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorSupport />
             </ProtectedRoute>
           }
         />

@@ -81,6 +81,14 @@ export interface Vendor {
   rating?: number
   ratingCount: number
   commissionRate: number
+  payoutMethod?: string
+  payoutAccountName?: string
+  payoutAccountNumber?: string
+  payoutBankName?: string
+  payoutEmail?: string
+  notifyByEmail: boolean
+  notifyByWhatsapp: boolean
+  lowStockAlerts: boolean
 }
 
 export interface RatingSummary {
@@ -120,6 +128,39 @@ export interface BroadcastResult {
   totalCustomers: number
 }
 
+export interface OrderEarning {
+  publicOrderId: string
+  createdAt: string
+  paymentStatus: PaymentStatus
+  grossSales: number
+  commission: number
+  refund: number
+  net: number
+}
+
+export interface EarningsSummary {
+  grossSales: number
+  platformCommission: number
+  processingFees: number
+  refunds: number
+  taxRate: number
+  tax: number
+  netPayout: number
+  totalOrders: number
+  paidOrders: number
+  currency: string
+  orders: OrderEarning[]
+}
+
+export interface SupportTicket {
+  id: string
+  category: string
+  subject: string
+  message: string
+  status: string
+  createdAt: string
+}
+
 export interface Product {
   id: string
   vendorId: string
@@ -129,6 +170,8 @@ export interface Product {
   price: number
   currency: string
   quantityAvailable: number
+  lowStockThreshold: number
+  lowStock: boolean
   productImageUrl?: string
   fulfillmentType: FulfillmentType
   originCountry?: string

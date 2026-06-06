@@ -18,6 +18,7 @@ interface FormState {
   category: ProductCategory
   price: string
   quantityAvailable: string
+  lowStockThreshold: string
   productImageUrl: string
   fulfillmentType: FulfillmentType
   originCountry: string
@@ -29,6 +30,7 @@ const EMPTY: FormState = {
   category: 'GROCERIES',
   price: '',
   quantityAvailable: '0',
+  lowStockThreshold: '0',
   productImageUrl: '',
   fulfillmentType: 'LOCAL_PICKUP',
   originCountry: '',
@@ -41,6 +43,7 @@ function fromProduct(p: Product): FormState {
     category: p.category,
     price: String(p.price),
     quantityAvailable: String(p.quantityAvailable),
+    lowStockThreshold: String(p.lowStockThreshold),
     productImageUrl: p.productImageUrl ?? '',
     fulfillmentType: p.fulfillmentType,
     originCountry: p.originCountry ?? '',
@@ -111,6 +114,7 @@ function ProductForm({
       category: form.category,
       price: Number(form.price),
       quantityAvailable: Number(form.quantityAvailable),
+      lowStockThreshold: Number(form.lowStockThreshold),
       productImageUrl: form.productImageUrl || undefined,
       fulfillmentType: form.fulfillmentType,
       originCountry: form.originCountry || undefined,
@@ -162,6 +166,11 @@ function ProductForm({
             <div>
               <label className="label">Quantity</label>
               <input className="field" type="number" min="0" value={form.quantityAvailable} onChange={set('quantityAvailable')} />
+            </div>
+            <div>
+              <label className="label">Low-stock alert at</label>
+              <input className="field" type="number" min="0" value={form.lowStockThreshold} onChange={set('lowStockThreshold')} />
+              <p className="mt-1 text-xs text-muted">Alert when stock ≤ this. 0 = off.</p>
             </div>
             <div>
               <label className="label">Category</label>
@@ -273,7 +282,14 @@ export default function VendorProducts() {
                 <tr key={p.id} className="hover:bg-sand/40">
                   <td className="px-5 py-3 font-medium">{p.name}</td>
                   <td className="px-5 py-3 font-mono">{money(p.price, p.currency)}</td>
-                  <td className="px-5 py-3">{p.quantityAvailable}</td>
+                  <td className="px-5 py-3">
+                    <span className="font-mono">{p.quantityAvailable}</span>
+                    {p.lowStock && (
+                      <span className="ml-2 chip bg-clay/12 text-clay-dark" title={`At or below threshold of ${p.lowStockThreshold}`}>
+                        Low stock
+                      </span>
+                    )}
+                  </td>
                   <td className="px-5 py-3 text-muted">{titleCase(p.fulfillmentType)}</td>
                   <td className="px-5 py-3">
                     <button

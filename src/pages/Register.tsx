@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ApiError } from '../lib/api'
 import { ErrorNote, Rail, Spinner } from '../components/ui'
@@ -7,7 +7,9 @@ import { ErrorNote, Rail, Spinner } from '../components/ui'
 export default function Register() {
   const { register } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', phone: '', city: '' })
+  const [params] = useSearchParams()
+  // Pre-fill the email when arriving from an order-confirmation notification (?email=).
+  const [form, setForm] = useState({ fullName: '', email: params.get('email') ?? '', password: '', phone: '', city: '' })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 

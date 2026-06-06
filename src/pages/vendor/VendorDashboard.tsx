@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../lib/api'
-import type { Order, ShareLink, Vendor, VendorAnalytics } from '../../lib/types'
+import type { Order, Product, ShareLink, Vendor, VendorAnalytics } from '../../lib/types'
 import { money, titleCase } from '../../lib/format'
 import { ConsoleShell, StatCard, VENDOR_TABS } from '../../components/Console'
 import { OrderStatusRow } from '../../components/OrderViews'
@@ -68,11 +68,13 @@ export default function VendorDashboard() {
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [analytics, setAnalytics] = useState<VendorAnalytics | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
 
   useEffect(() => {
     api.myVendor().then(setVendor).catch(() => setVendor(null))
     api.vendorOrders().then(setOrders).catch(() => setOrders([]))
     api.vendorAnalytics().then(setAnalytics).catch(() => setAnalytics(null))
+    api.vendorProducts().then(setProducts).catch(() => setProducts([]))
   }, [])
 
   if (!vendor || orders === null) return <PageLoader />
@@ -82,6 +84,7 @@ export default function VendorDashboard() {
     (o) => !['COMPLETED', 'DELIVERED', 'CANCELLED'].includes(o.fulfillmentStatus),
   )
   const gross = paid.reduce((n, o) => n + o.totalAmount, 0)
+  const lowStock = products.filter((p) => p.lowStock)
 
   return (
     <ConsoleShell
@@ -101,11 +104,21 @@ export default function VendorDashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {lowStock.length > 0 && (
+        <div className="mb-6 rounded-xl border border-clay/30 bg-clay/8 px-4 py-3 text-sm text-clay-dark">
+          <strong>{lowStock.length} product{lowStock.length === 1 ? '' : 's'} low on stock:</strong>{' '}
+          {lowStock.slice(0, 5).map((p) => `${p.name} (${p.quantityAvailable})`).join(', ')}
+          {lowStock.length > 5 ? '…' : ''}{' '}
+          <Link to="/vendor/manage/products" className="link-underline">Manage</Link>
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Total orders" value={String(orders.length)} />
         <StatCard label="Paid orders" value={String(paid.length)} />
         <StatCard label="Open fulfillment" value={String(openFulfillment.length)} hint="Need action" />
         <StatCard label="Gross (paid)" value={money(gross)} />
+        <StatCard label="Low stock" value={String(lowStock.length)} hint={lowStock.length ? 'Restock soon' : undefined} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">

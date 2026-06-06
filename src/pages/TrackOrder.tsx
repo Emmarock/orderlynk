@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import type { Order } from '../lib/types'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from '../components/OrderViews'
@@ -6,19 +7,19 @@ import { ErrorNote, Spinner } from '../components/ui'
 import { formatDate } from '../lib/format'
 
 export default function TrackOrder() {
-  const [orderId, setOrderId] = useState('')
-  const [contact, setContact] = useState('')
+  const [params] = useSearchParams()
+  const [orderId, setOrderId] = useState(() => params.get('orderId') ?? '')
+  const [contact, setContact] = useState(() => params.get('contact') ?? '')
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const runTrack = async (oid: string, c: string) => {
     setLoading(true)
     setError(null)
     setOrder(null)
     try {
-      setOrder(await api.track(orderId.trim(), contact.trim()))
+      setOrder(await api.track(oid.trim(), c.trim()))
     } catch (err) {
       setError(
         err instanceof ApiError && err.status === 404
@@ -28,6 +29,23 @@ export default function TrackOrder() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Auto-track when arriving from a notification deep link (?orderId=&contact=).
+  const autoRan = useRef(false)
+  useEffect(() => {
+    if (autoRan.current) return
+    const oid = params.get('orderId')
+    const c = params.get('contact')
+    if (oid && c) {
+      autoRan.current = true
+      void runTrack(oid, c)
+    }
+  }, [params])
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void runTrack(orderId, contact)
   }
 
   return (
