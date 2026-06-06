@@ -234,9 +234,6 @@ export default function Storefront() {
               </span>
             ))}
           </div>
-          <div className="mt-5 max-w-md">
-            <RatingWidget vendor={vendor} />
-          </div>
         </div>
       </section>
 
@@ -256,6 +253,12 @@ export default function Storefront() {
             ))}
           </div>
         )}
+
+        {/* Ratings & reviews — below the products so customers see the menu first */}
+        <div className="mt-12 max-w-md">
+          <h2 className="mb-3 font-display text-xl font-semibold tracking-tight">Ratings &amp; reviews</h2>
+          <RatingWidget vendor={vendor} />
+        </div>
       </section>
     </div>
   )
