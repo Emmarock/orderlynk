@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { Product, Vendor } from '../lib/types'
-import { money, titleCase } from '../lib/format'
+import { titleCase } from '../lib/format'
+import { PriceTag } from '../components/PriceTag'
 import { useCart } from '../context/CartContext'
 import { PageLoader } from '../components/ui'
 
@@ -76,7 +77,7 @@ export default function ProductDetail() {
         <div>
           <span className="chip bg-sand text-muted">{titleCase(product.category)}</span>
           <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">{product.name}</h1>
-          <p className="mt-3 font-mono text-2xl font-semibold">{money(product.price, product.currency)}</p>
+          <div className="mt-3"><PriceTag product={product} className="text-2xl" /></div>
           {product.description && <p className="mt-4 text-muted">{product.description}</p>}
 
           <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">

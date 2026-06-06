@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import type { Product, RatingSummary, Storefront as StorefrontData, Vendor } from '../lib/types'
-import { money, titleCase } from '../lib/format'
+import { titleCase } from '../lib/format'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { EmptyState, PageLoader, Spinner } from '../components/ui'
+import { PriceTag } from '../components/PriceTag'
 
 function Stars({ value, onPick }: { value: number; onPick?: (n: number) => void }) {
   return (
@@ -135,8 +136,8 @@ function ProductTile({
           {product.name}
         </Link>
         {product.description && <p className="line-clamp-2 text-sm text-muted">{product.description}</p>}
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="font-mono text-lg font-semibold">{money(product.price, product.currency)}</span>
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <PriceTag product={product} className="text-lg" />
           <button onClick={onAdd} disabled={soldOut} className="btn-forest px-4 py-2">
             {soldOut ? 'Sold out' : 'Add'}
           </button>

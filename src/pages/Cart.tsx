@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { money } from '../lib/format'
+import { effectivePrice, money } from '../lib/format'
 import { EmptyState } from '../components/ui'
 
 export default function Cart() {
@@ -43,7 +43,16 @@ export default function Cart() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{line.product.name}</p>
-                <p className="text-sm text-muted">{money(line.product.price, line.product.currency)} each</p>
+                <p className="text-sm text-muted">
+                  {money(effectivePrice(line.product), line.product.currency)} each
+                  {line.product.discountPercent > 0 && (
+                    <>
+                      {' '}
+                      <span className="line-through">{money(line.product.price, line.product.currency)}</span>
+                      <span className="ml-1 text-clay-dark">-{line.product.discountPercent}%</span>
+                    </>
+                  )}
+                </p>
               </div>
               <div className="flex items-center rounded-full border border-line">
                 <button className="px-3 py-1.5" onClick={() => setQuantity(line.product.id, line.quantity - 1)}>
@@ -60,7 +69,7 @@ export default function Cart() {
                 </button>
               </div>
               <span className="w-20 text-right font-mono font-semibold">
-                {money(line.product.price * line.quantity, line.product.currency)}
+                {money(effectivePrice(line.product) * line.quantity, line.product.currency)}
               </span>
               <button onClick={() => remove(line.product.id)} className="text-muted hover:text-clay" aria-label="Remove">
                 ✕

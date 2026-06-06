@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Product } from '../lib/types'
+import { effectivePrice } from '../lib/format'
 
 export interface CartLine {
   product: Product
@@ -68,7 +69,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const count = useMemo(() => cart?.lines.reduce((n, l) => n + l.quantity, 0) ?? 0, [cart])
   const subtotal = useMemo(
-    () => cart?.lines.reduce((n, l) => n + l.product.price * l.quantity, 0) ?? 0,
+    () => cart?.lines.reduce((n, l) => n + effectivePrice(l.product) * l.quantity, 0) ?? 0,
     [cart],
   )
 

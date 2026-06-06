@@ -1,5 +1,10 @@
 import type { FulfillmentStatus, PaymentStatus } from './types'
 
+/** The price actually charged for a product (discounted price when a discount applies). */
+export function effectivePrice(p: { price: number; discountedPrice: number; discountPercent: number }): number {
+  return p.discountPercent > 0 ? p.discountedPrice : p.price
+}
+
 export function money(amount: number, currency = 'CAD'): string {
   return new Intl.NumberFormat('en-CA', {
     style: 'currency',

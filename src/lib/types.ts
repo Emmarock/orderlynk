@@ -188,6 +188,8 @@ export interface Product {
   description?: string
   category: ProductCategory
   price: number
+  discountPercent: number
+  discountedPrice: number
   currency: string
   quantityAvailable: number
   lowStockThreshold: number

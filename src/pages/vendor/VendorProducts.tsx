@@ -17,6 +17,7 @@ interface FormState {
   description: string
   category: ProductCategory
   price: string
+  discountPercent: string
   quantityAvailable: string
   lowStockThreshold: string
   productImageUrl: string
@@ -29,6 +30,7 @@ const EMPTY: FormState = {
   description: '',
   category: 'GROCERIES',
   price: '',
+  discountPercent: '0',
   quantityAvailable: '0',
   lowStockThreshold: '0',
   productImageUrl: '',
@@ -42,6 +44,7 @@ function fromProduct(p: Product): FormState {
     description: p.description ?? '',
     category: p.category,
     price: String(p.price),
+    discountPercent: String(p.discountPercent),
     quantityAvailable: String(p.quantityAvailable),
     lowStockThreshold: String(p.lowStockThreshold),
     productImageUrl: p.productImageUrl ?? '',
@@ -113,6 +116,7 @@ function ProductForm({
       description: form.description || undefined,
       category: form.category,
       price: Number(form.price),
+      discountPercent: Number(form.discountPercent) || 0,
       quantityAvailable: Number(form.quantityAvailable),
       lowStockThreshold: Number(form.lowStockThreshold),
       productImageUrl: form.productImageUrl || undefined,
@@ -162,6 +166,15 @@ function ProductForm({
             <div>
               <label className="label">Price (CAD)</label>
               <input className="field" type="number" step="0.01" min="0" required value={form.price} onChange={set('price')} />
+            </div>
+            <div>
+              <label className="label">Discount %</label>
+              <input className="field" type="number" min="0" max="100" value={form.discountPercent} onChange={set('discountPercent')} />
+              {Number(form.discountPercent) > 0 && Number(form.price) > 0 && (
+                <p className="mt-1 text-xs text-muted">
+                  Sells for {money(Number(form.price) * (1 - Number(form.discountPercent) / 100))}
+                </p>
+              )}
             </div>
             <div>
               <label className="label">Quantity</label>
@@ -281,7 +294,17 @@ export default function VendorProducts() {
               {products.map((p) => (
                 <tr key={p.id} className="hover:bg-sand/40">
                   <td className="px-5 py-3 font-medium">{p.name}</td>
-                  <td className="px-5 py-3 font-mono">{money(p.price, p.currency)}</td>
+                  <td className="px-5 py-3 font-mono">
+                    {p.discountPercent > 0 ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="font-semibold text-clay-dark">{money(p.discountedPrice, p.currency)}</span>
+                        <span className="text-xs text-muted line-through">{money(p.price, p.currency)}</span>
+                        <span className="chip bg-clay/12 text-clay-dark">-{p.discountPercent}%</span>
+                      </span>
+                    ) : (
+                      money(p.price, p.currency)
+                    )}
+                  </td>
                   <td className="px-5 py-3">
                     <span className="font-mono">{p.quantityAvailable}</span>
                     {p.lowStock && (
