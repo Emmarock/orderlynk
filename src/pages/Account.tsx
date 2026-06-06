@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
-import type { CustomerAddress } from '../lib/types'
+import type { CustomerAddress, Order } from '../lib/types'
 import { useAuth } from '../context/AuthContext'
-import { titleCase } from '../lib/format'
+import { formatDate, money, titleCase } from '../lib/format'
+import { OrderStatusRow } from '../components/OrderViews'
 import { ErrorNote, Rail, Spinner } from '../components/ui'
 
 export default function Account() {
@@ -147,7 +149,44 @@ export default function Account() {
         </div>
       </div>
 
+      <OrderHistory />
       <AddressBook />
+    </div>
+  )
+}
+
+function OrderHistory() {
+  const [orders, setOrders] = useState<Order[] | null>(null)
+
+  useEffect(() => {
+    api.myOrders().then(setOrders).catch(() => setOrders([]))
+  }, [])
+
+  if (orders === null || orders.length === 0) return null
+
+  return (
+    <div className="card mt-6 overflow-hidden">
+      <Rail />
+      <div className="p-6">
+        <h2 className="font-display text-xl font-semibold">Order history</h2>
+        <p className="mt-1 text-sm text-muted">Your past orders. Open one to see live status.</p>
+        <div className="mt-4 divide-y divide-line">
+          {orders.map((o) => (
+            <Link
+              key={o.id}
+              to={o.trackToken ? `/orders?token=${encodeURIComponent(o.trackToken)}` : '/track'}
+              className="-mx-2 flex flex-wrap items-center justify-between gap-3 rounded-lg px-2 py-3 hover:bg-sand/50"
+            >
+              <div className="min-w-0">
+                <p className="font-mono text-sm font-semibold">{o.publicOrderId}</p>
+                <p className="truncate text-xs text-muted">{o.vendorName} · {formatDate(o.createdAt)}</p>
+              </div>
+              <OrderStatusRow order={o} />
+              <span className="font-mono text-sm font-semibold">{money(o.totalAmount, o.currency)}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

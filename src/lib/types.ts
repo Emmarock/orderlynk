@@ -257,6 +257,7 @@ export interface Order {
   notes?: string
   createdAt: string
   paymentInstructions?: PaymentInstructions | null
+  trackToken?: string | null
 }
 
 export interface Quote {

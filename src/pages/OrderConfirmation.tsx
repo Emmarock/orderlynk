@@ -68,7 +68,9 @@ export default function OrderConfirmation() {
       </div>
 
       <div className="mt-8 flex justify-center gap-3">
-        <Link to="/track" className="btn-ghost">Track order</Link>
+        <Link to={order.trackToken ? `/orders?token=${encodeURIComponent(order.trackToken)}` : '/track'} className="btn-ghost">
+          Track order
+        </Link>
         <Link to="/" className="btn-primary">Continue shopping</Link>
       </div>
     </div>
