@@ -65,12 +65,74 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
+/** Upload-from-device widget for a vendor branding image, with live preview. */
+function BrandingUpload({
+  label,
+  kind,
+  shape,
+  value,
+  onChange,
+}: {
+  label: string
+  kind: 'logo' | 'banner'
+  shape: 'square' | 'wide'
+  value: string
+  onChange: (url: string) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    try {
+      const { url } = await api.uploadVendorImage(kind, file)
+      onChange(url)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not upload image')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const previewClass = shape === 'square' ? 'h-16 w-16 rounded-xl' : 'h-20 w-full rounded-xl'
+
+  return (
+    <div>
+      <label className="label">{label}</label>
+      {value ? (
+        <div className={shape === 'wide' ? 'space-y-2' : 'flex items-center gap-3'}>
+          <img src={value} alt={label} className={`${previewClass} border border-line object-cover`} />
+          <div className="flex items-center gap-1">
+            <label className="btn-quiet cursor-pointer px-2 text-sm">
+              {uploading ? <Spinner /> : 'Replace'}
+              <input type="file" accept="image/*" className="hidden" onChange={pick} disabled={uploading} />
+            </label>
+            <button type="button" className="btn-quiet px-2 text-sm text-clay hover:text-clay-dark" onClick={() => onChange('')}>
+              Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <label className="field flex cursor-pointer items-center justify-center gap-2 text-muted">
+          {uploading ? <Spinner /> : 'Browse device…'}
+          <input type="file" accept="image/*" className="hidden" onChange={pick} disabled={uploading} />
+        </label>
+      )}
+      {error && <p className="mt-1 text-xs text-clay-dark">{error}</p>}
+    </div>
+  )
+}
+
 export default function VendorSettings() {
   const { user, applySession } = useAuth()
   const [vendor, setVendor] = useState<Vendor | null>(null)
 
   // Local form state per section.
-  const [biz, setBiz] = useState({ businessName: '', description: '', city: '', country: '', whatsappNumber: '', instagramHandle: '', logoUrl: '' })
+  const [biz, setBiz] = useState({ businessName: '', description: '', city: '', country: '', whatsappNumber: '', instagramHandle: '', logoUrl: '', bannerUrl: '' })
   const [fulfillment, setFulfillment] = useState<FulfillmentType[]>([])
   const [profile, setProfile] = useState({ fullName: '', phone: '', city: '', country: '' })
   const [emailForm, setEmailForm] = useState({ newEmail: '', currentPassword: '' })
@@ -84,6 +146,7 @@ export default function VendorSettings() {
       setBiz({
         businessName: v.businessName, description: v.description ?? '', city: v.city ?? '', country: v.country ?? '',
         whatsappNumber: v.whatsappNumber ?? '', instagramHandle: v.instagramHandle ?? '', logoUrl: v.logoUrl ?? '',
+        bannerUrl: v.bannerUrl ?? '',
       })
       setFulfillment(v.fulfillmentTypes)
       setPayout({
@@ -123,7 +186,14 @@ export default function VendorSettings() {
             <Field label="WhatsApp number"><input className="field" value={biz.whatsappNumber} onChange={(e) => setBiz({ ...biz, whatsappNumber: e.target.value })} /></Field>
             <Field label="Instagram handle"><input className="field" value={biz.instagramHandle} onChange={(e) => setBiz({ ...biz, instagramHandle: e.target.value })} /></Field>
           </div>
-          <Field label="Logo URL"><input className="field" value={biz.logoUrl} onChange={(e) => setBiz({ ...biz, logoUrl: e.target.value })} /></Field>
+          <BrandingUpload
+            label="Logo" kind="logo" shape="square"
+            value={biz.logoUrl} onChange={(url) => setBiz((b) => ({ ...b, logoUrl: url }))}
+          />
+          <BrandingUpload
+            label="Banner / cover image" kind="banner" shape="wide"
+            value={biz.bannerUrl} onChange={(url) => setBiz((b) => ({ ...b, bannerUrl: url }))}
+          />
           <div>
             <label className="label">Fulfillment options</label>
             <div className="flex flex-wrap gap-2">

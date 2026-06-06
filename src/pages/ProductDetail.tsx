@@ -40,10 +40,25 @@ export default function ProductDetail() {
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10">
-      <nav className="mb-6 text-sm text-muted">
+      <nav className="mb-4 text-sm text-muted">
         <Link to="/" className="hover:text-clay">Marketplace</Link> ·{' '}
         <Link to={`/vendor/${slug}`} className="hover:text-clay">{vendor.businessName}</Link>
       </nav>
+
+      {/* Vendor branding row */}
+      <Link to={`/vendor/${slug}`} className="mb-6 inline-flex items-center gap-3">
+        {vendor.logoUrl ? (
+          <img src={vendor.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover" />
+        ) : (
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-forest/10 font-display text-base font-semibold text-forest">
+            {vendor.businessName[0]}
+          </span>
+        )}
+        <span className="font-medium">
+          {vendor.businessName}
+          {vendor.rating ? <span className="ml-2 text-sm text-muted">★ {vendor.rating}</span> : null}
+        </span>
+      </Link>
 
       <div className="grid gap-10 md:grid-cols-2">
         <div className="card overflow-hidden">

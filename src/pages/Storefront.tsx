@@ -179,6 +179,13 @@ export default function Storefront() {
 
   return (
     <div>
+      {/* Cover banner */}
+      {vendor.bannerUrl && (
+        <div className="h-40 w-full overflow-hidden bg-sand sm:h-56">
+          <img src={vendor.bannerUrl} alt={`${vendor.businessName} banner`} className="h-full w-full object-cover" />
+        </div>
+      )}
+
       {/* Vendor header */}
       <section className="border-b border-line bg-cream">
         <div className="mx-auto max-w-6xl px-5 py-12">

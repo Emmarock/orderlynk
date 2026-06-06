@@ -132,6 +132,22 @@ export const api = {
     }
     return data as { url: string }
   },
+  // Upload a vendor branding image (kind='logo' | 'banner'); returns its public URL.
+  uploadVendorImage: async (kind: 'logo' | 'banner', file: File): Promise<{ url: string }> => {
+    const form = new FormData()
+    form.append('file', file)
+    const headers: Record<string, string> = {}
+    const token = tokenStore.get()
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch(`${BASE}/api/vendor/branding/image?kind=${kind}`, { method: 'POST', headers, body: form })
+    const text = await res.text()
+    const data = text ? JSON.parse(text) : undefined
+    if (!res.ok) {
+      const message = (data && (data.message as string)) || `Upload failed (${res.status})`
+      throw new ApiError(res.status, message, data?.details)
+    }
+    return data as { url: string }
+  },
   generateProductDescription: (b: { name: string; category?: string }) =>
     request<{ description: string }>('POST', '/api/vendor/products/description', b),
   createProduct: (b: unknown) => request<Product>('POST', '/api/vendor/products', b),

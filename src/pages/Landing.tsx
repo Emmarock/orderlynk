@@ -22,8 +22,14 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
   return (
     <Link
       to={`/vendor/${vendor.storeSlug}`}
-      className="card group flex flex-col gap-4 p-5 transition-all hover:-translate-y-1 hover:shadow-lift"
+      className="card group flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift"
     >
+      {vendor.bannerUrl && (
+        <div className="h-24 w-full overflow-hidden bg-sand">
+          <img src={vendor.bannerUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        </div>
+      )}
+      <div className="flex flex-1 flex-col gap-4 p-5">
       <div className="flex items-center gap-3">
         {vendor.logoUrl ? (
           <img src={vendor.logoUrl} alt="" className="h-12 w-12 rounded-xl object-cover" />
@@ -49,6 +55,7 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
             {titleCase(t)}
           </span>
         ))}
+      </div>
       </div>
     </Link>
   )

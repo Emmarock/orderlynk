@@ -74,6 +74,7 @@ export interface Vendor {
   whatsappNumber?: string
   instagramHandle?: string
   logoUrl?: string
+  bannerUrl?: string
   storeSlug: string
   verificationStatus: VendorStatus
   fulfillmentTypes: FulfillmentType[]
