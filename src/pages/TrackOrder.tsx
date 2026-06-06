@@ -14,16 +14,16 @@ export default function TrackOrder() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const runTrack = async (oid: string, c: string) => {
+  const resolve = async (fetcher: () => Promise<Order>) => {
     setLoading(true)
     setError(null)
     setOrder(null)
     try {
-      setOrder(await api.track(oid.trim(), c.trim()))
+      setOrder(await fetcher())
     } catch (err) {
       setError(
-        err instanceof ApiError && err.status === 404
-          ? 'No order matches that ID and contact. Double-check and try again.'
+        err instanceof ApiError && (err.status === 404 || err.status === 400)
+          ? 'No matching order. Double-check your details, or use the link from your confirmation message.'
           : 'Something went wrong. Please try again.',
       )
     } finally {
@@ -31,13 +31,20 @@ export default function TrackOrder() {
     }
   }
 
-  // Auto-track when arriving from a notification deep link (?orderId=&contact=).
+  const runTrack = (oid: string, c: string) => resolve(() => api.track(oid.trim(), c.trim()))
+
+  // Auto-resolve when arriving from an order link: a signed ?token=… (no PII in the URL),
+  // or the legacy ?orderId=&contact= form.
   const autoRan = useRef(false)
   useEffect(() => {
     if (autoRan.current) return
+    const token = params.get('token')
     const oid = params.get('orderId')
     const c = params.get('contact')
-    if (oid && c) {
+    if (token) {
+      autoRan.current = true
+      void resolve(() => api.trackByToken(token))
+    } else if (oid && c) {
       autoRan.current = true
       void runTrack(oid, c)
     }

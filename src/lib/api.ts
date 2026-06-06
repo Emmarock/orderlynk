@@ -118,6 +118,7 @@ export const api = {
   checkout: (b: unknown) => request<Order>('POST', '/api/orders', b),
   track: (orderId: string, contact: string) =>
     request<Order>('POST', '/api/orders/track', { orderId, contact }),
+  trackByToken: (token: string) => request<Order>('POST', '/api/orders/track-token', { token }),
   myOrders: () => request<Order[]>('GET', '/api/orders/mine'),
 
   // ---- vendor ----

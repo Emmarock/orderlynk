@@ -48,6 +48,7 @@ export default function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order/:orderId" element={<OrderConfirmation />} />
         <Route path="/track" element={<TrackOrder />} />
+        <Route path="/orders" element={<TrackOrder />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
