@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { fulfillmentTone, paymentTone, titleCase } from '../lib/format'
 import type { FulfillmentStatus, PaymentStatus } from '../lib/types'
@@ -70,6 +70,60 @@ export function ErrorNote({ message }: { message: string }) {
     <div className="rounded-xl border border-clay/30 bg-clay/8 px-4 py-3 text-sm text-clay-dark">
       {message}
     </div>
+  )
+}
+
+/**
+ * Renders an order id with an inline "copy to clipboard" button. The id text
+ * inherits font styling from the surrounding element, so it drops into any of
+ * the order views without restyling.
+ */
+export function CopyOrderId({ value, className = '' }: { value: string; className?: string }) {
+  const [copied, setCopied] = useState(false)
+
+  // The trigger is a role="button" span (not a <button>) so it can sit inside
+  // the clickable order rows without nesting interactive <button> elements.
+  // stopPropagation keeps a copy from also toggling the surrounding row.
+  const copy = async (e: { stopPropagation: () => void }) => {
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* clipboard unavailable (e.g. insecure context) — silently ignore */
+    }
+  }
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 ${className}`}>
+      {value}
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={copy}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            void copy(e)
+          }
+        }}
+        title={copied ? 'Copied!' : 'Copy order ID'}
+        aria-label={copied ? 'Order ID copied' : 'Copy order ID'}
+        className="inline-grid h-6 w-6 shrink-0 cursor-pointer place-items-center rounded-md text-muted transition-colors hover:bg-sand hover:text-ink"
+      >
+        {copied ? (
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        )}
+      </span>
+    </span>
   )
 }
 

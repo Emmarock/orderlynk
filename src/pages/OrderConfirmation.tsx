@@ -2,7 +2,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import type { Order } from '../lib/types'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline, PaymentInstructionsCard } from '../components/OrderViews'
-import { EmptyState } from '../components/ui'
+import { CopyOrderId, EmptyState } from '../components/ui'
 
 export default function OrderConfirmation() {
   const { orderId } = useParams()
@@ -40,7 +40,7 @@ export default function OrderConfirmation() {
           Thank you, {order.customerName.split(' ')[0]}. {order.vendorName} has received your order.
         </p>
         <p className="mt-4 inline-block rounded-full bg-cream px-5 py-2 font-mono text-lg font-semibold">
-          {order.publicOrderId}
+          <CopyOrderId value={order.publicOrderId} />
         </p>
       </div>
 

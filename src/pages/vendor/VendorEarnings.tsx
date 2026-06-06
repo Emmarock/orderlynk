@@ -3,7 +3,7 @@ import { api } from '../../lib/api'
 import type { EarningsSummary } from '../../lib/types'
 import { formatDate, money, titleCase } from '../../lib/format'
 import { ConsoleShell, StatCard, VENDOR_TABS } from '../../components/Console'
-import { PageLoader, PaymentBadge } from '../../components/ui'
+import { CopyOrderId, PageLoader, PaymentBadge } from '../../components/ui'
 
 export default function VendorEarnings() {
   const [data, setData] = useState<EarningsSummary | null>(null)
@@ -80,7 +80,7 @@ export default function VendorEarnings() {
                 <tbody className="divide-y divide-line">
                   {data.orders.map((o) => (
                     <tr key={o.publicOrderId} className="hover:bg-sand/40">
-                      <td className="px-5 py-3 font-mono">{o.publicOrderId}</td>
+                      <td className="px-5 py-3 font-mono"><CopyOrderId value={o.publicOrderId} /></td>
                       <td className="px-5 py-3 text-muted">{formatDate(o.createdAt)}</td>
                       <td className="px-5 py-3"><PaymentBadge status={o.paymentStatus} /></td>
                       <td className="px-5 py-3 text-right font-mono">{money(o.grossSales, data.currency)}</td>

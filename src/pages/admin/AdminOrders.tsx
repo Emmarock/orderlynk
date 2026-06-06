@@ -4,7 +4,7 @@ import type { Order } from '../../lib/types'
 import { formatDate, money } from '../../lib/format'
 import { ADMIN_TABS, ConsoleShell } from '../../components/Console'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from '../../components/OrderViews'
-import { EmptyState, PageLoader, Spinner } from '../../components/ui'
+import { CopyOrderId, EmptyState, PageLoader, Spinner } from '../../components/ui'
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[] | null>(null)
@@ -42,7 +42,7 @@ export default function AdminOrders() {
                   onClick={() => setOpenId(open ? null : o.id)}
                 >
                   <div className="min-w-0">
-                    <p className="font-mono text-sm font-semibold">{o.publicOrderId}</p>
+                    <p className="font-mono text-sm font-semibold"><CopyOrderId value={o.publicOrderId} /></p>
                     <p className="text-xs text-muted">
                       {o.vendorName} · {o.customerName} · {formatDate(o.createdAt)}
                     </p>

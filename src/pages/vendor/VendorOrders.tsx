@@ -4,7 +4,7 @@ import type { FulfillmentStatus, Order, PaymentStatus } from '../../lib/types'
 import { formatDate, money, titleCase } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from '../../components/OrderViews'
-import { EmptyState, PageLoader, Spinner } from '../../components/ui'
+import { CopyOrderId, EmptyState, PageLoader, Spinner } from '../../components/ui'
 
 const PAYMENT_FILTERS: (PaymentStatus | 'ALL')[] = ['ALL', 'PENDING', 'PAID']
 
@@ -158,7 +158,7 @@ export default function VendorOrders() {
                   onClick={() => setOpenId(open ? null : o.id)}
                 >
                   <div className="min-w-0">
-                    <p className="font-mono text-sm font-semibold">{o.publicOrderId}</p>
+                    <p className="font-mono text-sm font-semibold"><CopyOrderId value={o.publicOrderId} /></p>
                     <p className="text-xs text-muted">{o.customerName} · {formatDate(o.createdAt)}</p>
                   </div>
                   <OrderStatusRow order={o} />

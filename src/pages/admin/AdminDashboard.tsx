@@ -4,7 +4,7 @@ import { api } from '../../lib/api'
 import type { Order, Vendor } from '../../lib/types'
 import { money, titleCase } from '../../lib/format'
 import { ADMIN_TABS, ConsoleShell, StatCard } from '../../components/Console'
-import { PageLoader } from '../../components/ui'
+import { CopyOrderId, PageLoader } from '../../components/ui'
 import { OrderStatusRow } from '../../components/OrderViews'
 
 export default function AdminDashboard() {
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
             {orders.slice(0, 6).map((o) => (
               <div key={o.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="font-mono text-sm font-semibold">{o.publicOrderId}</p>
+                  <p className="font-mono text-sm font-semibold"><CopyOrderId value={o.publicOrderId} /></p>
                   <p className="truncate text-xs text-muted">{o.vendorName}</p>
                 </div>
                 <OrderStatusRow order={o} />

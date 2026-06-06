@@ -1,6 +1,6 @@
 import type { Order } from '../lib/types'
 import { money, titleCase } from '../lib/format'
-import { FulfillmentBadge, PaymentBadge } from './ui'
+import { CopyOrderId, FulfillmentBadge, PaymentBadge } from './ui'
 
 export function OrderTimeline({ order }: { order: Order }) {
   const flow = order.fulfillmentStatus === 'CANCELLED' ? ['ORDER_RECEIVED', 'CANCELLED'] : order.fulfillmentFlow
@@ -102,7 +102,7 @@ export function PaymentInstructionsCard({ order }: { order: Order }) {
         ))}
         <div className="flex justify-between gap-3 border-t border-clay/20 pt-2 font-semibold">
           <dt>Reference</dt>
-          <dd className="font-mono">{order.publicOrderId}</dd>
+          <dd className="font-mono"><CopyOrderId value={order.publicOrderId} /></dd>
         </div>
       </dl>
     </div>

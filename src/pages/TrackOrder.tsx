@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import type { Order } from '../lib/types'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline, PaymentInstructionsCard } from '../components/OrderViews'
-import { ErrorNote, Spinner } from '../components/ui'
+import { CopyOrderId, ErrorNote, Spinner } from '../components/ui'
 import { formatDate } from '../lib/format'
 
 export default function TrackOrder() {
@@ -89,7 +89,7 @@ export default function TrackOrder() {
           <div className="card p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-xl font-semibold">{order.publicOrderId}</p>
+                <p className="font-mono text-xl font-semibold"><CopyOrderId value={order.publicOrderId} /></p>
                 <p className="text-sm text-muted">
                   {order.vendorName} · {formatDate(order.createdAt)}
                 </p>

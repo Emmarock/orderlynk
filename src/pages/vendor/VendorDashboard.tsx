@@ -5,7 +5,7 @@ import type { Order, Product, ShareLink, Vendor, VendorAnalytics } from '../../l
 import { money, titleCase } from '../../lib/format'
 import { ConsoleShell, StatCard, VENDOR_TABS } from '../../components/Console'
 import { OrderStatusRow } from '../../components/OrderViews'
-import { PageLoader, Rail } from '../../components/ui'
+import { CopyOrderId, PageLoader, Rail } from '../../components/ui'
 
 const SOURCES = ['whatsapp', 'instagram', 'marketplace', 'vendor_link']
 
@@ -131,7 +131,7 @@ export default function VendorDashboard() {
             {orders.slice(0, 6).map((o) => (
               <div key={o.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="font-mono text-sm font-semibold">{o.publicOrderId}</p>
+                  <p className="font-mono text-sm font-semibold"><CopyOrderId value={o.publicOrderId} /></p>
                   <p className="truncate text-xs text-muted">{o.customerName}</p>
                 </div>
                 <OrderStatusRow order={o} />
