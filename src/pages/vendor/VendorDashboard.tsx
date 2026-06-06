@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../lib/api'
-import type { Order, ShareLink, Vendor } from '../../lib/types'
+import type { Order, ShareLink, Vendor, VendorAnalytics } from '../../lib/types'
 import { money, titleCase } from '../../lib/format'
 import { ConsoleShell, StatCard, VENDOR_TABS } from '../../components/Console'
 import { OrderStatusRow } from '../../components/OrderViews'
@@ -67,10 +67,12 @@ function ShareLinkPanel() {
 export default function VendorDashboard() {
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
+  const [analytics, setAnalytics] = useState<VendorAnalytics | null>(null)
 
   useEffect(() => {
     api.myVendor().then(setVendor).catch(() => setVendor(null))
     api.vendorOrders().then(setOrders).catch(() => setOrders([]))
+    api.vendorAnalytics().then(setAnalytics).catch(() => setAnalytics(null))
   }, [])
 
   if (!vendor || orders === null) return <PageLoader />
@@ -128,6 +130,58 @@ export default function VendorDashboard() {
         </div>
 
         <ShareLinkPanel />
+      </div>
+
+      {/* Analytics: top customers & top products */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="card p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl font-semibold">Top customers</h2>
+            <Link to="/vendor/manage/customers" className="link-underline text-sm">All customers</Link>
+          </div>
+          <div className="mt-4 divide-y divide-line">
+            {analytics?.topCustomers.map((c, i) => (
+              <div key={`${c.phone}-${i}`} className="flex items-center justify-between gap-3 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-clay/12 font-mono text-xs font-semibold text-clay">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{c.name}</p>
+                    <p className="truncate text-xs text-muted">{c.orderCount} order{c.orderCount === 1 ? '' : 's'}</p>
+                  </div>
+                </div>
+                <span className="font-mono text-sm font-semibold">{money(c.totalSpent)}</span>
+              </div>
+            ))}
+            {(!analytics || analytics.topCustomers.length === 0) && (
+              <p className="py-6 text-sm text-muted">No customers yet.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="card p-6">
+          <h2 className="font-display text-xl font-semibold">Top products</h2>
+          <div className="mt-4 divide-y divide-line">
+            {analytics?.topProducts.map((p, i) => (
+              <div key={p.productId} className="flex items-center justify-between gap-3 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-forest/10 font-mono text-xs font-semibold text-forest">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{p.productName}</p>
+                    <p className="truncate text-xs text-muted">{p.quantitySold} sold</p>
+                  </div>
+                </div>
+                <span className="font-mono text-sm font-semibold">{money(p.revenue)}</span>
+              </div>
+            ))}
+            {(!analytics || analytics.topProducts.length === 0) && (
+              <p className="py-6 text-sm text-muted">No sales yet.</p>
+            )}
+          </div>
+        </div>
       </div>
     </ConsoleShell>
   )

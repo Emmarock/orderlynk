@@ -1,13 +1,26 @@
 import type {
   AuthResponse,
+  BroadcastResult,
+  CustomerSummary,
   Order,
   Payout,
   Product,
   Quote,
+  RatingSummary,
   ShareLink,
   Storefront,
   Vendor,
+  VendorAnalytics,
 } from './types'
+
+/** Build a `?from=&to=` query string from optional ISO dates (yyyy-MM-dd). */
+function dateRangeQuery(from?: string, to?: string): string {
+  const qs = new URLSearchParams()
+  if (from) qs.set('from', from)
+  if (to) qs.set('to', to)
+  const s = qs.toString()
+  return s ? `?${s}` : ''
+}
 
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
@@ -66,9 +79,18 @@ export const api = {
   optionSets: () => request<Record<string, string[]>>('GET', '/api/meta/option-sets'),
 
   // ---- public storefront ----
-  marketplace: (city?: string) =>
-    request<Vendor[]>('GET', `/api/storefronts${city ? `?city=${encodeURIComponent(city)}` : ''}`),
+  marketplace: (city?: string, category?: string) => {
+    const qs = new URLSearchParams()
+    if (city) qs.set('city', city)
+    if (category) qs.set('category', category)
+    const suffix = qs.toString()
+    return request<Vendor[]>('GET', `/api/storefronts${suffix ? `?${suffix}` : ''}`)
+  },
   storefront: (slug: string) => request<Storefront>('GET', `/api/storefronts/${slug}`),
+  rateVendor: (slug: string, b: { stars: number; comment?: string }) =>
+    request<RatingSummary>('POST', `/api/storefronts/${slug}/ratings`, b),
+  myVendorRating: (slug: string) =>
+    request<RatingSummary>('GET', `/api/storefronts/${slug}/ratings/mine`),
 
   // ---- orders (public) ----
   quote: (b: unknown) => request<Quote>('POST', '/api/orders/quote', b),
@@ -111,7 +133,14 @@ export const api = {
   toggleProduct: (id: string, active: boolean) =>
     request<Product>('PATCH', `/api/vendor/products/${id}/active?active=${active}`),
   deleteProduct: (id: string) => request<void>('DELETE', `/api/vendor/products/${id}`),
-  vendorOrders: () => request<Order[]>('GET', '/api/vendor/orders'),
+  vendorOrders: (from?: string, to?: string) =>
+    request<Order[]>('GET', `/api/vendor/orders${dateRangeQuery(from, to)}`),
+  vendorCustomers: (from?: string, to?: string) =>
+    request<CustomerSummary[]>('GET', `/api/vendor/customers${dateRangeQuery(from, to)}`),
+  vendorAnalytics: (from?: string, to?: string) =>
+    request<VendorAnalytics>('GET', `/api/vendor/analytics${dateRangeQuery(from, to)}`),
+  vendorBroadcast: (b: { subject: string; message: string }, from?: string, to?: string) =>
+    request<BroadcastResult>('POST', `/api/vendor/customers/broadcast${dateRangeQuery(from, to)}`, b),
   updateFulfillment: (id: string, status: string, note?: string) =>
     request<Order>('PATCH', `/api/vendor/orders/${id}/fulfillment`, { status, note }),
   vendorUpdatePayment: (id: string, b: unknown) =>

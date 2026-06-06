@@ -89,11 +89,14 @@ function OrderDetail({ order, onUpdated }: { order: Order; onUpdated: (o: Order)
 export default function VendorOrders() {
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [filter, setFilter] = useState<PaymentStatus | 'ALL'>('ALL')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
 
+  // Refetch from the server whenever the date range changes (server filters by created-at).
   useEffect(() => {
-    api.vendorOrders().then(setOrders).catch(() => setOrders([]))
-  }, [])
+    api.vendorOrders(from || undefined, to || undefined).then(setOrders).catch(() => setOrders([]))
+  }, [from, to])
 
   const replace = (updated: Order) =>
     setOrders((prev) => prev?.map((o) => (o.id === updated.id ? updated : o)) ?? null)
@@ -107,7 +110,29 @@ export default function VendorOrders() {
       subtitle="Manage payment and fulfillment for every order"
       tabs={VENDOR_TABS}
       actions={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={from}
+            max={to || undefined}
+            onChange={(e) => setFrom(e.target.value)}
+            className="field h-9 w-auto px-2 py-1 text-sm"
+            aria-label="From date"
+          />
+          <span className="text-muted">–</span>
+          <input
+            type="date"
+            value={to}
+            min={from || undefined}
+            onChange={(e) => setTo(e.target.value)}
+            className="field h-9 w-auto px-2 py-1 text-sm"
+            aria-label="To date"
+          />
+          {(from || to) && (
+            <button className="btn-quiet px-2 text-sm" onClick={() => { setFrom(''); setTo('') }}>
+              Clear
+            </button>
+          )}
           {PAYMENT_FILTERS.map((f) => (
             <button
               key={f}

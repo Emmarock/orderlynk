@@ -16,6 +16,7 @@ import Account from './pages/Account'
 import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorProducts from './pages/vendor/VendorProducts'
 import VendorOrders from './pages/vendor/VendorOrders'
+import VendorCustomers from './pages/vendor/VendorCustomers'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminVendors from './pages/admin/AdminVendors'
 import AdminOrders from './pages/admin/AdminOrders'
@@ -72,6 +73,14 @@ export default function App() {
           element={
             <ProtectedRoute role="VENDOR">
               <VendorOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/customers"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorCustomers />
             </ProtectedRoute>
           }
         />

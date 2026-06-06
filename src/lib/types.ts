@@ -79,7 +79,45 @@ export interface Vendor {
   fulfillmentTypes: FulfillmentType[]
   active: boolean
   rating?: number
+  ratingCount: number
   commissionRate: number
+}
+
+export interface RatingSummary {
+  rating: number | null
+  ratingCount: number
+  myStars: number | null
+}
+
+export interface CustomerSummary {
+  name: string
+  phone: string
+  email?: string
+  city?: string
+  orderCount: number
+  totalSpent: number
+  lastOrderAt: string
+}
+
+export interface ProductSalesSummary {
+  productId: string
+  productName: string
+  quantitySold: number
+  revenue: number
+}
+
+export interface VendorAnalytics {
+  totalOrders: number
+  paidOrders: number
+  grossRevenue: number
+  uniqueCustomers: number
+  topCustomers: CustomerSummary[]
+  topProducts: ProductSalesSummary[]
+}
+
+export interface BroadcastResult {
+  recipients: number
+  totalCustomers: number
 }
 
 export interface Product {

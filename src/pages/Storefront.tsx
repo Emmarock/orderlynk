@@ -1,10 +1,106 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
-import type { Product, Storefront as StorefrontData } from '../lib/types'
+import type { Product, RatingSummary, Storefront as StorefrontData, Vendor } from '../lib/types'
 import { money, titleCase } from '../lib/format'
+import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
-import { EmptyState, PageLoader } from '../components/ui'
+import { EmptyState, PageLoader, Spinner } from '../components/ui'
+
+function Stars({ value, onPick }: { value: number; onPick?: (n: number) => void }) {
+  return (
+    <span className="inline-flex">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={!onPick}
+          onClick={() => onPick?.(n)}
+          className={`text-xl leading-none ${onPick ? 'cursor-pointer' : 'cursor-default'} ${n <= value ? 'text-clay' : 'text-line'}`}
+          aria-label={`${n} star${n > 1 ? 's' : ''}`}
+        >
+          ★
+        </button>
+      ))}
+    </span>
+  )
+}
+
+function RatingWidget({ vendor }: { vendor: Vendor }) {
+  const { user } = useAuth()
+  const [summary, setSummary] = useState<RatingSummary>({
+    rating: vendor.rating ?? null,
+    ratingCount: vendor.ratingCount,
+    myStars: null,
+  })
+  const [stars, setStars] = useState(0)
+  const [comment, setComment] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    api
+      .myVendorRating(vendor.storeSlug)
+      .then((s) => {
+        setSummary(s)
+        if (s.myStars) setStars(s.myStars)
+      })
+      .catch(() => {})
+  }, [user, vendor.storeSlug])
+
+  const submit = async () => {
+    if (!stars) return
+    setSaving(true)
+    setNote(null)
+    try {
+      const s = await api.rateVendor(vendor.storeSlug, { stars, comment: comment || undefined })
+      setSummary(s)
+      setNote('Thanks for rating!')
+    } catch (err) {
+      setNote(err instanceof ApiError ? err.message : 'Could not submit rating')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-line bg-sand/40 p-4">
+      <div className="flex items-center gap-2">
+        <Stars value={Math.round(summary.rating ?? 0)} />
+        <span className="text-sm font-medium">
+          {summary.rating
+            ? `${summary.rating.toFixed(1)} · ${summary.ratingCount} rating${summary.ratingCount === 1 ? '' : 's'}`
+            : 'No ratings yet'}
+        </span>
+      </div>
+      {user ? (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs uppercase tracking-wider text-muted">
+            {summary.myStars ? 'Update your rating' : 'Rate this vendor'}
+          </p>
+          <Stars value={stars} onPick={setStars} />
+          <textarea
+            className="field min-h-16 text-sm"
+            placeholder="Add a short review (optional)"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+          <div className="flex items-center gap-3">
+            <button className="btn-forest px-4 py-2" disabled={!stars || saving} onClick={submit}>
+              {saving ? <Spinner /> : summary.myStars ? 'Update rating' : 'Submit rating'}
+            </button>
+            {note && <span className="text-sm text-muted">{note}</span>}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-2 text-sm text-muted">
+          <Link to="/login" className="text-clay hover:underline">Sign in</Link> to rate this vendor.
+        </p>
+      )}
+    </div>
+  )
+}
 
 function ProductTile({
   product,
@@ -95,7 +191,7 @@ export default function Storefront() {
               </span>
             )}
             <div className="flex-1">
-              <p className="eyebrow">{vendor.city ?? 'Canada'}{vendor.rating ? ` · ★ ${vendor.rating}` : ''}</p>
+              <p className="eyebrow">{vendor.city ?? 'Canada'}</p>
               <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
                 {vendor.businessName}
               </h1>
@@ -130,6 +226,9 @@ export default function Storefront() {
                 {titleCase(t)}
               </span>
             ))}
+          </div>
+          <div className="mt-5 max-w-md">
+            <RatingWidget vendor={vendor} />
           </div>
         </div>
       </section>

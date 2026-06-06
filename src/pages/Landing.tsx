@@ -36,7 +36,7 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
           <p className="truncate font-display text-lg font-semibold leading-tight">{vendor.businessName}</p>
           <p className="text-sm text-muted">
             {vendor.city ?? 'Canada'}
-            {vendor.rating ? ` · ★ ${vendor.rating}` : ''}
+            {vendor.rating ? ` · ★ ${vendor.rating} (${vendor.ratingCount})` : ' · No ratings yet'}
           </p>
         </div>
       </div>
@@ -57,10 +57,20 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
 export default function Landing() {
   const [vendors, setVendors] = useState<Vendor[] | null>(null)
   const [city, setCity] = useState('')
+  const [category, setCategory] = useState('')
+  const [categories, setCategories] = useState<string[]>([])
 
+  // Available product categories for the filter (kept in sync with the backend enum).
   useEffect(() => {
-    api.marketplace().then(setVendors).catch(() => setVendors([]))
+    api.optionSets().then((s) => setCategories(s.productCategories ?? [])).catch(() => setCategories([]))
   }, [])
+
+  // Reload from the server whenever the category changes — the backend filters by
+  // category and returns vendors already sorted highest-rated first.
+  useEffect(() => {
+    setVendors(null)
+    api.marketplace(undefined, category || undefined).then(setVendors).catch(() => setVendors([]))
+  }, [category])
 
   const cities = Array.from(new Set((vendors ?? []).map((v) => v.city).filter(Boolean))) as string[]
   const filtered = city ? (vendors ?? []).filter((v) => v.city === city) : vendors ?? []
@@ -196,10 +206,33 @@ export default function Landing() {
           )}
         </div>
 
+        {/* Category filter — pick a vendor by what they sell; top-rated vendors lead each category. */}
+        {categories.length > 0 && (
+          <div className="mb-8 flex flex-wrap gap-2">
+            <button
+              onClick={() => { setCategory(''); setCity('') }}
+              className={`chip ${category === '' ? 'bg-clay text-cream' : 'bg-sand text-muted hover:text-ink'}`}
+            >
+              All categories
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => { setCategory(c); setCity('') }}
+                className={`chip ${category === c ? 'bg-clay text-cream' : 'bg-sand text-muted hover:text-ink'}`}
+              >
+                {titleCase(c)}
+              </button>
+            ))}
+          </div>
+        )}
+
         {vendors === null ? (
           <PageLoader />
         ) : filtered.length === 0 ? (
-          <p className="text-muted">No vendors available yet — check back soon.</p>
+          <p className="text-muted">
+            {category ? `No vendors in ${titleCase(category)} yet — try another category.` : 'No vendors available yet — check back soon.'}
+          </p>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((v) => (
