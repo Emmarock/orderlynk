@@ -193,6 +193,14 @@ export interface OrderItem {
   lineTotal: number
 }
 
+export interface PaymentInstructions {
+  method: string
+  accountName?: string
+  bankName?: string
+  accountNumber?: string
+  email?: string
+}
+
 export interface Order {
   id: string
   publicOrderId: string
@@ -222,6 +230,7 @@ export interface Order {
   campaign?: string
   notes?: string
   createdAt: string
+  paymentInstructions?: PaymentInstructions | null
 }
 
 export interface Quote {

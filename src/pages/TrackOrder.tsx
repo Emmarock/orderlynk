@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import type { Order } from '../lib/types'
-import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from '../components/OrderViews'
+import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline, PaymentInstructionsCard } from '../components/OrderViews'
 import { ErrorNote, Spinner } from '../components/ui'
 import { formatDate } from '../lib/format'
 
@@ -110,6 +110,7 @@ export default function TrackOrder() {
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Payment</h3>
                   <OrderFeeBreakdown order={order} />
                 </div>
+                <PaymentInstructionsCard order={order} />
               </div>
             </div>
           </div>

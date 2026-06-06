@@ -69,6 +69,46 @@ export function OrderItems({ order }: { order: Order }) {
   )
 }
 
+/**
+ * Shows the vendor's payment details so the customer knows how to pay. Rendered only
+ * when the vendor configured payout details and payment is still outstanding.
+ */
+export function PaymentInstructionsCard({ order }: { order: Order }) {
+  const pi = order.paymentInstructions
+  const outstanding = order.paymentStatus === 'PENDING' || order.paymentStatus === 'PARTIAL'
+  if (!pi || !outstanding) return null
+
+  const rows: [string, string | undefined][] = [
+    ['Method', titleCase(pi.method)],
+    ['Interac e-Transfer to', pi.email],
+    ['Account name', pi.accountName],
+    ['Bank', pi.bankName],
+    ['Account number', pi.accountNumber],
+  ]
+
+  return (
+    <div className="rounded-xl border border-clay/30 bg-clay/8 p-4">
+      <h3 className="font-display text-base font-semibold text-clay-dark">How to pay</h3>
+      <p className="mt-1 text-sm text-muted">
+        Send {money(order.totalAmount, order.currency)} to {order.vendorName} using the details below, then
+        the vendor will confirm your payment.
+      </p>
+      <dl className="mt-3 space-y-1.5 text-sm">
+        {rows.filter(([, v]) => v && v.trim()).map(([label, value]) => (
+          <div key={label} className="flex justify-between gap-3">
+            <dt className="text-muted">{label}</dt>
+            <dd className="text-right font-medium">{value}</dd>
+          </div>
+        ))}
+        <div className="flex justify-between gap-3 border-t border-clay/20 pt-2 font-semibold">
+          <dt>Reference</dt>
+          <dd className="font-mono">{order.publicOrderId}</dd>
+        </div>
+      </dl>
+    </div>
+  )
+}
+
 export function OrderStatusRow({ order }: { order: Order }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
