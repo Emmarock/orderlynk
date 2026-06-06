@@ -4,7 +4,7 @@ import { api, ApiError } from '../lib/api'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { money, titleCase } from '../lib/format'
-import type { FulfillmentType, PaymentMethod, Quote } from '../lib/types'
+import type { CustomerAddress, FulfillmentType, PaymentMethod, Quote } from '../lib/types'
 import { EmptyState, ErrorNote, Spinner } from '../components/ui'
 
 const PAYMENT_METHODS: PaymentMethod[] = ['INTERAC_ETRANSFER', 'CARD', 'BANK_TRANSFER', 'CASH']
@@ -23,7 +23,11 @@ export default function Checkout() {
     customerName: user?.fullName ?? '',
     customerPhone: '',
     customerEmail: user?.email ?? '',
+    customerHouseNumber: '',
+    customerStreet: '',
     customerCity: '',
+    customerPostcode: '',
+    customerCountry: '',
     notes: '',
   })
   const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType | ''>('')
@@ -31,10 +35,33 @@ export default function Checkout() {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[]>([])
+  const [saveAddress, setSaveAddress] = useState(false)
 
   useEffect(() => {
     if (fulfillmentOptions.length === 1) setFulfillmentType(fulfillmentOptions[0])
   }, [fulfillmentOptions])
+
+  // Logged-in customers: load saved addresses and prefill with their default.
+  useEffect(() => {
+    if (!user) return
+    api.customerAddresses().then((list) => {
+      setSavedAddresses(list)
+      const def = list.find((a) => a.isDefault) ?? list[0]
+      if (def) fillAddress(def)
+    }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
+  const fillAddress = (a: CustomerAddress) =>
+    setForm((f) => ({
+      ...f,
+      customerHouseNumber: a.address.houseNumber ?? '',
+      customerStreet: a.address.street ?? '',
+      customerCity: a.address.city ?? '',
+      customerPostcode: a.address.postcode ?? '',
+      customerCountry: a.address.country ?? '',
+    }))
 
   // Live fee quote whenever fulfillment / payment / cart changes.
   useEffect(() => {
@@ -74,12 +101,31 @@ export default function Checkout() {
         customerName: form.customerName,
         customerPhone: form.customerPhone,
         customerEmail: form.customerEmail || undefined,
+        customerHouseNumber: form.customerHouseNumber || undefined,
+        customerStreet: form.customerStreet || undefined,
         customerCity: form.customerCity || undefined,
+        customerPostcode: form.customerPostcode || undefined,
+        customerCountry: form.customerCountry || undefined,
         fulfillmentType,
         paymentMethod,
         sourceChannel: 'MARKETPLACE',
         notes: form.notes || undefined,
       })
+      // Optionally save the entered address to the customer's address book (best-effort).
+      if (saveAddress && user) {
+        try {
+          await api.addCustomerAddress({
+            address: {
+              houseNumber: form.customerHouseNumber || undefined,
+              street: form.customerStreet || undefined,
+              city: form.customerCity || undefined,
+              postcode: form.customerPostcode || undefined,
+              country: form.customerCountry || undefined,
+            },
+            makeDefault: savedAddresses.length === 0,
+          })
+        } catch { /* don't block the order on address-book save */ }
+      }
       clear()
       navigate(`/order/${order.publicOrderId}`, { state: { order } })
     } catch (err) {
@@ -114,11 +160,61 @@ export default function Checkout() {
                 <label className="label">Email</label>
                 <input className="field" type="email" value={form.customerEmail} onChange={set('customerEmail')} />
               </div>
-              <div className="sm:col-span-2">
+            </div>
+          </section>
+
+          {/* Delivery address */}
+          <section className="card p-6">
+            <h2 className="font-display text-xl font-semibold">Delivery address</h2>
+            <p className="mt-1 text-sm text-muted">Helps the vendor get your order to the right place.</p>
+            {savedAddresses.length > 0 && (
+              <div className="mt-4">
+                <label className="label">Use a saved address</label>
+                <select
+                  className="field"
+                  defaultValue={savedAddresses.find((a) => a.isDefault)?.id ?? ''}
+                  onChange={(e) => {
+                    const a = savedAddresses.find((x) => x.id === e.target.value)
+                    if (a) fillAddress(a)
+                  }}
+                >
+                  <option value="">New address…</option>
+                  {savedAddresses.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {(a.label || 'Address') + ' — ' + [a.address.street, a.address.city].filter(Boolean).join(', ')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="label">House / flat number</label>
+                <input className="field" value={form.customerHouseNumber} onChange={set('customerHouseNumber')} />
+              </div>
+              <div>
+                <label className="label">Street</label>
+                <input className="field" value={form.customerStreet} onChange={set('customerStreet')} />
+              </div>
+              <div>
                 <label className="label">City</label>
                 <input className="field" value={form.customerCity} onChange={set('customerCity')} />
               </div>
+              <div>
+                <label className="label">Postcode</label>
+                <input className="field" value={form.customerPostcode} onChange={set('customerPostcode')} />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label">Country</label>
+                <input className="field" value={form.customerCountry} onChange={set('customerCountry')} />
+              </div>
             </div>
+            {user && (
+              <label className="mt-4 flex items-center gap-2 text-sm text-muted">
+                <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
+                Save this address to my account
+              </label>
+            )}
           </section>
 
           {/* Fulfillment */}

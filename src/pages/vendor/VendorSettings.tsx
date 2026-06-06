@@ -132,7 +132,7 @@ export default function VendorSettings() {
   const [vendor, setVendor] = useState<Vendor | null>(null)
 
   // Local form state per section.
-  const [biz, setBiz] = useState({ businessName: '', description: '', city: '', country: '', whatsappNumber: '', instagramHandle: '', logoUrl: '', bannerUrl: '' })
+  const [biz, setBiz] = useState({ businessName: '', description: '', houseNumber: '', street: '', city: '', postcode: '', country: '', whatsappNumber: '', instagramHandle: '', logoUrl: '', bannerUrl: '' })
   const [fulfillment, setFulfillment] = useState<FulfillmentType[]>([])
   const [profile, setProfile] = useState({ fullName: '', phone: '', city: '', country: '' })
   const [emailForm, setEmailForm] = useState({ newEmail: '', currentPassword: '' })
@@ -144,7 +144,8 @@ export default function VendorSettings() {
     api.myVendor().then((v) => {
       setVendor(v)
       setBiz({
-        businessName: v.businessName, description: v.description ?? '', city: v.city ?? '', country: v.country ?? '',
+        businessName: v.businessName, description: v.description ?? '',
+        houseNumber: v.houseNumber ?? '', street: v.street ?? '', city: v.city ?? '', postcode: v.postcode ?? '', country: v.country ?? '',
         whatsappNumber: v.whatsappNumber ?? '', instagramHandle: v.instagramHandle ?? '', logoUrl: v.logoUrl ?? '',
         bannerUrl: v.bannerUrl ?? '',
       })
@@ -180,9 +181,15 @@ export default function VendorSettings() {
         >
           <Field label="Business name"><input className="field" value={biz.businessName} onChange={(e) => setBiz({ ...biz, businessName: e.target.value })} /></Field>
           <Field label="Description"><textarea className="field min-h-20" value={biz.description} onChange={(e) => setBiz({ ...biz, description: e.target.value })} /></Field>
+          <p className="label !mb-1 !mt-2">Business address</p>
           <div className="grid grid-cols-2 gap-4">
+            <Field label="House / unit no."><input className="field" value={biz.houseNumber} onChange={(e) => setBiz({ ...biz, houseNumber: e.target.value })} /></Field>
+            <Field label="Street"><input className="field" value={biz.street} onChange={(e) => setBiz({ ...biz, street: e.target.value })} /></Field>
             <Field label="City"><input className="field" value={biz.city} onChange={(e) => setBiz({ ...biz, city: e.target.value })} /></Field>
+            <Field label="Postcode"><input className="field" value={biz.postcode} onChange={(e) => setBiz({ ...biz, postcode: e.target.value })} /></Field>
             <Field label="Country"><input className="field" value={biz.country} onChange={(e) => setBiz({ ...biz, country: e.target.value })} /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <Field label="WhatsApp number"><input className="field" value={biz.whatsappNumber} onChange={(e) => setBiz({ ...biz, whatsappNumber: e.target.value })} /></Field>
             <Field label="Instagram handle"><input className="field" value={biz.instagramHandle} onChange={(e) => setBiz({ ...biz, instagramHandle: e.target.value })} /></Field>
           </div>

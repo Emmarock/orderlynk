@@ -1,6 +1,8 @@
 import type {
+  Address,
   AuthResponse,
   BroadcastResult,
+  CustomerAddress,
   CustomerSummary,
   EarningsSummary,
   Order,
@@ -83,6 +85,14 @@ export const api = {
     request<void>('POST', '/api/auth/reset-password', { token, newPassword }),
   updateProfile: (b: { fullName: string; phone?: string; city?: string; country?: string }) =>
     request<AuthResponse>('PUT', '/api/auth/profile', b),
+  // ---- customer address book ----
+  customerAddresses: () => request<CustomerAddress[]>('GET', '/api/account/addresses'),
+  addCustomerAddress: (b: { label?: string; address: Address; makeDefault?: boolean }) =>
+    request<CustomerAddress>('POST', '/api/account/addresses', b),
+  updateCustomerAddress: (id: string, b: { label?: string; address: Address; makeDefault?: boolean }) =>
+    request<CustomerAddress>('PUT', `/api/account/addresses/${id}`, b),
+  setDefaultAddress: (id: string) => request<CustomerAddress>('POST', `/api/account/addresses/${id}/default`),
+  deleteCustomerAddress: (id: string) => request<void>('DELETE', `/api/account/addresses/${id}`),
   changeEmail: (b: { newEmail: string; currentPassword: string }) =>
     request<AuthResponse>('POST', '/api/auth/change-email', b),
 
@@ -162,6 +172,7 @@ export const api = {
   deleteProduct: (id: string) => request<void>('DELETE', `/api/vendor/products/${id}`),
   vendorOrders: (from?: string, to?: string) =>
     request<Order[]>('GET', `/api/vendor/orders${dateRangeQuery(from, to)}`),
+  vendorOrder: (id: string) => request<Order>('GET', `/api/vendor/orders/${id}`),
   vendorCustomers: (from?: string, to?: string) =>
     request<CustomerSummary[]>('GET', `/api/vendor/customers${dateRangeQuery(from, to)}`),
   vendorAnalytics: (from?: string, to?: string) =>

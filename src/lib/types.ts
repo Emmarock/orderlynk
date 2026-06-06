@@ -66,11 +66,29 @@ export interface AuthResponse {
   emailVerified: boolean
 }
 
+export interface Address {
+  houseNumber?: string
+  street?: string
+  city?: string
+  postcode?: string
+  country?: string
+}
+
+export interface CustomerAddress {
+  id: string
+  label?: string
+  address: Address
+  isDefault: boolean
+}
+
 export interface Vendor {
   id: string
   businessName: string
   description?: string
+  houseNumber?: string
+  street?: string
   city?: string
+  postcode?: string
   country?: string
   whatsappNumber?: string
   instagramHandle?: string
@@ -209,7 +227,11 @@ export interface Order {
   customerName: string
   customerPhone: string
   customerEmail?: string
+  customerHouseNumber?: string
+  customerStreet?: string
   customerCity?: string
+  customerPostcode?: string
+  customerCountry?: string
   vendorId: string
   vendorName: string
   items: OrderItem[]

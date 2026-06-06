@@ -19,7 +19,9 @@ import Account from './pages/Account'
 import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorProducts from './pages/vendor/VendorProducts'
 import VendorOrders from './pages/vendor/VendorOrders'
+import VendorOrderDetail from './pages/vendor/VendorOrderDetail'
 import VendorCustomers from './pages/vendor/VendorCustomers'
+import VendorCustomerDetail from './pages/vendor/VendorCustomerDetail'
 import VendorEarnings from './pages/vendor/VendorEarnings'
 import VendorSettings from './pages/vendor/VendorSettings'
 import VendorSupport from './pages/vendor/VendorSupport'
@@ -86,10 +88,26 @@ export default function App() {
           }
         />
         <Route
+          path="/vendor/manage/orders/:id"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorOrderDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/vendor/manage/customers"
           element={
             <ProtectedRoute role="VENDOR">
               <VendorCustomers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/customers/:phone"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorCustomerDetail />
             </ProtectedRoute>
           }
         />

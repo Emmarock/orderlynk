@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../../lib/api'
 import type { CustomerSummary } from '../../lib/types'
 import { formatDate, money } from '../../lib/format'
@@ -59,6 +60,7 @@ function BroadcastModal({
 }
 
 export default function VendorCustomers() {
+  const navigate = useNavigate()
   const [customers, setCustomers] = useState<CustomerSummary[] | null>(null)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -132,7 +134,11 @@ export default function VendorCustomers() {
             </thead>
             <tbody className="divide-y divide-line">
               {customers.map((c, i) => (
-                <tr key={`${c.phone}-${i}`} className="hover:bg-sand/40">
+                <tr
+                  key={`${c.phone}-${i}`}
+                  onClick={() => navigate(`/vendor/manage/customers/${encodeURIComponent(c.phone)}`)}
+                  className="cursor-pointer hover:bg-sand/40"
+                >
                   <td className="px-5 py-3 font-medium">{c.name}</td>
                   <td className="px-5 py-3 text-muted">
                     <div>{c.phone}</div>

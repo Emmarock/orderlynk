@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import type { Order, Product, ShareLink, Vendor, VendorAnalytics } from '../../lib/types'
 import { money, titleCase } from '../../lib/format'
@@ -65,6 +65,7 @@ function ShareLinkPanel() {
 }
 
 export default function VendorDashboard() {
+  const navigate = useNavigate()
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [analytics, setAnalytics] = useState<VendorAnalytics | null>(null)
@@ -129,7 +130,11 @@ export default function VendorDashboard() {
           </div>
           <div className="mt-4 divide-y divide-line">
             {orders.slice(0, 6).map((o) => (
-              <div key={o.id} className="flex items-center justify-between gap-3 py-3">
+              <div
+                key={o.id}
+                onClick={() => navigate(`/vendor/manage/orders/${o.id}`)}
+                className="-mx-2 flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-3 hover:bg-sand/50"
+              >
                 <div className="min-w-0">
                   <p className="font-mono text-sm font-semibold"><CopyOrderId value={o.publicOrderId} /></p>
                   <p className="truncate text-xs text-muted">{o.customerName}</p>
@@ -154,7 +159,11 @@ export default function VendorDashboard() {
           </div>
           <div className="mt-4 divide-y divide-line">
             {analytics?.topCustomers.map((c, i) => (
-              <div key={`${c.phone}-${i}`} className="flex items-center justify-between gap-3 py-3">
+              <Link
+                key={`${c.phone}-${i}`}
+                to={`/vendor/manage/customers/${encodeURIComponent(c.phone)}`}
+                className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 hover:bg-sand/50"
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-clay/12 font-mono text-xs font-semibold text-clay">
                     {i + 1}
@@ -165,7 +174,7 @@ export default function VendorDashboard() {
                   </div>
                 </div>
                 <span className="font-mono text-sm font-semibold">{money(c.totalSpent)}</span>
-              </div>
+              </Link>
             ))}
             {(!analytics || analytics.topCustomers.length === 0) && (
               <p className="py-6 text-sm text-muted">No customers yet.</p>
