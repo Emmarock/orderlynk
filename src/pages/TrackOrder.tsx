@@ -14,18 +14,21 @@ export default function TrackOrder() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const resolve = async (fetcher: () => Promise<Order>) => {
+  const resolve = async (fetcher: () => Promise<Order>): Promise<Order | null> => {
     setLoading(true)
     setError(null)
     setOrder(null)
     try {
-      setOrder(await fetcher())
+      const result = await fetcher()
+      setOrder(result)
+      return result
     } catch (err) {
       setError(
         err instanceof ApiError && (err.status === 404 || err.status === 400)
           ? 'No matching order. Double-check your details, or use the link from your confirmation message.'
           : 'Something went wrong. Please try again.',
       )
+      return null
     } finally {
       setLoading(false)
     }
@@ -43,7 +46,13 @@ export default function TrackOrder() {
     const c = params.get('contact')
     if (token) {
       autoRan.current = true
-      void resolve(() => api.trackByToken(token))
+      // Reflect the decoded token back into the form fields so the customer
+      // sees which order/contact resolved, and can re-track manually if needed.
+      void resolve(() => api.trackByToken(token)).then((o) => {
+        if (!o) return
+        setOrderId(o.publicOrderId)
+        setContact(o.customerPhone || o.customerEmail || '')
+      })
     } else if (oid && c) {
       autoRan.current = true
       void runTrack(oid, c)
