@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
-import { money, titleCase } from '../lib/format'
+import { money, titleCase, effectivePrice } from '../lib/format'
 import type { CustomerAddress, FulfillmentType, PaymentMethod, Quote } from '../lib/types'
 import { EmptyState, ErrorNote, Spinner } from '../components/ui'
 
@@ -271,7 +271,7 @@ export default function Checkout() {
                 <span className="text-muted">
                   {l.quantity} × {l.product.name}
                 </span>
-                <span className="font-mono">{money(l.product.price * l.quantity)}</span>
+                <span className="font-mono">{money(effectivePrice(l.product) * l.quantity)}</span>
               </div>
             ))}
           </div>
