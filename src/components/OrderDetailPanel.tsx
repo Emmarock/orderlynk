@@ -3,6 +3,7 @@ import { api } from '../lib/api'
 import type { FulfillmentStatus, Order } from '../lib/types'
 import { titleCase } from '../lib/format'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from './OrderViews'
+import { OrderShippingPanel } from './OrderShippingPanel'
 import { Spinner } from './ui'
 
 /** Full vendor view of a single order: customer + address, items, fees, and status actions. */
@@ -17,7 +18,7 @@ export function OrderDetailPanel({ order, onUpdated }: { order: Order; onUpdated
 
   const addressLines = [
     [order.customerHouseNumber, order.customerStreet].filter(Boolean).join(' '),
-    [order.customerCity, order.customerPostcode].filter(Boolean).join(' '),
+    [order.customerCity, order.customerState, order.customerPostcode].filter(Boolean).join(' '),
     order.customerCountry,
   ].filter((l) => l && l.trim())
 
@@ -94,6 +95,8 @@ export function OrderDetailPanel({ order, onUpdated }: { order: Order; onUpdated
           )}
           <OrderStatusRow order={order} />
         </div>
+
+        {order.fulfillmentType === 'DOMESTIC_SHIPPING' && <OrderShippingPanel order={order} />}
       </div>
     </div>
   )

@@ -4,7 +4,7 @@ import { api, ApiError } from '../lib/api'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { money, titleCase, effectivePrice } from '../lib/format'
-import type { CustomerAddress, FulfillmentType, PaymentMethod, Quote } from '../lib/types'
+import type { CustomerAddress, FulfillmentType, PaymentMethod, Quote, RateOption } from '../lib/types'
 import { EmptyState, ErrorNote, Spinner } from '../components/ui'
 
 const PAYMENT_METHODS: PaymentMethod[] = ['INTERAC_ETRANSFER', 'CARD', 'BANK_TRANSFER', 'CASH']
@@ -26,6 +26,7 @@ export default function Checkout() {
     customerHouseNumber: '',
     customerStreet: '',
     customerCity: '',
+    customerState: '',
     customerPostcode: '',
     customerCountry: '',
     notes: '',
@@ -37,6 +38,18 @@ export default function Checkout() {
   const [error, setError] = useState<string | null>(null)
   const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[]>([])
   const [saveAddress, setSaveAddress] = useState(false)
+
+  // Live carrier shipping options (only for DOMESTIC_SHIPPING).
+  const [shippingRates, setShippingRates] = useState<RateOption[] | null>(null)
+  const [ratesLoading, setRatesLoading] = useState(false)
+  const [ratesError, setRatesError] = useState<string | null>(null)
+  const [selectedRateToken, setSelectedRateToken] = useState<string>('')
+
+  const isShipping = fulfillmentType === 'DOMESTIC_SHIPPING'
+  // Enough of a destination to ask a carrier for rates.
+  const destinationReady =
+    form.customerCountry.trim() !== '' &&
+    (form.customerPostcode.trim() !== '' || form.customerCity.trim() !== '')
 
   useEffect(() => {
     if (fulfillmentOptions.length === 1) setFulfillmentType(fulfillmentOptions[0])
@@ -59,11 +72,13 @@ export default function Checkout() {
       customerHouseNumber: a.address.houseNumber ?? '',
       customerStreet: a.address.street ?? '',
       customerCity: a.address.city ?? '',
+      customerState: a.address.state ?? '',
       customerPostcode: a.address.postcode ?? '',
       customerCountry: a.address.country ?? '',
     }))
 
-  // Live fee quote whenever fulfillment / payment / cart changes.
+  // Live fee quote whenever fulfillment / payment / cart / chosen shipping rate changes.
+  // The address is read at call time; for shipping the total updates when a rate is selected.
   useEffect(() => {
     if (!cart || !fulfillmentType) {
       setQuote(null)
@@ -74,9 +89,70 @@ export default function Checkout() {
       items: cart.lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
       fulfillmentType,
       paymentMethod,
+      customerHouseNumber: form.customerHouseNumber || undefined,
+      customerStreet: form.customerStreet || undefined,
+      customerCity: form.customerCity || undefined,
+      customerState: form.customerState || undefined,
+      customerPostcode: form.customerPostcode || undefined,
+      customerCountry: form.customerCountry || undefined,
+      customerName: form.customerName || undefined,
+      customerPhone: form.customerPhone || undefined,
+      customerEmail: form.customerEmail || undefined,
+      shippingServiceToken: selectedRateToken || undefined,
     }
     api.quote(body).then(setQuote).catch(() => setQuote(null))
-  }, [cart, fulfillmentType, paymentMethod])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, fulfillmentType, paymentMethod, selectedRateToken])
+
+  // Fetch live carrier rates for shipping orders, debounced on destination changes.
+  useEffect(() => {
+    if (!cart || !isShipping || !destinationReady) {
+      setShippingRates(null)
+      setRatesError(null)
+      setSelectedRateToken('')
+      return
+    }
+    setRatesLoading(true)
+    setRatesError(null)
+    const handle = setTimeout(() => {
+      api
+        .shippingRates({
+          vendorId: cart.vendorId,
+          items: cart.lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
+          destination: {
+            houseNumber: form.customerHouseNumber || undefined,
+            street: form.customerStreet || undefined,
+            city: form.customerCity || undefined,
+            state: form.customerState || undefined,
+            postcode: form.customerPostcode || undefined,
+            country: form.customerCountry || undefined,
+          },
+          customerName: form.customerName || undefined,
+          customerPhone: form.customerPhone || undefined,
+          customerEmail: form.customerEmail || undefined,
+        })
+        .then((res) => {
+          setShippingRates(res.rates)
+          // Auto-select the cheapest (rates arrive sorted by price) so the total reflects a real rate.
+          setSelectedRateToken((cur) =>
+            res.rates.some((r) => r.serviceToken === cur) ? cur : res.rates[0]?.serviceToken ?? '',
+          )
+          if (res.rates.length === 0) setRatesError('No carrier rates for this destination — a flat fee applies.')
+        })
+        .catch(() => {
+          setShippingRates([])
+          setSelectedRateToken('')
+          setRatesError('Live rates are unavailable right now — a flat shipping fee will apply.')
+        })
+        .finally(() => setRatesLoading(false))
+    }, 600)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    cart, isShipping, destinationReady,
+    form.customerHouseNumber, form.customerStreet, form.customerCity,
+    form.customerState, form.customerPostcode, form.customerCountry,
+  ])
 
   if (!cart || cart.lines.length === 0) {
     return (
@@ -104,12 +180,14 @@ export default function Checkout() {
         customerHouseNumber: form.customerHouseNumber || undefined,
         customerStreet: form.customerStreet || undefined,
         customerCity: form.customerCity || undefined,
+        customerState: form.customerState || undefined,
         customerPostcode: form.customerPostcode || undefined,
         customerCountry: form.customerCountry || undefined,
         fulfillmentType,
         paymentMethod,
         sourceChannel: 'MARKETPLACE',
         notes: form.notes || undefined,
+        shippingServiceToken: isShipping ? selectedRateToken || undefined : undefined,
       })
       // Optionally save the entered address to the customer's address book (best-effort).
       if (saveAddress && user) {
@@ -119,6 +197,7 @@ export default function Checkout() {
               houseNumber: form.customerHouseNumber || undefined,
               street: form.customerStreet || undefined,
               city: form.customerCity || undefined,
+              state: form.customerState || undefined,
               postcode: form.customerPostcode || undefined,
               country: form.customerCountry || undefined,
             },
@@ -201,10 +280,14 @@ export default function Checkout() {
                 <input className="field" value={form.customerCity} onChange={set('customerCity')} />
               </div>
               <div>
+                <label className="label">State / province</label>
+                <input className="field" placeholder="e.g. MB" value={form.customerState} onChange={set('customerState')} />
+              </div>
+              <div>
                 <label className="label">Postcode</label>
                 <input className="field" value={form.customerPostcode} onChange={set('customerPostcode')} />
               </div>
-              <div className="sm:col-span-2">
+              <div>
                 <label className="label">Country</label>
                 <input className="field" value={form.customerCountry} onChange={set('customerCountry')} />
               </div>
@@ -238,6 +321,59 @@ export default function Checkout() {
               ))}
             </div>
           </section>
+
+          {/* Shipping options (live carrier rates) */}
+          {isShipping && (
+            <section className="card p-6">
+              <h2 className="font-display text-xl font-semibold">Shipping options</h2>
+              {!destinationReady ? (
+                <p className="mt-2 text-sm text-muted">
+                  Enter your delivery address (at least country and city or postcode) to see live carrier rates.
+                </p>
+              ) : ratesLoading ? (
+                <p className="mt-3 flex items-center gap-2 text-sm text-muted"><Spinner /> Fetching carrier rates…</p>
+              ) : shippingRates && shippingRates.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {shippingRates.map((r) => (
+                    <label
+                      key={r.serviceToken || r.rateId}
+                      className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border p-3 transition-colors ${
+                        selectedRateToken === r.serviceToken ? 'border-clay bg-clay/8' : 'border-line bg-cream hover:border-ink/30'
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="shipping-rate"
+                          checked={selectedRateToken === r.serviceToken}
+                          onChange={() => setSelectedRateToken(r.serviceToken)}
+                        />
+                        {r.providerImageUrl && (
+                          <img src={r.providerImageUrl} alt={r.carrier} className="h-6 w-6 object-contain" />
+                        )}
+                        <span>
+                          <span className="block font-medium">{r.carrier} · {r.serviceLevel}</span>
+                          <span className="block text-xs text-muted">
+                            {r.estimatedDays != null
+                              ? `Est. ${r.estimatedDays} day${r.estimatedDays === 1 ? '' : 's'}`
+                              : r.durationTerms || 'Delivery estimate at carrier'}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="font-mono font-semibold">{money(r.amount, r.currency)}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-muted">
+                  {ratesError ?? 'No live rates available — a flat shipping fee will apply.'}
+                </p>
+              )}
+              {ratesError && shippingRates && shippingRates.length > 0 && (
+                <p className="mt-2 text-xs text-muted">{ratesError}</p>
+              )}
+            </section>
+          )}
 
           {/* Payment */}
           <section className="card p-6">
@@ -279,7 +415,14 @@ export default function Checkout() {
           {quote ? (
             <div className="space-y-2 text-sm">
               <Row label="Product subtotal" value={money(quote.productSubtotal)} />
-              <Row label="Logistics fee" value={money(quote.logisticsFee)} />
+              <Row
+                label={
+                  quote.liveShippingRate && quote.shippingCarrier
+                    ? `Shipping (${quote.shippingCarrier}${quote.shippingService ? ' · ' + quote.shippingService : ''})`
+                    : 'Logistics fee'
+                }
+                value={money(quote.logisticsFee)}
+              />
               <Row label="Platform fee" value={money(quote.platformFee)} />
               <Row label="Processing fee" value={money(quote.processingFee)} />
               <div className="mt-3 flex justify-between border-t border-line pt-3 text-base font-semibold">

@@ -56,6 +56,10 @@ export type ProductCategory =
 
 export type SourceChannel = 'WHATSAPP' | 'INSTAGRAM' | 'MARKETPLACE' | 'VENDOR_LINK' | 'MANUAL'
 
+export type WeightUnit = 'G' | 'KG' | 'OZ' | 'LB'
+
+export type DimensionUnit = 'MM' | 'CM' | 'M' | 'IN' | 'FT' | 'YD'
+
 export interface AuthResponse {
   token: string | null
   userId: string
@@ -70,6 +74,7 @@ export interface Address {
   houseNumber?: string
   street?: string
   city?: string
+  state?: string
   postcode?: string
   country?: string
 }
@@ -88,6 +93,7 @@ export interface Vendor {
   houseNumber?: string
   street?: string
   city?: string
+  state?: string
   postcode?: string
   country?: string
   whatsappNumber?: string
@@ -197,6 +203,12 @@ export interface Product {
   productImageUrl?: string
   fulfillmentType: FulfillmentType
   originCountry?: string
+  weight?: number | null
+  weightUnit: WeightUnit
+  length?: number | null
+  width?: number | null
+  height?: number | null
+  dimensionUnit: DimensionUnit
   availableNow: boolean
   batchId?: string
   active: boolean
@@ -232,6 +244,7 @@ export interface Order {
   customerHouseNumber?: string
   customerStreet?: string
   customerCity?: string
+  customerState?: string
   customerPostcode?: string
   customerCountry?: string
   vendorId: string
@@ -267,6 +280,74 @@ export interface Quote {
   processingFee: number
   totalAmount: number
   currency: string
+  /** True when logisticsFee came from a live carrier rate (vs the flat per-fulfillment fee). */
+  liveShippingRate: boolean
+  shippingCarrier?: string | null
+  shippingService?: string | null
+  shippingServiceToken?: string | null
+  shippingEstimatedDays?: number | null
+}
+
+/** One selectable carrier rate option for shipping. Select by serviceToken. */
+export interface RateOption {
+  rateId: string
+  carrier: string
+  serviceLevel: string
+  serviceToken: string
+  amount: number
+  currency: string
+  estimatedDays?: number | null
+  durationTerms?: string | null
+  providerImageUrl?: string | null
+}
+
+export interface RateQuoteResponse {
+  currency: string
+  rates: RateOption[]
+}
+
+export type ShipmentStatus =
+  | 'RATED'
+  | 'PURCHASED'
+  | 'IN_TRANSIT'
+  | 'DELIVERED'
+  | 'RETURNED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'UNKNOWN'
+
+export interface Shipment {
+  id: string
+  orderId: string
+  provider: string
+  status: ShipmentStatus
+  carrier?: string | null
+  serviceLevel?: string | null
+  serviceToken?: string | null
+  amount?: number | null
+  currency?: string | null
+  estimatedDays?: number | null
+  trackingNumber?: string | null
+  trackingUrl?: string | null
+  labelUrl?: string | null
+  trackingStatusDetail?: string | null
+  eta?: string | null
+  createdAt: string
+}
+
+export interface TrackingEvent {
+  status: ShipmentStatus
+  statusDetails?: string | null
+  location?: string | null
+  occurredAt?: string | null
+}
+
+export interface TrackingResponse {
+  carrier?: string | null
+  trackingNumber?: string | null
+  status: ShipmentStatus
+  eta?: string | null
+  events: TrackingEvent[]
 }
 
 export interface Payout {

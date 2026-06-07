@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError } from '../../lib/api'
-import type { FulfillmentType, Product, ProductCategory } from '../../lib/types'
+import type { DimensionUnit, FulfillmentType, Product, ProductCategory, WeightUnit } from '../../lib/types'
 import { money, titleCase } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
 import { EmptyState, ErrorNote, PageLoader, Spinner } from '../../components/ui'
@@ -11,6 +11,8 @@ const CATEGORIES: ProductCategory[] = [
 const FULFILLMENT: FulfillmentType[] = [
   'LOCAL_PICKUP', 'LOCAL_DELIVERY', 'DOMESTIC_SHIPPING', 'IMPORT_BATCH',
 ]
+const WEIGHT_UNITS: WeightUnit[] = ['G', 'KG', 'OZ', 'LB']
+const DIMENSION_UNITS: DimensionUnit[] = ['CM', 'IN', 'MM', 'M', 'FT', 'YD']
 
 interface FormState {
   name: string
@@ -23,6 +25,12 @@ interface FormState {
   productImageUrl: string
   fulfillmentType: FulfillmentType
   originCountry: string
+  weight: string
+  weightUnit: WeightUnit
+  length: string
+  width: string
+  height: string
+  dimensionUnit: DimensionUnit
 }
 
 const EMPTY: FormState = {
@@ -36,6 +44,17 @@ const EMPTY: FormState = {
   productImageUrl: '',
   fulfillmentType: 'LOCAL_PICKUP',
   originCountry: '',
+  weight: '',
+  weightUnit: 'G',
+  length: '',
+  width: '',
+  height: '',
+  dimensionUnit: 'CM',
+}
+
+const numOrUndefined = (v: string): number | undefined => {
+  const n = Number(v)
+  return v.trim() === '' || Number.isNaN(n) ? undefined : n
 }
 
 function fromProduct(p: Product): FormState {
@@ -50,6 +69,12 @@ function fromProduct(p: Product): FormState {
     productImageUrl: p.productImageUrl ?? '',
     fulfillmentType: p.fulfillmentType,
     originCountry: p.originCountry ?? '',
+    weight: p.weight != null ? String(p.weight) : '',
+    weightUnit: p.weightUnit ?? 'G',
+    length: p.length != null ? String(p.length) : '',
+    width: p.width != null ? String(p.width) : '',
+    height: p.height != null ? String(p.height) : '',
+    dimensionUnit: p.dimensionUnit ?? 'CM',
   }
 }
 
@@ -122,6 +147,12 @@ function ProductForm({
       productImageUrl: form.productImageUrl || undefined,
       fulfillmentType: form.fulfillmentType,
       originCountry: form.originCountry || undefined,
+      weight: numOrUndefined(form.weight),
+      weightUnit: form.weightUnit,
+      length: numOrUndefined(form.length),
+      width: numOrUndefined(form.width),
+      height: numOrUndefined(form.height),
+      dimensionUnit: form.dimensionUnit,
     }
     try {
       if (initial) await api.updateProduct(initial.id, body)
@@ -234,6 +265,54 @@ function ProductForm({
               <input className="field" value={form.originCountry} onChange={set('originCountry')} />
             </div>
           </div>
+
+          {/* Shipping: weight & packed dimensions per item — used to calculate live carrier rates. */}
+          <div className="rounded-xl border border-line bg-sand/40 p-4">
+            <div className="flex items-center justify-between">
+              <p className="label !mb-0">Shipping size &amp; weight</p>
+              <span className="text-xs text-muted">Per item — powers live shipping rates</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-4">
+              <div>
+                <label className="label">Weight</label>
+                <input className="field" type="number" step="0.01" min="0" placeholder="0.00"
+                       value={form.weight} onChange={set('weight')} />
+              </div>
+              <div>
+                <label className="label">Weight unit</label>
+                <select className="field" value={form.weightUnit} onChange={set('weightUnit')}>
+                  {WEIGHT_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-4 gap-3">
+              <div>
+                <label className="label">Length</label>
+                <input className="field" type="number" step="0.01" min="0" placeholder="L"
+                       value={form.length} onChange={set('length')} />
+              </div>
+              <div>
+                <label className="label">Width</label>
+                <input className="field" type="number" step="0.01" min="0" placeholder="W"
+                       value={form.width} onChange={set('width')} />
+              </div>
+              <div>
+                <label className="label">Height</label>
+                <input className="field" type="number" step="0.01" min="0" placeholder="H"
+                       value={form.height} onChange={set('height')} />
+              </div>
+              <div>
+                <label className="label">Unit</label>
+                <select className="field" value={form.dimensionUnit} onChange={set('dimensionUnit')}>
+                  {DIMENSION_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted">
+              Optional, but recommended for shipped products — leave blank to use a default parcel size.
+            </p>
+          </div>
+
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>

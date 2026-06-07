@@ -9,10 +9,13 @@ import type {
   Payout,
   Product,
   Quote,
+  RateQuoteResponse,
   RatingSummary,
   ShareLink,
+  Shipment,
   Storefront,
   SupportTicket,
+  TrackingResponse,
   Vendor,
   VendorAnalytics,
 } from './types'
@@ -116,6 +119,9 @@ export const api = {
   // ---- orders (public) ----
   quote: (b: unknown) => request<Quote>('POST', '/api/orders/quote', b),
   checkout: (b: unknown) => request<Order>('POST', '/api/orders', b),
+
+  // ---- shipping (public live rates for the cart) ----
+  shippingRates: (b: unknown) => request<RateQuoteResponse>('POST', '/api/shipping/rates', b),
   track: (orderId: string, contact: string) =>
     request<Order>('POST', '/api/orders/track', { orderId, contact }),
   trackByToken: (token: string) => request<Order>('POST', '/api/orders/track-token', { token }),
@@ -187,6 +193,16 @@ export const api = {
     request<SupportTicket>('POST', '/api/vendor/support', b),
   updateFulfillment: (id: string, status: string, note?: string) =>
     request<Order>('PATCH', `/api/vendor/orders/${id}/fulfillment`, { status, note }),
+  // ---- vendor shipping (labels + tracking) ----
+  // Current shipment for an order; rejects with a 404 ApiError when none exists yet.
+  shippingShipment: (orderId: string) =>
+    request<Shipment>('GET', `/api/shipping/vendor/orders/${orderId}`),
+  shippingOrderRates: (orderId: string) =>
+    request<RateQuoteResponse>('GET', `/api/shipping/vendor/orders/${orderId}/rates`),
+  buyShippingLabel: (orderId: string, rateId?: string) =>
+    request<Shipment>('POST', `/api/shipping/vendor/orders/${orderId}/label`, { rateId }),
+  refreshShippingTracking: (orderId: string) =>
+    request<TrackingResponse>('POST', `/api/shipping/vendor/orders/${orderId}/tracking/refresh`),
   vendorUpdatePayment: (id: string, b: unknown) =>
     request<Order>('PATCH', `/api/vendor/orders/${id}/payment`, b),
   vendorPayouts: () => request<Payout[]>('GET', '/api/vendor/payouts'),

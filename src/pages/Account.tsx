@@ -191,7 +191,7 @@ function OrderHistory() {
   )
 }
 
-const EMPTY_ADDR = { label: '', houseNumber: '', street: '', city: '', postcode: '', country: '' }
+const EMPTY_ADDR = { label: '', houseNumber: '', street: '', city: '', state: '', postcode: '', country: '' }
 
 function AddressBook() {
   const [addresses, setAddresses] = useState<CustomerAddress[] | null>(null)
@@ -216,6 +216,7 @@ function AddressBook() {
           houseNumber: form.houseNumber || undefined,
           street: form.street || undefined,
           city: form.city || undefined,
+          state: form.state || undefined,
           postcode: form.postcode || undefined,
           country: form.country || undefined,
         },
@@ -283,6 +284,7 @@ function AddressBook() {
             <input className="field" placeholder="House / flat number" value={form.houseNumber} onChange={set('houseNumber')} />
             <input className="field" placeholder="Street" value={form.street} onChange={set('street')} />
             <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
+            <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
             <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
             <input className="field" placeholder="Country" value={form.country} onChange={set('country')} />
           </div>
