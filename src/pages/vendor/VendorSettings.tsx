@@ -5,6 +5,7 @@ import type { FulfillmentType, Vendor } from '../../lib/types'
 import { titleCase } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
 import { ErrorNote, PageLoader, Spinner } from '../../components/ui'
+import StripeOnboardingCard from '../../components/StripeOnboardingCard'
 
 const FULFILLMENT: FulfillmentType[] = ['LOCAL_PICKUP', 'LOCAL_DELIVERY', 'DOMESTIC_SHIPPING', 'IMPORT_BATCH']
 const PAYOUT_METHODS = ['INTERAC', 'BANK_TRANSFER', 'OTHER']
@@ -263,7 +264,10 @@ export default function VendorSettings() {
           <Field label="Confirm new password"><input className="field" type="password" required autoComplete="new-password" value={pwd.confirm} onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })} /></Field>
         </SettingsCard>
 
-        {/* Payout information */}
+        {/* Stripe Connect onboarding — accept card payments */}
+        <StripeOnboardingCard />
+
+        {/* Payout information (legacy manual payout details; Stripe handles card payouts automatically) */}
         <SettingsCard
           title="Payment / payout information"
           desc="Where OrderLynk sends your payouts."

@@ -25,6 +25,7 @@ import VendorCustomerDetail from './pages/vendor/VendorCustomerDetail'
 import VendorEarnings from './pages/vendor/VendorEarnings'
 import VendorSettings from './pages/vendor/VendorSettings'
 import VendorSupport from './pages/vendor/VendorSupport'
+import VendorOnboardingReturn from './pages/vendor/VendorOnboardingReturn'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminVendors from './pages/admin/AdminVendors'
 import AdminOrders from './pages/admin/AdminOrders'
@@ -133,6 +134,22 @@ export default function App() {
           element={
             <ProtectedRoute role="VENDOR">
               <VendorSupport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/onboarding/complete"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorOnboardingReturn />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/onboarding/refresh"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorOnboardingReturn />
             </ProtectedRoute>
           }
         />

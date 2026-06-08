@@ -7,7 +7,9 @@ import { CopyOrderId, EmptyState } from '../components/ui'
 export default function OrderConfirmation() {
   const { orderId } = useParams()
   const location = useLocation()
-  const order = (location.state as { order?: Order } | null)?.order
+  const state = location.state as { order?: Order; paid?: boolean } | null
+  const order = state?.order
+  const paid = state?.paid === true
 
   if (!order) {
     return (
@@ -35,7 +37,14 @@ export default function OrderConfirmation() {
       </motion.div>
 
       <div className="mt-5 text-center">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Order placed!</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">
+          {paid ? 'Payment received!' : 'Order placed!'}
+        </h1>
+        {paid && (
+          <span className="mt-3 inline-block rounded-full bg-forest/10 px-3 py-1 text-xs font-medium text-forest">
+            ✓ Card payment confirmed
+          </span>
+        )}
         <p className="mt-2 text-muted">
           Thank you, {order.customerName.split(' ')[0]}. {order.vendorName} has received your order.
         </p>
@@ -61,7 +70,9 @@ export default function OrderConfirmation() {
             <div className="mt-3"><OrderFeeBreakdown order={order} /></div>
             <div className="mt-4"><PaymentInstructionsCard order={order} /></div>
             <p className="mt-4 rounded-xl bg-sand p-3 text-xs text-muted">
-              The vendor will confirm your payment. You'll be notified when your order is ready.
+              {paid
+                ? "Your payment is complete. You'll be notified when your order is ready."
+                : "The vendor will confirm your payment. You'll be notified when your order is ready."}
             </p>
           </div>
         </div>

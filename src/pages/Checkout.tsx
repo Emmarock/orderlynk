@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { api, ApiError } from '../lib/api'
+import { stripePromise } from '../lib/stripe'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { money, titleCase, effectivePrice } from '../lib/format'
-import type { CustomerAddress, FulfillmentType, PaymentMethod, Quote, RateOption } from '../lib/types'
+import type { CustomerAddress, FulfillmentType, Order, PaymentMethod, Quote, RateOption } from '../lib/types'
 import { EmptyState, ErrorNote, Spinner } from '../components/ui'
 
-const PAYMENT_METHODS: PaymentMethod[] = ['INTERAC_ETRANSFER', 'CARD', 'BANK_TRANSFER', 'CASH']
+// Customers either pay by card (collected via Stripe at checkout) or by bank
+// transfer / e-Transfer (the vendor's details are shown after the order is placed).
+const TRANSFER_METHOD: PaymentMethod = 'BANK_TRANSFER'
 
 export default function Checkout() {
   const { cart, clear } = useCart()
@@ -32,12 +36,15 @@ export default function Checkout() {
     notes: '',
   })
   const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType | ''>('')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('INTERAC_ETRANSFER')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CARD')
   const [quote, setQuote] = useState<Quote | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[]>([])
   const [saveAddress, setSaveAddress] = useState(false)
+
+  // Once the order is created we move to the card-payment phase.
+  const [payOrder, setPayOrder] = useState<Order | null>(null)
 
   // Live carrier shipping options (only for DOMESTIC_SHIPPING).
   const [shippingRates, setShippingRates] = useState<RateOption[] | null>(null)
@@ -46,7 +53,6 @@ export default function Checkout() {
   const [selectedRateToken, setSelectedRateToken] = useState<string>('')
 
   const isShipping = fulfillmentType === 'DOMESTIC_SHIPPING'
-  // Enough of a destination to ask a carrier for rates.
   const destinationReady =
     form.customerCountry.trim() !== '' &&
     (form.customerPostcode.trim() !== '' || form.customerCity.trim() !== '')
@@ -55,7 +61,6 @@ export default function Checkout() {
     if (fulfillmentOptions.length === 1) setFulfillmentType(fulfillmentOptions[0])
   }, [fulfillmentOptions])
 
-  // Logged-in customers: load saved addresses and prefill with their default.
   useEffect(() => {
     if (!user) return
     api.customerAddresses().then((list) => {
@@ -77,8 +82,7 @@ export default function Checkout() {
       customerCountry: a.address.country ?? '',
     }))
 
-  // Live fee quote whenever fulfillment / payment / cart / chosen shipping rate changes.
-  // The address is read at call time; for shipping the total updates when a rate is selected.
+  // Live fee quote whenever fulfillment / cart / chosen shipping rate changes.
   useEffect(() => {
     if (!cart || !fulfillmentType) {
       setQuote(null)
@@ -133,7 +137,6 @@ export default function Checkout() {
         })
         .then((res) => {
           setShippingRates(res.rates)
-          // Auto-select the cheapest (rates arrive sorted by price) so the total reflects a real rate.
           setSelectedRateToken((cur) =>
             res.rates.some((r) => r.serviceToken === cur) ? cur : res.rates[0]?.serviceToken ?? '',
           )
@@ -189,7 +192,6 @@ export default function Checkout() {
         notes: form.notes || undefined,
         shippingServiceToken: isShipping ? selectedRateToken || undefined : undefined,
       })
-      // Optionally save the entered address to the customer's address book (best-effort).
       if (saveAddress && user) {
         try {
           await api.addCustomerAddress({
@@ -203,10 +205,18 @@ export default function Checkout() {
             },
             makeDefault: savedAddresses.length === 0,
           })
-        } catch { /* don't block the order on address-book save */ }
+        } catch { /* don't block on address-book save */ }
       }
-      clear()
-      navigate(`/order/${order.publicOrderId}`, { state: { order } })
+
+      if (order.clientSecret) {
+        // Move to the card-payment step (cart is cleared only on success).
+        setPayOrder(order)
+        setSubmitting(false)
+      } else {
+        // Payment not initiated (payment-service disabled) — fall back to the legacy flow.
+        clear()
+        navigate(`/order/${order.publicOrderId}`, { state: { order } })
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Checkout failed. Please try again.')
       setSubmitting(false)
@@ -215,6 +225,38 @@ export default function Checkout() {
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const onPaid = () => {
+    clear()
+    // The order was created before payment, so its status is still PENDING. Mark it
+    // PAID for the confirmation page so the badge is correct and the transfer
+    // instructions (only shown while payment is outstanding) stay hidden.
+    const paidOrder: Order = { ...payOrder!, paymentStatus: 'PAID' }
+    navigate(`/order/${paidOrder.publicOrderId}`, { state: { order: paidOrder, paid: true } })
+  }
+
+  // ---- Payment phase: collect the card with Stripe's Payment Element ----
+  if (payOrder && payOrder.clientSecret) {
+    return (
+      <div className="mx-auto max-w-2xl px-5 py-10">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Payment</h1>
+        <p className="mt-1 text-muted">Order {payOrder.publicOrderId} · {cart.vendorName}</p>
+        <div className="card mt-6 p-6">
+          <div className="mb-4 flex items-baseline justify-between">
+            <span className="text-muted">Amount due</span>
+            <span className="font-mono text-xl font-semibold">{money(payOrder.totalAmount, payOrder.currency)}</span>
+          </div>
+          {stripePromise ? (
+            <Elements stripe={stripePromise} options={{ clientSecret: payOrder.clientSecret, appearance: { theme: 'stripe' } }}>
+              <PaymentForm onPaid={onPaid} amountLabel={money(payOrder.totalAmount, payOrder.currency)} orderId={payOrder.publicOrderId} />
+            </Elements>
+          ) : (
+            <ErrorNote message="Card payments are not configured (missing VITE_STRIPE_PUBLISHABLE_KEY)." />
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10">
@@ -375,25 +417,35 @@ export default function Checkout() {
             </section>
           )}
 
-          {/* Payment */}
+          {/* Payment — choose card (Stripe) or bank transfer / e-Transfer */}
           <section className="card p-6">
-            <h2 className="font-display text-xl font-semibold">Payment method</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {PAYMENT_METHODS.map((m) => (
-                <button
-                  type="button"
-                  key={m}
-                  onClick={() => setPaymentMethod(m)}
-                  className={`chip border px-4 py-2 ${
-                    paymentMethod === m ? 'border-clay bg-clay/10 text-clay-dark' : 'border-line text-muted'
-                  }`}
-                >
-                  {titleCase(m)}
-                </button>
-              ))}
+            <h2 className="font-display text-xl font-semibold">Payment</h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('CARD')}
+                className={`rounded-xl border p-4 text-left transition-colors ${
+                  paymentMethod === 'CARD' ? 'border-clay bg-clay/8' : 'border-line bg-cream hover:border-ink/30'
+                }`}
+              >
+                <p className="font-medium">Pay by card</p>
+                <p className="text-xs text-muted">Secure card payment via Stripe</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod(TRANSFER_METHOD)}
+                className={`rounded-xl border p-4 text-left transition-colors ${
+                  paymentMethod === TRANSFER_METHOD ? 'border-clay bg-clay/8' : 'border-line bg-cream hover:border-ink/30'
+                }`}
+              >
+                <p className="font-medium">Bank transfer / e-Transfer</p>
+                <p className="text-xs text-muted">Pay the vendor directly with the details shown after you order</p>
+              </button>
             </div>
-            <p className="mt-3 text-xs text-muted">
-              Payment is confirmed by the vendor after you place the order. Card &amp; Stripe add a processing fee.
+            <p className="mt-3 text-sm text-muted">
+              {paymentMethod === 'CARD'
+                ? 'You’ll pay securely by card on the next step. Powered by Stripe — we never see your card details.'
+                : 'After you place the order we’ll show the vendor’s transfer details. The vendor confirms once your payment arrives.'}
             </p>
           </section>
         </div>
@@ -439,11 +491,49 @@ export default function Checkout() {
           {error && <div className="mt-4"><ErrorNote message={error} /></div>}
 
           <button type="submit" disabled={submitting || !quote} className="btn-primary mt-6 w-full">
-            {submitting ? <Spinner /> : 'Place order'}
+            {submitting ? <Spinner /> : paymentMethod === 'CARD' ? 'Continue to payment' : 'Place order'}
           </button>
         </aside>
       </form>
     </div>
+  )
+}
+
+/** Stripe Payment Element + confirm. Must render inside <Elements>. */
+function PaymentForm({ onPaid, amountLabel, orderId }: { onPaid: () => void; amountLabel: string; orderId: string }) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const pay = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!stripe || !elements) return
+    setBusy(true)
+    setError(null)
+    const { error: err } = await stripe.confirmPayment({
+      elements,
+      // For card payments this resolves inline; methods needing a redirect use this URL.
+      confirmParams: { return_url: `${window.location.origin}/order/${orderId}` },
+      redirect: 'if_required',
+    })
+    if (err) {
+      setError(err.message ?? 'Payment failed. Please try another card.')
+      setBusy(false)
+      return
+    }
+    onPaid()
+  }
+
+  return (
+    <form onSubmit={pay} className="space-y-5">
+      <PaymentElement />
+      {error && <ErrorNote message={error} />}
+      <button type="submit" disabled={!stripe || busy} className="btn-primary w-full">
+        {busy ? <Spinner /> : `Pay ${amountLabel}`}
+      </button>
+      <p className="text-center text-xs text-muted">Secured by Stripe</p>
+    </form>
   )
 }
 

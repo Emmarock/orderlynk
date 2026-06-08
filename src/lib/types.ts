@@ -271,6 +271,26 @@ export interface Order {
   createdAt: string
   paymentInstructions?: PaymentInstructions | null
   trackToken?: string | null
+  // Present only on the checkout response when card payment is initiated.
+  clientSecret?: string | null
+  paymentReference?: string | null
+}
+
+/** Vendor Stripe Connect onboarding/capability state (from /api/vendor/connect/status). */
+export interface ConnectStatus {
+  vendorId: string | null
+  accountId: string | null
+  chargesEnabled: boolean
+  payoutsEnabled: boolean
+  detailsSubmitted: boolean
+  canReceiveFunds: boolean
+}
+
+/** Result of starting onboarding (/api/vendor/connect/onboard). */
+export interface OnboardingResult {
+  url: string
+  expiresAt?: string | null
+  account: ConnectStatus
 }
 
 export interface Quote {

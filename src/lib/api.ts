@@ -2,9 +2,11 @@ import type {
   Address,
   AuthResponse,
   BroadcastResult,
+  ConnectStatus,
   CustomerAddress,
   CustomerSummary,
   EarningsSummary,
+  OnboardingResult,
   Order,
   Payout,
   Product,
@@ -206,6 +208,10 @@ export const api = {
   vendorUpdatePayment: (id: string, b: unknown) =>
     request<Order>('PATCH', `/api/vendor/orders/${id}/payment`, b),
   vendorPayouts: () => request<Payout[]>('GET', '/api/vendor/payouts'),
+  // ---- vendor Stripe Connect onboarding ----
+  vendorConnectStatus: () => request<ConnectStatus>('GET', '/api/vendor/connect/status'),
+  vendorConnectRefresh: () => request<ConnectStatus>('POST', '/api/vendor/connect/refresh'),
+  vendorConnectOnboard: () => request<OnboardingResult>('POST', '/api/vendor/connect/onboard'),
 
   // ---- admin ----
   adminVendors: (status?: string) =>
