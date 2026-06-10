@@ -86,6 +86,12 @@ export interface CustomerAddress {
   isDefault: boolean
 }
 
+// An address-autocomplete suggestion: the structured parts plus a display label and 0–1 confidence.
+export interface AddressSuggestion extends Address {
+  formatted: string
+  confidence?: number
+}
+
 export interface Vendor {
   id: string
   businessName: string

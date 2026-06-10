@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { formatDate, money, titleCase } from '../lib/format'
 import { OrderStatusRow } from '../components/OrderViews'
 import { ErrorNote, Rail, Spinner } from '../components/ui'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 export default function Account() {
   const { user } = useAuth()
@@ -279,6 +280,23 @@ function AddressBook() {
 
         <form onSubmit={add} className="mt-6 border-t border-line pt-5">
           <h3 className="text-sm font-semibold">Add an address</h3>
+          <div className="mt-3">
+            <AddressAutocomplete
+              label=""
+              country={form.country || 'Canada'}
+              onSelect={(addr) =>
+                setForm((f) => ({
+                  ...f,
+                  houseNumber: addr.houseNumber ?? '',
+                  street: addr.street ?? '',
+                  city: addr.city ?? '',
+                  state: addr.state ?? '',
+                  postcode: addr.postcode ?? '',
+                  country: addr.country ?? '',
+                }))
+              }
+            />
+          </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <input className="field" placeholder="Label (e.g. Home)" value={form.label} onChange={set('label')} />
             <input className="field" placeholder="House / flat number" value={form.houseNumber} onChange={set('houseNumber')} />

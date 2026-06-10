@@ -6,6 +6,7 @@ import { titleCase } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
 import { ErrorNote, PageLoader, Spinner } from '../../components/ui'
 import StripeOnboardingCard from '../../components/StripeOnboardingCard'
+import AddressAutocomplete from '../../components/AddressAutocomplete'
 
 const FULFILLMENT: FulfillmentType[] = ['LOCAL_PICKUP', 'LOCAL_DELIVERY', 'DOMESTIC_SHIPPING', 'IMPORT_BATCH']
 const PAYOUT_METHODS = ['INTERAC', 'BANK_TRANSFER', 'OTHER']
@@ -183,6 +184,20 @@ export default function VendorSettings() {
           <Field label="Business name"><input className="field" value={biz.businessName} onChange={(e) => setBiz({ ...biz, businessName: e.target.value })} /></Field>
           <Field label="Description"><textarea className="field min-h-20" value={biz.description} onChange={(e) => setBiz({ ...biz, description: e.target.value })} /></Field>
           <p className="label !mb-1 !mt-2">Business address</p>
+          <AddressAutocomplete
+            country={biz.country || 'Canada'}
+            onSelect={(addr) =>
+              setBiz({
+                ...biz,
+                houseNumber: addr.houseNumber ?? '',
+                street: addr.street ?? '',
+                city: addr.city ?? '',
+                state: addr.state ?? '',
+                postcode: addr.postcode ?? '',
+                country: addr.country ?? '',
+              })
+            }
+          />
           <div className="grid grid-cols-2 gap-4">
             <Field label="House / unit no."><input className="field" value={biz.houseNumber} onChange={(e) => setBiz({ ...biz, houseNumber: e.target.value })} /></Field>
             <Field label="Street"><input className="field" value={biz.street} onChange={(e) => setBiz({ ...biz, street: e.target.value })} /></Field>

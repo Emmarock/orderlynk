@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import { money, titleCase, effectivePrice } from '../lib/format'
 import type { CustomerAddress, FulfillmentType, Order, PaymentMethod, Quote, RateOption } from '../lib/types'
 import { EmptyState, ErrorNote, Spinner } from '../components/ui'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 // Customers either pay by card (collected via Stripe at checkout) or by bank
 // transfer / e-Transfer (the vendor's details are shown after the order is placed).
@@ -308,6 +309,22 @@ export default function Checkout() {
                 </select>
               </div>
             )}
+            <div className="mt-4">
+              <AddressAutocomplete
+                country={form.customerCountry || 'Canada'}
+                onSelect={(addr) =>
+                  setForm((f) => ({
+                    ...f,
+                    customerHouseNumber: addr.houseNumber ?? '',
+                    customerStreet: addr.street ?? '',
+                    customerCity: addr.city ?? '',
+                    customerState: addr.state ?? '',
+                    customerPostcode: addr.postcode ?? '',
+                    customerCountry: addr.country ?? '',
+                  }))
+                }
+              />
+            </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="label">House / flat number</label>

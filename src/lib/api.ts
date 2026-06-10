@@ -4,6 +4,7 @@ import type {
   BroadcastResult,
   ConnectStatus,
   CustomerAddress,
+  AddressSuggestion,
   CustomerSummary,
   EarningsSummary,
   FulfillmentType,
@@ -116,6 +117,12 @@ export const api = {
 
   // ---- meta ----
   optionSets: () => request<Record<string, string[]>>('GET', '/api/meta/option-sets'),
+  // Address autocomplete (proxied to Geoapify). `country` accepts a name ("Canada") or ISO code.
+  addressAutocomplete: (text: string, country?: string) => {
+    const qs = new URLSearchParams({ text })
+    if (country) qs.set('country', country)
+    return request<AddressSuggestion[]>('GET', `/api/meta/address/autocomplete?${qs.toString()}`)
+  },
 
   // ---- public storefront ----
   marketplace: (city?: string, category?: string) => {
