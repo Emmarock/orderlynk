@@ -15,7 +15,9 @@ interface AuthState {
   user: AuthUser | null
   loading: boolean
   login: (email: string, password: string) => Promise<AuthUser>
-  register: (b: { fullName: string; email: string; password: string; phone?: string; city?: string; country?: string }) => Promise<AuthUser>
+  register: (b: { fullName: string; email: string; password: string; confirmPassword: string; phone?: string; city?: string; country?: string }) => Promise<AuthUser>
+  /** Adopt a session straight from an auth response (token + user fields), e.g. one-step seller signup. */
+  authenticate: (r: AuthResponse) => AuthUser
   applySession: (token: string, user: AuthUser) => void
   logout: () => void
 }
@@ -42,21 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const login: AuthState['login'] = async (email, password) => {
-    const r = await api.login({ email, password })
+  const authenticate: AuthState['authenticate'] = (r) => {
     if (r.token) tokenStore.set(r.token)
     const u = toUser(r)
     setUser(u)
     return u
   }
 
-  const register: AuthState['register'] = async (b) => {
-    const r = await api.register(b)
-    if (r.token) tokenStore.set(r.token)
-    const u = toUser(r)
-    setUser(u)
-    return u
-  }
+  const login: AuthState['login'] = async (email, password) => authenticate(await api.login({ email, password }))
+
+  const register: AuthState['register'] = async (b) => authenticate(await api.register(b))
 
   const applySession: AuthState['applySession'] = (token, u) => {
     tokenStore.set(token)
@@ -69,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, applySession, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, authenticate, applySession, logout }}>
       {children}
     </AuthContext.Provider>
   )

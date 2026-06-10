@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ApiError } from '../lib/api'
+import { apiMessage } from '../lib/api'
+import { PASSWORD_RULE, validateNewPassword } from '../lib/password'
 import { ErrorNote, Rail, Spinner } from '../components/ui'
 
 export default function Register() {
@@ -9,7 +10,7 @@ export default function Register() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   // Pre-fill the email when arriving from an order-confirmation notification (?email=).
-  const [form, setForm] = useState({ fullName: '', email: params.get('email') ?? '', password: '', phone: '', city: '' })
+  const [form, setForm] = useState({ fullName: '', email: params.get('email') ?? '', password: '', confirmPassword: '', phone: '', city: '' })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -18,6 +19,11 @@ export default function Register() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const pwError = validateNewPassword(form.password, form.confirmPassword)
+    if (pwError) {
+      setError(pwError)
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -25,12 +31,13 @@ export default function Register() {
         fullName: form.fullName,
         email: form.email,
         password: form.password,
+        confirmPassword: form.confirmPassword,
         phone: form.phone || undefined,
         city: form.city || undefined,
       })
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create account')
+      setError(apiMessage(err, 'Could not create account'))
       setLoading(false)
     }
   }
@@ -54,7 +61,12 @@ export default function Register() {
             </div>
             <div>
               <label className="label">Password</label>
-              <input className="field" type="password" required minLength={6} value={form.password} onChange={set('password')} />
+              <input className="field" type="password" required minLength={8} value={form.password} onChange={set('password')} />
+              <p className="mt-1 text-xs text-muted">{PASSWORD_RULE}</p>
+            </div>
+            <div>
+              <label className="label">Confirm password</label>
+              <input className="field" type="password" required value={form.confirmPassword} onChange={set('confirmPassword')} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

@@ -6,6 +6,7 @@ import type {
   CustomerAddress,
   CustomerSummary,
   EarningsSummary,
+  FulfillmentType,
   OnboardingResult,
   Order,
   Payout,
@@ -51,6 +52,18 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Best user-facing message for a failed request: prefers a specific field-validation message
+ * (the `details` map returned for 400s) over the generic "Validation failed" envelope.
+ */
+export function apiMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    const first = err.details && Object.values(err.details)[0]
+    return first || err.message
+  }
+  return fallback
+}
+
 async function request<T>(method: string, path: string, body?: unknown, auth = false): Promise<T> {
   const headers: Record<string, string> = {}
   if (body !== undefined) headers['Content-Type'] = 'application/json'
@@ -76,7 +89,7 @@ async function request<T>(method: string, path: string, body?: unknown, auth = f
 
 export const api = {
   // ---- auth ----
-  register: (b: { fullName: string; email: string; password: string; phone?: string; city?: string; country?: string }) =>
+  register: (b: { fullName: string; email: string; password: string; confirmPassword: string; phone?: string; city?: string; country?: string }) =>
     request<AuthResponse>('POST', '/api/auth/register', b),
   login: (b: { email: string; password: string }) =>
     request<AuthResponse>('POST', '/api/auth/login', b),
@@ -130,6 +143,21 @@ export const api = {
   myOrders: () => request<Order[]>('GET', '/api/orders/mine'),
 
   // ---- vendor ----
+  // One-step seller signup for a brand-new user (account + business in one call); returns a signed-in session.
+  registerSeller: (b: {
+    fullName: string
+    email: string
+    password: string
+    confirmPassword: string
+    phone?: string
+    businessName: string
+    description?: string
+    city?: string
+    country?: string
+    whatsappNumber?: string
+    instagramHandle?: string
+    fulfillmentTypes?: FulfillmentType[]
+  }) => request<AuthResponse>('POST', '/api/vendor/register', b),
   applyVendor: (b: unknown) => request<{ token: string; vendor: Vendor }>('POST', '/api/vendor/apply', b),
   myVendor: () => request<Vendor>('GET', '/api/vendor/me'),
   updateVendor: (b: unknown) => request<Vendor>('PUT', '/api/vendor/me', b),

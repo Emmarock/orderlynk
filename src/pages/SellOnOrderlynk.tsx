@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { api, ApiError } from '../lib/api'
+import { api, apiMessage } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { PASSWORD_RULE, validateNewPassword } from '../lib/password'
 import { titleCase } from '../lib/format'
 import type { FulfillmentType } from '../lib/types'
 import { ErrorNote, PageLoader, Rail, Spinner } from '../components/ui'
@@ -21,9 +22,15 @@ const BENEFITS = [
 ]
 
 export default function SellOnOrderlynk() {
-  const { user, loading, applySession } = useAuth()
+  const { user, loading, authenticate, applySession } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({
+    // Account fields — only used when signing up as a brand-new (guest) seller.
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    // Business fields — used in both the guest and signed-in application flows.
     businessName: '',
     description: '',
     city: '',
@@ -55,22 +62,52 @@ export default function SellOnOrderlynk() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
+    const business = {
+      businessName: form.businessName,
+      description: form.description || undefined,
+      city: form.city || undefined,
+      country: form.country || undefined,
+      whatsappNumber: form.whatsappNumber || undefined,
+      instagramHandle: form.instagramHandle || undefined,
+      fulfillmentTypes: Array.from(types),
+    }
+
+    // Guests register the account + vendor in one step; signed-in users just apply.
+    if (!user) {
+      const pwError = validateNewPassword(form.password, form.confirmPassword)
+      if (pwError) {
+        setError(pwError)
+        return
+      }
+    }
+
     setSubmitting(true)
     setError(null)
     try {
-      const res = await api.applyVendor({ ...form, fulfillmentTypes: Array.from(types) })
-      applySession(res.token, {
-        userId: user.userId,
-        fullName: user.fullName,
-        email: user.email,
-        role: 'VENDOR',
-        vendorId: res.vendor.id,
-        emailVerified: user.emailVerified,
-      })
+      if (user) {
+        const res = await api.applyVendor(business)
+        applySession(res.token, {
+          userId: user.userId,
+          fullName: user.fullName,
+          email: user.email,
+          role: 'VENDOR',
+          vendorId: res.vendor.id,
+          emailVerified: user.emailVerified,
+        })
+      } else {
+        authenticate(
+          await api.registerSeller({
+            fullName: form.fullName,
+            email: form.email,
+            password: form.password,
+            confirmPassword: form.confirmPassword,
+            ...business,
+          }),
+        )
+      }
       navigate('/vendor', { replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not submit application')
+      setError(apiMessage(err, 'Could not submit application'))
       setSubmitting(false)
     }
   }
@@ -102,69 +139,87 @@ export default function SellOnOrderlynk() {
         <div className="card overflow-hidden">
           <Rail />
           <div className="p-7">
-            {!user ? (
-              <div className="text-center">
-                <h2 className="font-display text-xl font-semibold">Sign in to apply</h2>
-                <p className="mt-2 text-sm text-muted">
-                  Create an account or sign in, then submit your business details.
-                </p>
-                <div className="mt-5 flex justify-center gap-3">
-                  <Link to="/register" className="btn-primary">Create account</Link>
-                  <Link to="/login" className="btn-ghost">Sign in</Link>
+            <form onSubmit={submit} className="space-y-4">
+              {!user && (
+                <>
+                  <h2 className="font-display text-xl font-semibold">Create your seller account</h2>
+                  <div>
+                    <label className="label">Full name</label>
+                    <input className="field" required value={form.fullName} onChange={set('fullName')} />
+                  </div>
+                  <div>
+                    <label className="label">Email</label>
+                    <input className="field" type="email" required value={form.email} onChange={set('email')} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="label">Password</label>
+                      <input className="field" type="password" required minLength={8} value={form.password} onChange={set('password')} />
+                    </div>
+                    <div>
+                      <label className="label">Confirm password</label>
+                      <input className="field" type="password" required value={form.confirmPassword} onChange={set('confirmPassword')} />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted">{PASSWORD_RULE}</p>
+                </>
+              )}
+
+              <h2 className="font-display text-xl font-semibold">{user ? 'Business details' : 'Your business'}</h2>
+              <div>
+                <label className="label">Business name</label>
+                <input className="field" required value={form.businessName} onChange={set('businessName')} />
+              </div>
+              <div>
+                <label className="label">Description</label>
+                <textarea className="field min-h-20" value={form.description} onChange={set('description')} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">City</label>
+                  <input className="field" value={form.city} onChange={set('city')} />
+                </div>
+                <div>
+                  <label className="label">Country</label>
+                  <input className="field" value={form.country} onChange={set('country')} />
+                </div>
+                <div>
+                  <label className="label">WhatsApp</label>
+                  <input className="field" placeholder="+1…" value={form.whatsappNumber} onChange={set('whatsappNumber')} />
+                </div>
+                <div>
+                  <label className="label">Instagram</label>
+                  <input className="field" placeholder="@handle" value={form.instagramHandle} onChange={set('instagramHandle')} />
                 </div>
               </div>
-            ) : (
-              <form onSubmit={submit} className="space-y-4">
-                <h2 className="font-display text-xl font-semibold">Business details</h2>
-                <div>
-                  <label className="label">Business name</label>
-                  <input className="field" required value={form.businessName} onChange={set('businessName')} />
+              <div>
+                <label className="label">Fulfillment options</label>
+                <div className="flex flex-wrap gap-2">
+                  {FULFILLMENT.map((t) => (
+                    <button
+                      type="button"
+                      key={t}
+                      onClick={() => toggleType(t)}
+                      className={`chip border px-3 py-1.5 ${
+                        types.has(t) ? 'border-clay bg-clay/10 text-clay-dark' : 'border-line text-muted'
+                      }`}
+                    >
+                      {titleCase(t)}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <label className="label">Description</label>
-                  <textarea className="field min-h-20" value={form.description} onChange={set('description')} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="label">City</label>
-                    <input className="field" value={form.city} onChange={set('city')} />
-                  </div>
-                  <div>
-                    <label className="label">Country</label>
-                    <input className="field" value={form.country} onChange={set('country')} />
-                  </div>
-                  <div>
-                    <label className="label">WhatsApp</label>
-                    <input className="field" placeholder="+1…" value={form.whatsappNumber} onChange={set('whatsappNumber')} />
-                  </div>
-                  <div>
-                    <label className="label">Instagram</label>
-                    <input className="field" placeholder="@handle" value={form.instagramHandle} onChange={set('instagramHandle')} />
-                  </div>
-                </div>
-                <div>
-                  <label className="label">Fulfillment options</label>
-                  <div className="flex flex-wrap gap-2">
-                    {FULFILLMENT.map((t) => (
-                      <button
-                        type="button"
-                        key={t}
-                        onClick={() => toggleType(t)}
-                        className={`chip border px-3 py-1.5 ${
-                          types.has(t) ? 'border-clay bg-clay/10 text-clay-dark' : 'border-line text-muted'
-                        }`}
-                      >
-                        {titleCase(t)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {error && <ErrorNote message={error} />}
-                <button className="btn-primary w-full" disabled={submitting}>
-                  {submitting ? <Spinner /> : 'Submit application'}
-                </button>
-              </form>
-            )}
+              </div>
+              {error && <ErrorNote message={error} />}
+              <button className="btn-primary w-full" disabled={submitting}>
+                {submitting ? <Spinner /> : user ? 'Submit application' : 'Create account & apply'}
+              </button>
+              {!user && (
+                <p className="text-center text-sm text-muted">
+                  Already have an account?{' '}
+                  <Link to="/login" className="link-underline">Sign in</Link> to apply.
+                </p>
+              )}
+            </form>
           </div>
         </div>
       </div>
