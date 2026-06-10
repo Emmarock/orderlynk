@@ -5,8 +5,9 @@ import { useAuth } from '../context/AuthContext'
 import { validateNewPassword } from '../lib/password'
 import { titleCase } from '../lib/format'
 import type { FulfillmentType } from '../lib/types'
-import { ErrorNote, PageLoader, PasswordChecklist, Rail, Spinner } from '../components/ui'
+import { CountrySelect, ErrorNote, PageLoader, PasswordChecklist, Rail, Spinner } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
+import { countryCode } from '../lib/countries'
 
 const FULFILLMENT: FulfillmentType[] = [
   'LOCAL_PICKUP',
@@ -39,7 +40,7 @@ export default function SellOnOrderlynk() {
     city: '',
     state: '',
     postcode: '',
-    country: 'Canada',
+    country: '',
     whatsappNumber: '',
     instagramHandle: '',
   })
@@ -196,7 +197,7 @@ export default function SellOnOrderlynk() {
                 <p className="label !mb-1">Business address</p>
                 <AddressAutocomplete
                   label=""
-                  country={form.country || 'Canada'}
+                  country={countryCode(form.country)}
                   onSelect={(addr) =>
                     setForm((f) => ({
                       ...f,
@@ -215,7 +216,7 @@ export default function SellOnOrderlynk() {
                   <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
                   <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
                   <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
-                  <input className="field" placeholder="Country" value={form.country} onChange={set('country')} />
+                  <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v }))} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

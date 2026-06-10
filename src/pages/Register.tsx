@@ -3,8 +3,9 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiMessage } from '../lib/api'
 import { validateNewPassword } from '../lib/password'
-import { ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
+import { CountrySelect, ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
+import { countryCode } from '../lib/countries'
 
 export default function Register() {
   const { register } = useAuth()
@@ -108,7 +109,7 @@ export default function Register() {
               <p className="label !mb-1">Delivery address</p>
               <AddressAutocomplete
                 label=""
-                country={form.country || 'Canada'}
+                country={countryCode(form.country)}
                 onSelect={(addr) =>
                   setForm((f) => ({
                     ...f,
@@ -127,7 +128,7 @@ export default function Register() {
                 <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
                 <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
                 <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
-                <input className="field" placeholder="Country" value={form.country} onChange={set('country')} />
+                <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v }))} />
               </div>
             </div>
             {error && <ErrorNote message={error} />}

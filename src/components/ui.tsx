@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fulfillmentTone, paymentTone, titleCase } from '../lib/format'
 import type { FulfillmentStatus, PaymentStatus } from '../lib/types'
 import { passwordChecks } from '../lib/password'
+import { COUNTRIES } from '../lib/countries'
 
 /** The signature four-colour brand rail. */
 export function Rail({ className = '' }: { className?: string }) {
@@ -166,6 +167,46 @@ export function PasswordChecklist({
         </li>
       ))}
     </ul>
+  )
+}
+
+/**
+ * Country picker styled to match `.field` inputs. Stores/emits the country *name*
+ * (e.g. "Canada") so it round-trips with Geoapify suggestions and persists readably.
+ */
+export function CountrySelect({
+  value,
+  onChange,
+  placeholder = 'Select country…',
+  className = '',
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  className?: string
+}) {
+  return (
+    <div className={`relative ${className}`}>
+      <select
+        className={`field appearance-none pr-9 ${value ? '' : 'text-muted'}`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">{placeholder}</option>
+        {COUNTRIES.map((c) => (
+          <option key={c.code} value={c.name} className="text-ink">
+            {c.name}
+          </option>
+        ))}
+      </select>
+      <svg
+        viewBox="0 0 24 24"
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </div>
   )
 }
 

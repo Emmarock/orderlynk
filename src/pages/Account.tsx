@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext'
 import { formatDate, money, titleCase } from '../lib/format'
 import { OrderStatusRow } from '../components/OrderViews'
 import { validateNewPassword } from '../lib/password'
-import { ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
+import { countryCode } from '../lib/countries'
+import { CountrySelect, ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 
 export default function Account() {
@@ -286,7 +287,7 @@ function AddressBook() {
           <div className="mt-3">
             <AddressAutocomplete
               label=""
-              country={form.country || 'Canada'}
+              country={countryCode(form.country)}
               onSelect={(addr) =>
                 setForm((f) => ({
                   ...f,
@@ -307,7 +308,7 @@ function AddressBook() {
             <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
             <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
             <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
-            <input className="field" placeholder="Country" value={form.country} onChange={set('country')} />
+            <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v }))} />
           </div>
           {error && <div className="mt-3"><ErrorNote message={error} /></div>}
           <button className="btn-primary mt-4" disabled={saving}>{saving ? <Spinner /> : 'Add address'}</button>

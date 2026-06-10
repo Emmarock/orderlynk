@@ -5,7 +5,8 @@ import type { FulfillmentType, Vendor } from '../../lib/types'
 import { titleCase } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
 import { validateNewPassword } from '../../lib/password'
-import { ErrorNote, PageLoader, PasswordChecklist, Spinner } from '../../components/ui'
+import { countryCode } from '../../lib/countries'
+import { CountrySelect, ErrorNote, PageLoader, PasswordChecklist, Spinner } from '../../components/ui'
 import StripeOnboardingCard from '../../components/StripeOnboardingCard'
 import AddressAutocomplete from '../../components/AddressAutocomplete'
 
@@ -188,7 +189,7 @@ export default function VendorSettings() {
           <Field label="Description"><textarea className="field min-h-20" value={biz.description} onChange={(e) => setBiz({ ...biz, description: e.target.value })} /></Field>
           <p className="label !mb-1 !mt-2">Business address</p>
           <AddressAutocomplete
-            country={biz.country || 'Canada'}
+            country={countryCode(biz.country)}
             onSelect={(addr) =>
               setBiz({
                 ...biz,
@@ -207,7 +208,7 @@ export default function VendorSettings() {
             <Field label="City"><input className="field" value={biz.city} onChange={(e) => setBiz({ ...biz, city: e.target.value })} /></Field>
             <Field label="State / province"><input className="field" value={biz.state} onChange={(e) => setBiz({ ...biz, state: e.target.value })} /></Field>
             <Field label="Postcode"><input className="field" value={biz.postcode} onChange={(e) => setBiz({ ...biz, postcode: e.target.value })} /></Field>
-            <Field label="Country"><input className="field" value={biz.country} onChange={(e) => setBiz({ ...biz, country: e.target.value })} /></Field>
+            <Field label="Country"><CountrySelect value={biz.country} onChange={(v) => setBiz({ ...biz, country: v })} /></Field>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Field label="WhatsApp number"><input className="field" value={biz.whatsappNumber} onChange={(e) => setBiz({ ...biz, whatsappNumber: e.target.value })} /></Field>

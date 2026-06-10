@@ -7,8 +7,9 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { money, titleCase, effectivePrice } from '../lib/format'
 import type { CustomerAddress, FulfillmentType, Order, PaymentMethod, Quote, RateOption } from '../lib/types'
-import { EmptyState, ErrorNote, Spinner } from '../components/ui'
+import { CountrySelect, EmptyState, ErrorNote, Spinner } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
+import { countryCode } from '../lib/countries'
 
 // Customers either pay by card (collected via Stripe at checkout) or by bank
 // transfer / e-Transfer (the vendor's details are shown after the order is placed).
@@ -311,7 +312,7 @@ export default function Checkout() {
             )}
             <div className="mt-4">
               <AddressAutocomplete
-                country={form.customerCountry || 'Canada'}
+                country={countryCode(form.customerCountry)}
                 onSelect={(addr) =>
                   setForm((f) => ({
                     ...f,
@@ -348,7 +349,7 @@ export default function Checkout() {
               </div>
               <div>
                 <label className="label">Country</label>
-                <input className="field" value={form.customerCountry} onChange={set('customerCountry')} />
+                <CountrySelect value={form.customerCountry} onChange={(v) => setForm((f) => ({ ...f, customerCountry: v }))} />
               </div>
             </div>
             {user && (
