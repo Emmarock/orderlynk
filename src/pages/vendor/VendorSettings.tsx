@@ -5,7 +5,7 @@ import type { FulfillmentType, Vendor } from '../../lib/types'
 import { titleCase } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
 import { validateNewPassword } from '../../lib/password'
-import { countryCode } from '../../lib/countries'
+import { applyDialCode, countryCode, countryDialCode } from '../../lib/countries'
 import { CountrySelect, ErrorNote, PageLoader, PasswordChecklist, Spinner } from '../../components/ui'
 import StripeOnboardingCard from '../../components/StripeOnboardingCard'
 import AddressAutocomplete from '../../components/AddressAutocomplete'
@@ -208,10 +208,10 @@ export default function VendorSettings() {
             <Field label="City"><input className="field" value={biz.city} onChange={(e) => setBiz({ ...biz, city: e.target.value })} /></Field>
             <Field label="State / province"><input className="field" value={biz.state} onChange={(e) => setBiz({ ...biz, state: e.target.value })} /></Field>
             <Field label="Postcode"><input className="field" value={biz.postcode} onChange={(e) => setBiz({ ...biz, postcode: e.target.value })} /></Field>
-            <Field label="Country"><CountrySelect value={biz.country} onChange={(v) => setBiz({ ...biz, country: v })} /></Field>
+            <Field label="Country"><CountrySelect value={biz.country} onChange={(v) => setBiz({ ...biz, country: v, whatsappNumber: applyDialCode(biz.whatsappNumber, biz.country, v) })} /></Field>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="WhatsApp number"><input className="field" value={biz.whatsappNumber} onChange={(e) => setBiz({ ...biz, whatsappNumber: e.target.value })} /></Field>
+            <Field label="WhatsApp number"><input className="field" placeholder={`${countryDialCode(biz.country) ?? '+1'}…`} value={biz.whatsappNumber} onChange={(e) => setBiz({ ...biz, whatsappNumber: e.target.value })} /></Field>
             <Field label="Instagram handle"><input className="field" value={biz.instagramHandle} onChange={(e) => setBiz({ ...biz, instagramHandle: e.target.value })} /></Field>
           </div>
           <BrandingUpload

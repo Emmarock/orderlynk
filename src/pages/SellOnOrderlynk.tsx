@@ -7,7 +7,7 @@ import { titleCase } from '../lib/format'
 import type { FulfillmentType } from '../lib/types'
 import { CountrySelect, ErrorNote, PageLoader, PasswordChecklist, Rail, Spinner } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
-import { countryCode } from '../lib/countries'
+import { applyDialCode, countryCode, countryDialCode } from '../lib/countries'
 
 const FULFILLMENT: FulfillmentType[] = [
   'LOCAL_PICKUP',
@@ -216,13 +216,13 @@ export default function SellOnOrderlynk() {
                   <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
                   <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
                   <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
-                  <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v }))} />
+                  <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v, whatsappNumber: applyDialCode(f.whatsappNumber, f.country, v) }))} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">WhatsApp</label>
-                  <input className="field" placeholder="+1…" value={form.whatsappNumber} onChange={set('whatsappNumber')} />
+                  <input className="field" placeholder={`${countryDialCode(form.country) ?? '+1'}…`} value={form.whatsappNumber} onChange={set('whatsappNumber')} />
                 </div>
                 <div>
                   <label className="label">Instagram</label>
