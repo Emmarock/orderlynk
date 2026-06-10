@@ -230,10 +230,16 @@ export default function Checkout() {
 
   const onPaid = () => {
     clear()
-    // The order was created before payment, so its status is still PENDING. Mark it
-    // PAID for the confirmation page so the badge is correct and the transfer
-    // instructions (only shown while payment is outstanding) stay hidden.
-    const paidOrder: Order = { ...payOrder!, paymentStatus: 'PAID' }
+    // The order was created before payment as PENDING / ORDER_RECEIVED. Reflect the
+    // paid state immediately on the confirmation page — both the payment badge and the
+    // fulfillment status, which the backend auto-advances ORDER_RECEIVED → PAID on the
+    // payment-success event. (Also keeps the transfer instructions, shown only while
+    // payment is outstanding, hidden.)
+    const paidOrder: Order = {
+      ...payOrder!,
+      paymentStatus: 'PAID',
+      fulfillmentStatus: payOrder!.fulfillmentStatus === 'ORDER_RECEIVED' ? 'PAID' : payOrder!.fulfillmentStatus,
+    }
     navigate(`/order/${paidOrder.publicOrderId}`, { state: { order: paidOrder, paid: true } })
   }
 
