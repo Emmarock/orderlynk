@@ -5,7 +5,7 @@ import { apiMessage } from '../lib/api'
 import { validateNewPassword } from '../lib/password'
 import { CountrySelect, ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
-import { countryCode } from '../lib/countries'
+import { applyDialCode, countryCode, countryDialCode } from '../lib/countries'
 
 export default function Register() {
   const { register } = useAuth()
@@ -102,7 +102,7 @@ export default function Register() {
             </div>
             <div>
               <label className="label">Phone</label>
-              <input className="field" value={form.phone} onChange={set('phone')} />
+              <input className="field" placeholder={`${countryDialCode(form.country) ?? '+1'}…`} value={form.phone} onChange={set('phone')} />
             </div>
 
             <div>
@@ -128,7 +128,7 @@ export default function Register() {
                 <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
                 <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
                 <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
-                <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v }))} />
+                <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v, phone: applyDialCode(f.phone, f.country, v) }))} />
               </div>
             </div>
             {error && <ErrorNote message={error} />}
