@@ -90,7 +90,7 @@ async function request<T>(method: string, path: string, body?: unknown, auth = f
 
 export const api = {
   // ---- auth ----
-  register: (b: { fullName: string; email: string; password: string; confirmPassword: string; phone?: string; city?: string; country?: string }) =>
+  register: (b: { fullName: string; email: string; password: string; confirmPassword: string; phone?: string; city?: string; country?: string; address?: Address }) =>
     request<AuthResponse>('POST', '/api/auth/register', b),
   login: (b: { email: string; password: string }) =>
     request<AuthResponse>('POST', '/api/auth/login', b),
@@ -159,7 +159,11 @@ export const api = {
     phone?: string
     businessName: string
     description?: string
+    houseNumber?: string
+    street?: string
     city?: string
+    state?: string
+    postcode?: string
     country?: string
     whatsappNumber?: string
     instagramHandle?: string

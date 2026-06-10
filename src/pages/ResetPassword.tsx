@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
-import { ErrorNote, Rail, Spinner } from '../components/ui'
+import { validateNewPassword } from '../lib/password'
+import { ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
 
 export default function ResetPassword() {
   const [params] = useSearchParams()
@@ -12,10 +13,13 @@ export default function ResetPassword() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
+  const canSubmit = token !== '' && validateNewPassword(form.newPassword, form.confirm) === null
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.newPassword !== form.confirm) {
-      setError('Passwords do not match')
+    const pwError = validateNewPassword(form.newPassword, form.confirm)
+    if (pwError) {
+      setError(pwError)
       return
     }
     setLoading(true)
@@ -48,8 +52,9 @@ export default function ResetPassword() {
             <form onSubmit={submit} className="mt-6 space-y-4">
               <div>
                 <label className="label">New password</label>
-                <input className="field" type="password" required minLength={6} autoComplete="new-password"
+                <input className="field" type="password" required minLength={8} autoComplete="new-password"
                        value={form.newPassword} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} />
+                <PasswordChecklist password={form.newPassword} confirm={form.confirm} />
               </div>
               <div>
                 <label className="label">Confirm new password</label>
@@ -57,7 +62,7 @@ export default function ResetPassword() {
                        value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} />
               </div>
               {error && <ErrorNote message={error} />}
-              <button className="btn-primary w-full" disabled={loading}>
+              <button className="btn-primary w-full" disabled={loading || !canSubmit}>
                 {loading ? <Spinner /> : 'Reset password'}
               </button>
             </form>

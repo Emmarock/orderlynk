@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api, apiMessage } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import { PASSWORD_RULE, validateNewPassword } from '../lib/password'
+import { validateNewPassword } from '../lib/password'
 import { titleCase } from '../lib/format'
 import type { FulfillmentType } from '../lib/types'
-import { ErrorNote, PageLoader, Rail, Spinner } from '../components/ui'
+import { ErrorNote, PageLoader, PasswordChecklist, Rail, Spinner } from '../components/ui'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 const FULFILLMENT: FulfillmentType[] = [
   'LOCAL_PICKUP',
@@ -33,7 +34,11 @@ export default function SellOnOrderlynk() {
     // Business fields — used in both the guest and signed-in application flows.
     businessName: '',
     description: '',
+    houseNumber: '',
+    street: '',
     city: '',
+    state: '',
+    postcode: '',
     country: 'Canada',
     whatsappNumber: '',
     instagramHandle: '',
@@ -60,12 +65,25 @@ export default function SellOnOrderlynk() {
       return next
     })
 
+  // Guests must supply a valid account block; signed-in users skip it. Both flows
+  // require a business name and at least one fulfillment option.
+  const accountValid =
+    !!user ||
+    (form.fullName.trim() !== '' &&
+      form.email.trim() !== '' &&
+      validateNewPassword(form.password, form.confirmPassword) === null)
+  const canSubmit = accountValid && form.businessName.trim() !== '' && types.size > 0
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     const business = {
       businessName: form.businessName,
       description: form.description || undefined,
+      houseNumber: form.houseNumber || undefined,
+      street: form.street || undefined,
       city: form.city || undefined,
+      state: form.state || undefined,
+      postcode: form.postcode || undefined,
       country: form.country || undefined,
       whatsappNumber: form.whatsappNumber || undefined,
       instagramHandle: form.instagramHandle || undefined,
@@ -161,7 +179,7 @@ export default function SellOnOrderlynk() {
                       <input className="field" type="password" required value={form.confirmPassword} onChange={set('confirmPassword')} />
                     </div>
                   </div>
-                  <p className="text-xs text-muted">{PASSWORD_RULE}</p>
+                  <PasswordChecklist password={form.password} confirm={form.confirmPassword} />
                 </>
               )}
 
@@ -174,15 +192,33 @@ export default function SellOnOrderlynk() {
                 <label className="label">Description</label>
                 <textarea className="field min-h-20" value={form.description} onChange={set('description')} />
               </div>
+              <div>
+                <p className="label !mb-1">Business address</p>
+                <AddressAutocomplete
+                  label=""
+                  country={form.country || 'Canada'}
+                  onSelect={(addr) =>
+                    setForm((f) => ({
+                      ...f,
+                      houseNumber: addr.houseNumber ?? '',
+                      street: addr.street ?? '',
+                      city: addr.city ?? '',
+                      state: addr.state ?? '',
+                      postcode: addr.postcode ?? '',
+                      country: addr.country ?? '',
+                    }))
+                  }
+                />
+                <div className="mt-3 grid grid-cols-2 gap-4">
+                  <input className="field" placeholder="House / unit no." value={form.houseNumber} onChange={set('houseNumber')} />
+                  <input className="field" placeholder="Street" value={form.street} onChange={set('street')} />
+                  <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
+                  <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
+                  <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
+                  <input className="field" placeholder="Country" value={form.country} onChange={set('country')} />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">City</label>
-                  <input className="field" value={form.city} onChange={set('city')} />
-                </div>
-                <div>
-                  <label className="label">Country</label>
-                  <input className="field" value={form.country} onChange={set('country')} />
-                </div>
                 <div>
                   <label className="label">WhatsApp</label>
                   <input className="field" placeholder="+1…" value={form.whatsappNumber} onChange={set('whatsappNumber')} />
@@ -210,7 +246,7 @@ export default function SellOnOrderlynk() {
                 </div>
               </div>
               {error && <ErrorNote message={error} />}
-              <button className="btn-primary w-full" disabled={submitting}>
+              <button className="btn-primary w-full" disabled={submitting || !canSubmit}>
                 {submitting ? <Spinner /> : user ? 'Submit application' : 'Create account & apply'}
               </button>
               {!user && (

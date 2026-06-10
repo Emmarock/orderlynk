@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { fulfillmentTone, paymentTone, titleCase } from '../lib/format'
 import type { FulfillmentStatus, PaymentStatus } from '../lib/types'
+import { passwordChecks } from '../lib/password'
 
 /** The signature four-colour brand rail. */
 export function Rail({ className = '' }: { className?: string }) {
@@ -124,6 +125,47 @@ export function CopyOrderId({ value, className = '' }: { value: string; classNam
         )}
       </span>
     </span>
+  )
+}
+
+/**
+ * Live checklist of the password policy. Each rule turns green with a check the
+ * moment the typed password satisfies it, so users get immediate feedback as they
+ * type rather than a single error on submit. Stays hidden until they start typing.
+ *
+ * Pass `confirm` to append a "Passwords match" row that lights up once the
+ * confirmation field has content and equals the password.
+ */
+export function PasswordChecklist({
+  password,
+  confirm,
+  className = '',
+}: {
+  password: string
+  confirm?: string
+  className?: string
+}) {
+  const checks = passwordChecks(password)
+  if (confirm !== undefined) {
+    checks.push({ label: 'Passwords match', met: password.length > 0 && password === confirm })
+  }
+  // Nothing to show until the user has started typing in either field.
+  if (!password && !confirm) return null
+  return (
+    <ul className={`mt-2 space-y-1 ${className}`} aria-label="Password requirements">
+      {checks.map(({ label, met }) => (
+        <li
+          key={label}
+          className={`flex items-center gap-1.5 text-xs transition-colors ${met ? 'text-forest' : 'text-muted'}`}
+        >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            {met ? <path d="M20 6 9 17l-5-5" /> : <circle cx="12" cy="12" r="9" strokeWidth="2" />}
+          </svg>
+          <span>{label}</span>
+          <span className="sr-only">{met ? 'met' : 'not met'}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, tokenStore } from '../lib/api'
-import type { AuthResponse, UserRole } from '../lib/types'
+import type { Address, AuthResponse, UserRole } from '../lib/types'
 
 interface AuthUser {
   userId: string
@@ -15,7 +15,7 @@ interface AuthState {
   user: AuthUser | null
   loading: boolean
   login: (email: string, password: string) => Promise<AuthUser>
-  register: (b: { fullName: string; email: string; password: string; confirmPassword: string; phone?: string; city?: string; country?: string }) => Promise<AuthUser>
+  register: (b: { fullName: string; email: string; password: string; confirmPassword: string; phone?: string; city?: string; country?: string; address?: Address }) => Promise<AuthUser>
   /** Adopt a session straight from an auth response (token + user fields), e.g. one-step seller signup. */
   authenticate: (r: AuthResponse) => AuthUser
   applySession: (token: string, user: AuthUser) => void

@@ -21,6 +21,8 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const canSubmit = email.trim() !== '' && password !== ''
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -61,7 +63,7 @@ export default function Login() {
               />
             </div>
             {error && <ErrorNote message={error} />}
-            <button className="btn-primary w-full" disabled={loading}>
+            <button className="btn-primary w-full" disabled={loading || !canSubmit}>
               {loading ? <Spinner /> : 'Sign in'}
             </button>
           </form>

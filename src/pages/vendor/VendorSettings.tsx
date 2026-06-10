@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext'
 import type { FulfillmentType, Vendor } from '../../lib/types'
 import { titleCase } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
-import { ErrorNote, PageLoader, Spinner } from '../../components/ui'
+import { validateNewPassword } from '../../lib/password'
+import { ErrorNote, PageLoader, PasswordChecklist, Spinner } from '../../components/ui'
 import StripeOnboardingCard from '../../components/StripeOnboardingCard'
 import AddressAutocomplete from '../../components/AddressAutocomplete'
 
@@ -16,12 +17,14 @@ function SettingsCard({
   title,
   desc,
   submitLabel = 'Save changes',
+  canSave = true,
   onSave,
   children,
 }: {
   title: string
   desc?: string
   submitLabel?: string
+  canSave?: boolean
   onSave: () => Promise<void>
   children: ReactNode
 }) {
@@ -53,7 +56,7 @@ function SettingsCard({
       {done && (
         <div className="mt-4 rounded-xl border border-forest/30 bg-forest/8 px-4 py-2.5 text-sm text-forest">Saved.</div>
       )}
-      <button className="btn-primary mt-4" disabled={saving}>{saving ? <Spinner /> : submitLabel}</button>
+      <button className="btn-primary mt-4" disabled={saving || !canSave}>{saving ? <Spinner /> : submitLabel}</button>
     </form>
   )
 }
@@ -253,6 +256,7 @@ export default function VendorSettings() {
           title="Email address"
           desc={`Current: ${user.email}`}
           submitLabel="Change email"
+          canSave={emailForm.newEmail.trim() !== '' && emailForm.currentPassword !== ''}
           onSave={async () => {
             const r = await api.changeEmail({ newEmail: emailForm.newEmail, currentPassword: emailForm.currentPassword })
             if (r.token) applySession(r.token, { userId: r.userId, fullName: r.fullName, email: r.email, role: r.role, vendorId: r.vendorId, emailVerified: r.emailVerified })
@@ -268,14 +272,16 @@ export default function VendorSettings() {
           title="Password"
           desc="Use a strong password you don't reuse elsewhere."
           submitLabel="Update password"
+          canSave={pwd.currentPassword !== '' && validateNewPassword(pwd.newPassword, pwd.confirm) === null}
           onSave={async () => {
-            if (pwd.newPassword !== pwd.confirm) throw new ApiError(400, 'New password and confirmation do not match')
+            const pwError = validateNewPassword(pwd.newPassword, pwd.confirm)
+            if (pwError) throw new ApiError(400, pwError)
             await api.changePassword({ currentPassword: pwd.currentPassword, newPassword: pwd.newPassword })
             setPwd({ currentPassword: '', newPassword: '', confirm: '' })
           }}
         >
           <Field label="Current password"><input className="field" type="password" required autoComplete="current-password" value={pwd.currentPassword} onChange={(e) => setPwd({ ...pwd, currentPassword: e.target.value })} /></Field>
-          <Field label="New password"><input className="field" type="password" required minLength={6} autoComplete="new-password" value={pwd.newPassword} onChange={(e) => setPwd({ ...pwd, newPassword: e.target.value })} /></Field>
+          <Field label="New password"><input className="field" type="password" required minLength={8} autoComplete="new-password" value={pwd.newPassword} onChange={(e) => setPwd({ ...pwd, newPassword: e.target.value })} /><PasswordChecklist password={pwd.newPassword} confirm={pwd.confirm} /></Field>
           <Field label="Confirm new password"><input className="field" type="password" required autoComplete="new-password" value={pwd.confirm} onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })} /></Field>
         </SettingsCard>
 

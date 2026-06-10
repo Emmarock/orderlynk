@@ -2,20 +2,38 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiMessage } from '../lib/api'
-import { PASSWORD_RULE, validateNewPassword } from '../lib/password'
-import { ErrorNote, Rail, Spinner } from '../components/ui'
+import { validateNewPassword } from '../lib/password'
+import { ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 export default function Register() {
   const { register } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   // Pre-fill the email when arriving from an order-confirmation notification (?email=).
-  const [form, setForm] = useState({ fullName: '', email: params.get('email') ?? '', password: '', confirmPassword: '', phone: '', city: '' })
+  const [form, setForm] = useState({
+    fullName: '',
+    email: params.get('email') ?? '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    houseNumber: '',
+    street: '',
+    city: '',
+    state: '',
+    postcode: '',
+    country: '',
+  })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const canSubmit =
+    form.fullName.trim() !== '' &&
+    form.email.trim() !== '' &&
+    validateNewPassword(form.password, form.confirmPassword) === null
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,6 +45,17 @@ export default function Register() {
     setLoading(true)
     setError(null)
     try {
+      // Structured address from the autocomplete (or manual entry). city/country are also
+      // sent flat for backward compatibility with the existing register endpoint.
+      const address = {
+        houseNumber: form.houseNumber || undefined,
+        street: form.street || undefined,
+        city: form.city || undefined,
+        state: form.state || undefined,
+        postcode: form.postcode || undefined,
+        country: form.country || undefined,
+      }
+      const hasAddress = Object.values(address).some(Boolean)
       await register({
         fullName: form.fullName,
         email: form.email,
@@ -34,6 +63,8 @@ export default function Register() {
         confirmPassword: form.confirmPassword,
         phone: form.phone || undefined,
         city: form.city || undefined,
+        country: form.country || undefined,
+        address: hasAddress ? address : undefined,
       })
       navigate('/', { replace: true })
     } catch (err) {
@@ -62,24 +93,45 @@ export default function Register() {
             <div>
               <label className="label">Password</label>
               <input className="field" type="password" required minLength={8} value={form.password} onChange={set('password')} />
-              <p className="mt-1 text-xs text-muted">{PASSWORD_RULE}</p>
+              <PasswordChecklist password={form.password} confirm={form.confirmPassword} />
             </div>
             <div>
               <label className="label">Confirm password</label>
               <input className="field" type="password" required value={form.confirmPassword} onChange={set('confirmPassword')} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Phone</label>
-                <input className="field" value={form.phone} onChange={set('phone')} />
-              </div>
-              <div>
-                <label className="label">City</label>
-                <input className="field" value={form.city} onChange={set('city')} />
+            <div>
+              <label className="label">Phone</label>
+              <input className="field" value={form.phone} onChange={set('phone')} />
+            </div>
+
+            <div>
+              <p className="label !mb-1">Delivery address</p>
+              <AddressAutocomplete
+                label=""
+                country={form.country || 'Canada'}
+                onSelect={(addr) =>
+                  setForm((f) => ({
+                    ...f,
+                    houseNumber: addr.houseNumber ?? '',
+                    street: addr.street ?? '',
+                    city: addr.city ?? '',
+                    state: addr.state ?? '',
+                    postcode: addr.postcode ?? '',
+                    country: addr.country ?? '',
+                  }))
+                }
+              />
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <input className="field" placeholder="House / flat number" value={form.houseNumber} onChange={set('houseNumber')} />
+                <input className="field" placeholder="Street" value={form.street} onChange={set('street')} />
+                <input className="field" placeholder="City" value={form.city} onChange={set('city')} />
+                <input className="field" placeholder="State / province" value={form.state} onChange={set('state')} />
+                <input className="field" placeholder="Postcode" value={form.postcode} onChange={set('postcode')} />
+                <input className="field" placeholder="Country" value={form.country} onChange={set('country')} />
               </div>
             </div>
             {error && <ErrorNote message={error} />}
-            <button className="btn-primary w-full" disabled={loading}>
+            <button className="btn-primary w-full" disabled={loading || !canSubmit}>
               {loading ? <Spinner /> : 'Create account'}
             </button>
           </form>

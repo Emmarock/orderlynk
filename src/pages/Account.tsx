@@ -5,7 +5,8 @@ import type { CustomerAddress, Order } from '../lib/types'
 import { useAuth } from '../context/AuthContext'
 import { formatDate, money, titleCase } from '../lib/format'
 import { OrderStatusRow } from '../components/OrderViews'
-import { ErrorNote, Rail, Spinner } from '../components/ui'
+import { validateNewPassword } from '../lib/password'
+import { ErrorNote, PasswordChecklist, Rail, Spinner } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 
 export default function Account() {
@@ -32,14 +33,15 @@ export default function Account() {
     setDone(false)
   }
 
+  const canSubmit =
+    form.currentPassword !== '' &&
+    validateNewPassword(form.newPassword, form.confirm) === null
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.newPassword !== form.confirm) {
-      setError('New password and confirmation do not match')
-      return
-    }
-    if (form.newPassword.length < 6) {
-      setError('New password must be at least 6 characters')
+    const pwError = validateNewPassword(form.newPassword, form.confirm)
+    if (pwError) {
+      setError(pwError)
       return
     }
     setSaving(true)
@@ -119,11 +121,12 @@ export default function Account() {
                   className="field"
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   autoComplete="new-password"
                   value={form.newPassword}
                   onChange={set('newPassword')}
                 />
+                <PasswordChecklist password={form.newPassword} confirm={form.confirm} />
               </div>
               <div>
                 <label className="label">Confirm new password</label>
@@ -142,7 +145,7 @@ export default function Account() {
                   Password updated. Use your new password next time you sign in.
                 </div>
               )}
-              <button className="btn-primary w-full" disabled={saving}>
+              <button className="btn-primary w-full" disabled={saving || !canSubmit}>
                 {saving ? <Spinner /> : 'Update password'}
               </button>
             </form>

@@ -9,6 +9,8 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const canSubmit = email.trim() !== ''
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -44,7 +46,7 @@ export default function ForgotPassword() {
                   <input className="field" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 {error && <ErrorNote message={error} />}
-                <button className="btn-primary w-full" disabled={loading}>
+                <button className="btn-primary w-full" disabled={loading || !canSubmit}>
                   {loading ? <Spinner /> : 'Send reset link'}
                 </button>
               </form>
