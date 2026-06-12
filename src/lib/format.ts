@@ -1,4 +1,4 @@
-import type { FulfillmentStatus, PaymentStatus } from './types'
+import type { BookingStatus, FulfillmentStatus, PaymentStatus } from './types'
 
 /** The price actually charged for a product (discounted price when a discount applies). */
 export function effectivePrice(p: { price: number; discountedPrice: number; discountPercent: number }): number {
@@ -50,4 +50,34 @@ export function fulfillmentTone(status: FulfillmentStatus): string {
   if (status === 'CANCELLED') return 'bg-clay/12 text-clay-dark'
   if (status === 'READY_FOR_PICKUP') return 'bg-clay/15 text-clay-dark'
   return 'bg-ink/8 text-ink'
+}
+
+/** Date only, no time — e.g. "Jun 12, 2026". */
+export function formatDay(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+/** Time only — e.g. "2:30 PM". */
+export function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })
+}
+
+const BOOKING_TONE: Record<BookingStatus, string> = {
+  DRAFT: 'bg-ink/8 text-muted',
+  REQUESTED: 'bg-gold/15 text-[#9A6A10]',
+  APPROVED: 'bg-clay/15 text-clay-dark',
+  DEPOSIT_PENDING: 'bg-gold/15 text-[#9A6A10]',
+  CONFIRMED: 'bg-forest/12 text-forest',
+  REMINDER_SENT: 'bg-forest/12 text-forest',
+  IN_PROGRESS: 'bg-clay/15 text-clay-dark',
+  COMPLETED: 'bg-forest/12 text-forest',
+  BALANCE_PENDING: 'bg-gold/15 text-[#9A6A10]',
+  CLOSED: 'bg-ink/8 text-muted',
+  CANCELLED: 'bg-clay/12 text-clay-dark',
+  NO_SHOW: 'bg-clay/12 text-clay-dark',
+  REJECTED: 'bg-clay/12 text-clay-dark',
+}
+
+export function bookingTone(status: BookingStatus): string {
+  return BOOKING_TONE[status] ?? 'bg-ink/8 text-ink'
 }

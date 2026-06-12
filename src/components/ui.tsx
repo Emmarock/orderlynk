@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { fulfillmentTone, paymentTone, titleCase } from '../lib/format'
-import type { FulfillmentStatus, PaymentStatus } from '../lib/types'
+import { bookingTone, fulfillmentTone, paymentTone, titleCase } from '../lib/format'
+import type { BookingStatus, FulfillmentStatus, PaymentStatus } from '../lib/types'
 import { passwordChecks } from '../lib/password'
 import { COUNTRIES } from '../lib/countries'
 
@@ -28,6 +28,10 @@ export function PaymentBadge({ status }: { status: PaymentStatus }) {
 
 export function FulfillmentBadge({ status }: { status: FulfillmentStatus }) {
   return <span className={`chip ${fulfillmentTone(status)}`}>{titleCase(status)}</span>
+}
+
+export function BookingBadge({ status }: { status: BookingStatus }) {
+  return <span className={`chip ${bookingTone(status)}`}>{titleCase(status)}</span>
 }
 
 export function Spinner({ className = '' }: { className?: string }) {

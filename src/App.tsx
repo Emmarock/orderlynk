@@ -4,6 +4,9 @@ import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import Landing from './pages/Landing'
 import Storefront from './pages/Storefront'
+import Services from './pages/Services'
+import ServiceProvider from './pages/ServiceProvider'
+import TrackBooking from './pages/TrackBooking'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
@@ -18,6 +21,8 @@ import SellOnOrderlynk from './pages/SellOnOrderlynk'
 import Account from './pages/Account'
 import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorProducts from './pages/vendor/VendorProducts'
+import VendorServices from './pages/vendor/VendorServices'
+import VendorBookings from './pages/vendor/VendorBookings'
 import VendorOrders from './pages/vendor/VendorOrders'
 import VendorOrderDetail from './pages/vendor/VendorOrderDetail'
 import VendorCustomers from './pages/vendor/VendorCustomers'
@@ -29,6 +34,7 @@ import VendorOnboardingReturn from './pages/vendor/VendorOnboardingReturn'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminVendors from './pages/admin/AdminVendors'
 import AdminOrders from './pages/admin/AdminOrders'
+import AdminBookings from './pages/admin/AdminBookings'
 import NotFound from './pages/NotFound'
 
 function ScrollToTop() {
@@ -43,6 +49,9 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/services/:slug" element={<ServiceProvider />} />
+        <Route path="/bookings/track" element={<TrackBooking />} />
         <Route path="/vendor/:slug" element={<Storefront />} />
         <Route path="/vendor/:slug/product/:productId" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
@@ -78,6 +87,22 @@ export default function App() {
           element={
             <ProtectedRoute role="VENDOR">
               <VendorProducts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/services"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorServices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/bookings"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorBookings />
             </ProtectedRoute>
           }
         />
@@ -175,6 +200,14 @@ export default function App() {
           element={
             <ProtectedRoute role="ADMIN">
               <AdminOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/bookings"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminBookings />
             </ProtectedRoute>
           }
         />

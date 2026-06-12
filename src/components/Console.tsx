@@ -76,6 +76,8 @@ export const VENDOR_TABS: ConsoleTab[] = [
   { to: '/vendor', label: 'Overview' },
   { to: '/vendor/manage/products', label: 'Products' },
   { to: '/vendor/manage/orders', label: 'Orders' },
+  { to: '/vendor/manage/services', label: 'Services' },
+  { to: '/vendor/manage/bookings', label: 'Bookings' },
   { to: '/vendor/manage/customers', label: 'Customers' },
   { to: '/vendor/manage/earnings', label: 'Earnings' },
   { to: '/vendor/manage/settings', label: 'Settings' },
@@ -86,4 +88,5 @@ export const ADMIN_TABS: ConsoleTab[] = [
   { to: '/admin', label: 'Overview' },
   { to: '/admin/vendors', label: 'Vendors' },
   { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/bookings', label: 'Bookings' },
 ]

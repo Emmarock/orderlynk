@@ -38,6 +38,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             <NavLink to="/" end className={({ isActive }) => (isActive ? 'link-underline after:w-full' : 'link-underline')}>
               Marketplace
             </NavLink>
+            <NavLink to="/services" className={({ isActive }) => (isActive ? 'link-underline after:w-full' : 'link-underline')}>
+              Services
+            </NavLink>
             <NavLink to="/track" className={({ isActive }) => (isActive ? 'link-underline after:w-full' : 'link-underline')}>
               Track order
             </NavLink>
@@ -97,7 +100,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Shop</p>
             <ul className="space-y-1.5 text-sm">
               <li><Link className="hover:text-clay" to="/">Marketplace</Link></li>
+              <li><Link className="hover:text-clay" to="/services">Book a service</Link></li>
               <li><Link className="hover:text-clay" to="/track">Track an order</Link></li>
+              <li><Link className="hover:text-clay" to="/bookings/track">Track a booking</Link></li>
             </ul>
           </div>
           <div>
