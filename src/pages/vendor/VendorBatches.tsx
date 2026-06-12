@@ -4,11 +4,13 @@ import { api, ApiError } from '../../lib/api'
 import type { Batch, BatchSummary, BatchType, ShippingMethod, BatchVisibility } from '../../lib/types'
 import { money, titleCase, formatDay, cargoTone } from '../../lib/format'
 import { ConsoleShell, VENDOR_TABS } from '../../components/Console'
-import { EmptyState, ErrorNote, PageLoader, Spinner } from '../../components/ui'
+import { CountrySelect, EmptyState, ErrorNote, PageLoader, Spinner } from '../../components/ui'
+import SuggestField from '../../components/SuggestField'
 
 const BATCH_TYPES: BatchType[] = ['PRODUCT_BATCH', 'CARGO_BATCH', 'HYBRID_BATCH']
 const SHIPPING_METHODS: ShippingMethod[] = ['AIR_CARGO', 'SEA_CARGO', 'DOMESTIC', 'OTHER']
 const VISIBILITIES: BatchVisibility[] = ['DRAFT', 'PRIVATE_LINK', 'MARKETPLACE']
+const CURRENCIES = ['CAD', 'USD', 'GBP', 'EUR', 'NGN']
 
 const numOrUndef = (v: string): number | undefined => (v.trim() === '' || Number.isNaN(Number(v)) ? undefined : Number(v))
 
@@ -29,7 +31,7 @@ interface FormState {
   handlingFee: string
   currency: string
   pickupLocation: string
-  collectionPoints: string
+  collectionPoints: string[]
   visibility: BatchVisibility
   notes: string
 }
@@ -38,7 +40,7 @@ const EMPTY: FormState = {
   batchName: '', batchType: 'PRODUCT_BATCH', route: '', originCountry: '', originCity: '',
   destinationCountry: '', destinationCity: '', shippingMethod: 'AIR_CARGO', openDate: '', closeDate: '',
   estimatedDeparture: '', estimatedArrival: '', ratePerKg: '', handlingFee: '0', currency: 'CAD',
-  pickupLocation: '', collectionPoints: '', visibility: 'DRAFT', notes: '',
+  pickupLocation: '', collectionPoints: [], visibility: 'DRAFT', notes: '',
 }
 
 function fromBatch(b: Batch): FormState {
@@ -50,8 +52,34 @@ function fromBatch(b: Batch): FormState {
     estimatedDeparture: b.estimatedDeparture ?? '', estimatedArrival: b.estimatedArrival ?? '',
     ratePerKg: b.ratePerKg != null ? String(b.ratePerKg) : '', handlingFee: String(b.handlingFee ?? 0),
     currency: b.currency, pickupLocation: b.pickupLocation ?? '',
-    collectionPoints: (b.collectionPoints ?? []).join(', '), visibility: b.visibility, notes: b.notes ?? '',
+    collectionPoints: b.collectionPoints ?? [], visibility: b.visibility, notes: b.notes ?? '',
   }
+}
+
+/** Multi-value origin drop-off picker — each entry uses the shared address autocomplete. */
+function CollectionPointsField({ country, value, onChange }: { country?: string; value: string[]; onChange: (v: string[]) => void }) {
+  const [draft, setDraft] = useState('')
+  const add = () => { const t = draft.trim(); if (!t) return; onChange([...value, t]); setDraft('') }
+  return (
+    <div className="col-span-2">
+      <label className="label">Collection points (origin drop-off)</label>
+      {value.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {value.map((c, i) => (
+            <span key={i} className="chip bg-ink/8 text-ink">
+              {c}
+              <button type="button" className="ml-1.5 text-muted hover:text-clay" onClick={() => onChange(value.filter((_, j) => j !== i))}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex items-start gap-2">
+        <SuggestField className="flex-1" value={draft} onChange={setDraft} country={country}
+          pick={(s) => s.formatted} placeholder="Search an origin address…" />
+        <button type="button" className="btn-quiet" onClick={add} disabled={!draft.trim()}>Add</button>
+      </div>
+    </div>
+  )
 }
 
 function BatchForm({ initial, onClose, onSaved }: { initial: Batch | null; onClose: () => void; onSaved: () => void }) {
@@ -60,6 +88,7 @@ function BatchForm({ initial, onClose, onSaved }: { initial: Batch | null; onClo
   const [saving, setSaving] = useState(false)
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+  const setField = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   const cargo = form.batchType !== 'PRODUCT_BATCH'
 
@@ -83,7 +112,7 @@ function BatchForm({ initial, onClose, onSaved }: { initial: Batch | null; onClo
       handlingFee: numOrUndef(form.handlingFee),
       currency: form.currency,
       pickupLocation: form.pickupLocation || undefined,
-      collectionPoints: form.collectionPoints.split(',').map((s) => s.trim()).filter(Boolean),
+      collectionPoints: form.collectionPoints.map((s) => s.trim()).filter(Boolean),
       visibility: form.visibility,
       notes: form.notes || undefined,
     }
@@ -119,10 +148,24 @@ function BatchForm({ initial, onClose, onSaved }: { initial: Batch | null; onClo
                 {SHIPPING_METHODS.map((m) => <option key={m} value={m}>{titleCase(m)}</option>)}
               </select>
             </div>
-            <div><label className="label">Origin country</label><input className="field" value={form.originCountry} onChange={set('originCountry')} /></div>
-            <div><label className="label">Origin city</label><input className="field" value={form.originCity} onChange={set('originCity')} /></div>
-            <div><label className="label">Destination country</label><input className="field" value={form.destinationCountry} onChange={set('destinationCountry')} /></div>
-            <div><label className="label">Destination city</label><input className="field" value={form.destinationCity} onChange={set('destinationCity')} /></div>
+            <div>
+              <label className="label">Origin country</label>
+              <CountrySelect value={form.originCountry} onChange={(v) => setForm((f) => ({ ...f, originCountry: v, originCity: '' }))} />
+            </div>
+            <SuggestField
+              label="Origin city" value={form.originCity} onChange={(v) => setField('originCity', v)}
+              country={form.originCountry} type="city" pick={(s) => s.city || s.formatted}
+              placeholder={form.originCountry ? 'Start typing a city…' : 'Pick a country first'}
+            />
+            <div>
+              <label className="label">Destination country</label>
+              <CountrySelect value={form.destinationCountry} onChange={(v) => setForm((f) => ({ ...f, destinationCountry: v, destinationCity: '' }))} />
+            </div>
+            <SuggestField
+              label="Destination city" value={form.destinationCity} onChange={(v) => setField('destinationCity', v)}
+              country={form.destinationCountry} type="city" pick={(s) => s.city || s.formatted}
+              placeholder={form.destinationCountry ? 'Start typing a city…' : 'Pick a country first'}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -141,14 +184,25 @@ function BatchForm({ initial, onClose, onSaved }: { initial: Batch | null; onClo
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Currency</label><input className="field" value={form.currency} onChange={set('currency')} /></div>
+            <div><label className="label">Currency</label>
+              <select className="field" value={form.currency} onChange={set('currency')}>
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
             <div><label className="label">Visibility</label>
               <select className="field" value={form.visibility} onChange={set('visibility')}>
                 {VISIBILITIES.map((v) => <option key={v} value={v}>{titleCase(v)}</option>)}
               </select>
             </div>
-            <div className="col-span-2"><label className="label">Pickup location (destination)</label><input className="field" value={form.pickupLocation} onChange={set('pickupLocation')} /></div>
-            <div className="col-span-2"><label className="label">Collection points (comma-separated)</label><input className="field" value={form.collectionPoints} onChange={set('collectionPoints')} placeholder="Lagos warehouse, Abuja office" /></div>
+            <SuggestField
+              className="col-span-2" label="Pickup location (destination)" value={form.pickupLocation}
+              onChange={(v) => setField('pickupLocation', v)} country={form.destinationCountry}
+              pick={(s) => s.formatted} placeholder="Search a destination address…"
+            />
+            <CollectionPointsField
+              country={form.originCountry} value={form.collectionPoints}
+              onChange={(v) => setField('collectionPoints', v)}
+            />
             <div className="col-span-2"><label className="label">Notes</label><textarea className="field min-h-16" value={form.notes} onChange={set('notes')} /></div>
           </div>
 
