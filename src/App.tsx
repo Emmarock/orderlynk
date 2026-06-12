@@ -7,6 +7,9 @@ import Storefront from './pages/Storefront'
 import Services from './pages/Services'
 import ServiceProvider from './pages/ServiceProvider'
 import TrackBooking from './pages/TrackBooking'
+import Batches from './pages/Batches'
+import BatchPage from './pages/BatchPage'
+import BatchTracking from './pages/BatchTracking'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
@@ -23,6 +26,8 @@ import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorProducts from './pages/vendor/VendorProducts'
 import VendorServices from './pages/vendor/VendorServices'
 import VendorBookings from './pages/vendor/VendorBookings'
+import VendorBatches from './pages/vendor/VendorBatches'
+import VendorBatchDetail from './pages/vendor/VendorBatchDetail'
 import VendorOrders from './pages/vendor/VendorOrders'
 import VendorOrderDetail from './pages/vendor/VendorOrderDetail'
 import VendorCustomers from './pages/vendor/VendorCustomers'
@@ -35,6 +40,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminVendors from './pages/admin/AdminVendors'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminBookings from './pages/admin/AdminBookings'
+import AdminBatches from './pages/admin/AdminBatches'
 import NotFound from './pages/NotFound'
 
 function ScrollToTop() {
@@ -52,6 +58,9 @@ export default function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/services/:slug" element={<ServiceProvider />} />
         <Route path="/bookings/track" element={<TrackBooking />} />
+        <Route path="/batches" element={<Batches />} />
+        <Route path="/batches/track" element={<BatchTracking />} />
+        <Route path="/batches/:id" element={<BatchPage />} />
         <Route path="/vendor/:slug" element={<Storefront />} />
         <Route path="/vendor/:slug/product/:productId" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
@@ -103,6 +112,22 @@ export default function App() {
           element={
             <ProtectedRoute role="VENDOR">
               <VendorBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/batches"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorBatches />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/manage/batches/:id"
+          element={
+            <ProtectedRoute role="VENDOR">
+              <VendorBatchDetail />
             </ProtectedRoute>
           }
         />
@@ -208,6 +233,14 @@ export default function App() {
           element={
             <ProtectedRoute role="ADMIN">
               <AdminBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/batches"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminBatches />
             </ProtectedRoute>
           }
         />

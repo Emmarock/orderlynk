@@ -81,3 +81,17 @@ const BOOKING_TONE: Record<BookingStatus, string> = {
 export function bookingTone(status: BookingStatus): string {
   return BOOKING_TONE[status] ?? 'bg-ink/8 text-ink'
 }
+
+/** Tone for the many batch / batch-order / shipment-request statuses, by keyword. */
+export function cargoTone(status: string): string {
+  const s = status.toUpperCase()
+  if (['COMPLETED', 'PAID', 'DELIVERED', 'ARRIVED', 'CLEARED', 'OPEN', 'ADDED_TO_BATCH'].includes(s)) {
+    return 'bg-forest/12 text-forest'
+  }
+  if (['CANCELLED', 'REJECTED', 'DELAYED'].includes(s)) return 'bg-clay/12 text-clay-dark'
+  if (s.includes('PENDING') || s.includes('AWAITING') || s.includes('INVOICE') || s === 'CLOSING_SOON' || s === 'DRAFT') {
+    return 'bg-gold/15 text-[#9A6A10]'
+  }
+  if (s === 'READY_FOR_PICKUP') return 'bg-clay/15 text-clay-dark'
+  return 'bg-ink/8 text-ink'
+}

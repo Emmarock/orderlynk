@@ -41,6 +41,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             <NavLink to="/services" className={({ isActive }) => (isActive ? 'link-underline after:w-full' : 'link-underline')}>
               Services
             </NavLink>
+            <NavLink to="/batches" className={({ isActive }) => (isActive ? 'link-underline after:w-full' : 'link-underline')}>
+              Batch & Cargo
+            </NavLink>
             <NavLink to="/track" className={({ isActive }) => (isActive ? 'link-underline after:w-full' : 'link-underline')}>
               Track order
             </NavLink>
@@ -101,8 +104,10 @@ export default function Layout({ children }: { children: ReactNode }) {
             <ul className="space-y-1.5 text-sm">
               <li><Link className="hover:text-clay" to="/">Marketplace</Link></li>
               <li><Link className="hover:text-clay" to="/services">Book a service</Link></li>
+              <li><Link className="hover:text-clay" to="/batches">Batch &amp; Cargo</Link></li>
               <li><Link className="hover:text-clay" to="/track">Track an order</Link></li>
               <li><Link className="hover:text-clay" to="/bookings/track">Track a booking</Link></li>
+              <li><Link className="hover:text-clay" to="/batches/track">Track a batch/shipment</Link></li>
             </ul>
           </div>
           <div>
