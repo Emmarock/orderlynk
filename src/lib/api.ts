@@ -304,6 +304,22 @@ export const api = {
   serviceProfile: () => request<ServiceProviderProfile>('GET', '/api/vendor/service-profile'),
   updateServiceProfile: (b: unknown) => request<ServiceProviderProfile>('PUT', '/api/vendor/service-profile', b),
   vendorServices: () => request<ServiceOffering[]>('GET', '/api/vendor/services'),
+  // Multipart upload — let the browser set the Content-Type (with boundary), so we don't use `request`.
+  uploadServiceImage: async (file: File): Promise<{ url: string }> => {
+    const form = new FormData()
+    form.append('file', file)
+    const headers: Record<string, string> = {}
+    const token = tokenStore.get()
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch(`${BASE}/api/vendor/services/image`, { method: 'POST', headers, body: form })
+    const text = await res.text()
+    const data = text ? JSON.parse(text) : undefined
+    if (!res.ok) {
+      const message = (data && (data.message as string)) || `Upload failed (${res.status})`
+      throw new ApiError(res.status, message, data?.details)
+    }
+    return data as { url: string }
+  },
   createService: (b: unknown) => request<ServiceOffering>('POST', '/api/vendor/services', b),
   updateService: (id: string, b: unknown) => request<ServiceOffering>('PUT', `/api/vendor/services/${id}`, b),
   toggleService: (id: string, active: boolean) =>

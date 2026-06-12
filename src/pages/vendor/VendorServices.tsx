@@ -152,9 +152,26 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: ServiceOffering |
   const [addOns, setAddOns] = useState<ServiceAddOn[]>(initial?.addOns ?? [])
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   const set = (k: keyof ServiceFormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file after a remove
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    try {
+      const { url } = await api.uploadServiceImage(file)
+      setForm((f) => ({ ...f, imageUrl: url }))
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not upload image')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -239,8 +256,34 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: ServiceOffering |
             </p>
           </div>
           <div>
-            <label className="label">Image URL (optional)</label>
-            <input className="field" value={form.imageUrl} onChange={set('imageUrl')} placeholder="https://…" />
+            <label className="label">Service image</label>
+            {form.imageUrl ? (
+              <div className="flex items-center gap-3">
+                <img
+                  src={form.imageUrl}
+                  alt={form.name || 'Service'}
+                  className="h-16 w-16 shrink-0 rounded-lg border border-line object-cover"
+                />
+                <div className="flex flex-col items-start gap-1">
+                  <label className="btn-quiet cursor-pointer px-2 text-sm">
+                    {uploading ? <Spinner /> : 'Replace'}
+                    <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn-quiet px-2 text-sm text-clay hover:text-clay-dark"
+                    onClick={() => setForm((f) => ({ ...f, imageUrl: '' }))}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="field flex cursor-pointer items-center justify-center gap-2 text-muted">
+                {uploading ? <Spinner /> : 'Browse device…'}
+                <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+              </label>
+            )}
           </div>
 
           {initial && (
@@ -251,7 +294,7 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: ServiceOffering |
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Close</button>
-            <button className="btn-primary" disabled={saving}>{saving ? <Spinner /> : 'Save service'}</button>
+            <button className="btn-primary" disabled={saving || uploading}>{saving ? <Spinner /> : 'Save service'}</button>
           </div>
         </form>
       </div>
