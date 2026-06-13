@@ -70,6 +70,18 @@ export default function AdminVendors() {
                   {v.whatsappNumber ? ` · ${v.whatsappNumber}` : ''}
                 </p>
                 {v.description && <p className="mt-1 max-w-xl text-sm text-muted">{v.description}</p>}
+                <div className="mt-2 flex items-center gap-2">
+                  <span className={`chip ${v.alternativePaymentsEnabled ? 'bg-forest/12 text-forest' : 'bg-ink/8 text-muted'}`}>
+                    {v.alternativePaymentsEnabled ? 'Card + transfers' : 'Card only'}
+                  </span>
+                  <button
+                    className="btn-quiet px-2 text-xs"
+                    disabled={busyId === v.id}
+                    onClick={() => act(v.id, (id) => api.setVendorAlternativePayments(id, !v.alternativePaymentsEnabled))}
+                  >
+                    {v.alternativePaymentsEnabled ? 'Disable transfers' : 'Enable transfers'}
+                  </button>
+                </div>
               </div>
               <div className="flex gap-2">
                 {v.verificationStatus !== 'APPROVED' && (

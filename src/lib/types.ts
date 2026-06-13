@@ -121,6 +121,7 @@ export interface Vendor {
   notifyByEmail: boolean
   notifyByWhatsapp: boolean
   lowStockAlerts: boolean
+  alternativePaymentsEnabled: boolean
 }
 
 export interface RatingSummary {

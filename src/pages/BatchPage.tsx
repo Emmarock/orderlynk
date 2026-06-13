@@ -5,6 +5,8 @@ import type { PublicBatch, BatchProduct, BatchOrder, ShipmentRequest, Fulfillmen
 import { money, titleCase, formatDay, cargoTone } from '../lib/format'
 import { CopyOrderId, ErrorNote, PageLoader, SectionTitle, Spinner } from '../components/ui'
 import { BookingPayment } from '../components/BookingPayment'
+import AddressAutocomplete from '../components/AddressAutocomplete'
+import SuggestField from '../components/SuggestField'
 
 export default function BatchPage() {
   const { id = '' } = useParams()
@@ -209,16 +211,21 @@ function OrderModal({ batch, cart, onClose }: { batch: PublicBatch; cart: Record
                 </select>
               </div>
               {fulfillment === 'LOCAL_DELIVERY' && (
-                <>
-                  <div className="col-span-2"><label className="label">Street</label><input className="field" value={street} onChange={(e) => setStreet(e.target.value)} /></div>
-                  <div className="col-span-2"><label className="label">City</label><input className="field" value={city} onChange={(e) => setCity(e.target.value)} /></div>
-                </>
+                <div className="col-span-2 space-y-3">
+                  <AddressAutocomplete
+                    label="Search your delivery address"
+                    country={batch.batch.destinationCountry}
+                    onSelect={(addr) => { setStreet([addr.houseNumber, addr.street].filter(Boolean).join(' ')); setCity(addr.city ?? '') }}
+                  />
+                  <div><label className="label">Street</label><input className="field" value={street} onChange={(e) => setStreet(e.target.value)} /></div>
+                  <div><label className="label">City</label><input className="field" value={city} onChange={(e) => setCity(e.target.value)} /></div>
+                </div>
               )}
             </div>
             {error && <ErrorNote message={error} />}
             <div className="flex justify-end gap-2">
               <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-              <button className="btn-primary" disabled={submitting}>{submitting ? <Spinner /> : 'Place order'}</button>
+              <button className="btn-primary" disabled={submitting || !name.trim() || !phone.trim() || (fulfillment === 'LOCAL_DELIVERY' && (!street.trim() || !city.trim()))}>{submitting ? <Spinner /> : 'Place order'}</button>
             </div>
           </form>
         )}
@@ -237,7 +244,8 @@ function ShipItemsModal({ batch, onClose }: { batch: PublicBatch; onClose: () =>
   const [estimatedWeight, setEstimatedWeight] = useState('')
   const [declaredValue, setDeclaredValue] = useState('')
   const [dropOff, setDropOff] = useState(b.collectionPoints[0] ?? '')
-  const [destination, setDestination] = useState('')
+  // Default the destination to the batch's configured pickup point (the customer can override it).
+  const [destination, setDestination] = useState(b.pickupLocation ?? '')
   const [preference, setPreference] = useState('PICKUP')
   const [restricted, setRestricted] = useState(false)
   const [notes, setNotes] = useState('')
@@ -314,10 +322,10 @@ function ShipItemsModal({ batch, onClose }: { batch: PublicBatch; onClose: () =>
                     {b.collectionPoints.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 ) : (
-                  <input className="field" value={dropOff} onChange={(e) => setDropOff(e.target.value)} />
+                  <SuggestField value={dropOff} onChange={setDropOff} country={b.originCountry} pick={(s) => s.formatted} placeholder="Search an origin address…" />
                 )}
               </div>
-              <div><label className="label">Destination address/city</label><input className="field" value={destination} onChange={(e) => setDestination(e.target.value)} /></div>
+              <SuggestField label="Destination address/city" value={destination} onChange={setDestination} country={b.destinationCountry} pick={(s) => s.formatted} placeholder="Search a destination address…" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2"><label className="label">Your name</label><input className="field" required value={name} onChange={(e) => setName(e.target.value)} /></div>
@@ -335,7 +343,7 @@ function ShipItemsModal({ batch, onClose }: { batch: PublicBatch; onClose: () =>
             {error && <ErrorNote message={error} />}
             <div className="flex justify-end gap-2">
               <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-              <button className="btn-primary" disabled={submitting}>{submitting ? <Spinner /> : 'Submit request'}</button>
+              <button className="btn-primary" disabled={submitting || !name.trim() || !phone.trim() || !itemDescription.trim() || !restricted}>{submitting ? <Spinner /> : 'Submit request'}</button>
             </div>
           </form>
         )}

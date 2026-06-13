@@ -316,7 +316,7 @@ function ProductForm({
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" disabled={saving || uploading || generating}>{saving ? <Spinner /> : 'Save product'}</button>
+            <button className="btn-primary" disabled={saving || uploading || generating || !form.name.trim() || !form.price.trim()}>{saving ? <Spinner /> : 'Save product'}</button>
           </div>
         </form>
       </div>

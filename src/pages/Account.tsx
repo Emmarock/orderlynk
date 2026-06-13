@@ -311,7 +311,7 @@ function AddressBook() {
             <CountrySelect value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v }))} />
           </div>
           {error && <div className="mt-3"><ErrorNote message={error} /></div>}
-          <button className="btn-primary mt-4" disabled={saving}>{saving ? <Spinner /> : 'Add address'}</button>
+          <button className="btn-primary mt-4" disabled={saving || !form.street.trim() || !form.city.trim()}>{saving ? <Spinner /> : 'Add address'}</button>
         </form>
       </div>
     </div>

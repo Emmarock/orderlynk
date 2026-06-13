@@ -80,7 +80,10 @@ function CatalogSection() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {services.map((s) => (
-            <div key={s.id} className="card flex flex-col gap-3 p-5">
+            <div key={s.id} className="card flex flex-col gap-3 overflow-hidden p-5">
+              {s.imageUrl && (
+                <img src={s.imageUrl} alt={s.name} className="-mx-5 -mt-5 mb-1 h-36 w-[calc(100%+2.5rem)] object-cover" />
+              )}
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-display text-lg font-semibold">{s.name}</p>
@@ -294,7 +297,7 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: ServiceOffering |
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Close</button>
-            <button className="btn-primary" disabled={saving || uploading}>{saving ? <Spinner /> : 'Save service'}</button>
+            <button className="btn-primary" disabled={saving || uploading || !form.name.trim() || !form.basePrice.trim()}>{saving ? <Spinner /> : 'Save service'}</button>
           </div>
         </form>
       </div>
@@ -414,7 +417,7 @@ function RuleCard({ rules, onChanged, setError }: { rules: AvailabilityRule[]; o
         <div><label className="label">From</label><input className="field" type="time" value={start} onChange={(e) => setStart(e.target.value)} /></div>
         <div><label className="label">To</label><input className="field" type="time" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
         <div><label className="label">Capacity (optional)</label><input className="field" type="number" min="1" placeholder="default" value={capacity} onChange={(e) => setCapacity(e.target.value)} /></div>
-        <div className="flex items-end"><button className="btn-primary w-full" onClick={add} disabled={busy}>{busy ? <Spinner /> : 'Add hours'}</button></div>
+        <div className="flex items-end"><button className="btn-primary w-full" onClick={add} disabled={busy || !start || !end}>{busy ? <Spinner /> : 'Add hours'}</button></div>
       </div>
     </div>
   )

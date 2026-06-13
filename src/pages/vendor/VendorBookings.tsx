@@ -22,9 +22,11 @@ export default function VendorBookings() {
   const [filter, setFilter] = useState<Filter>('all')
   const [view, setView] = useState<View>('list')
   const [selected, setSelected] = useState<Booking | null>(null)
+  const [altPay, setAltPay] = useState(false)
 
   const load = () => api.vendorBookings().then(setBookings).catch(() => setBookings([]))
   useEffect(() => { load() }, [])
+  useEffect(() => { api.myVendor().then((v) => setAltPay(v.alternativePaymentsEnabled)).catch(() => {}) }, [])
 
   const visible = useMemo(() => {
     if (!bookings) return []
@@ -110,7 +112,7 @@ export default function VendorBookings() {
         </div>
       )}
 
-      {selected && <BookingDetail booking={selected} onClose={() => setSelected(null)} onChanged={onChanged} />}
+      {selected && <BookingDetail booking={selected} onClose={() => setSelected(null)} onChanged={onChanged} alternativePayments={altPay} />}
     </ConsoleShell>
   )
 }
@@ -249,10 +251,20 @@ function WeekCalendar({ bookings, onSelect }: { bookings: Booking[]; onSelect: (
   )
 }
 
-function BookingDetail({ booking, onClose, onChanged }: { booking: Booking; onClose: () => void; onChanged: (b: Booking) => void }) {
+/** ISO instant → "YYYY-MM-DDTHH:mm" in local time, for a datetime-local input default. */
+function toDatetimeLocal(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function BookingDetail({ booking, onClose, onChanged, alternativePayments }: { booking: Booking; onClose: () => void; onChanged: (b: Booking) => void; alternativePayments: boolean }) {
   const [payments, setPayments] = useState<BookingPayment[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [action, setAction] = useState<null | 'reschedule' | 'cancel' | 'reject'>(null)
+  const [rescheduleAt, setRescheduleAt] = useState('')
+  const [reason, setReason] = useState('')
 
   const loadPayments = () => api.bookingPayments(booking.id).then(setPayments).catch(() => setPayments([]))
   useEffect(() => { loadPayments() }, [booking.id])
@@ -280,12 +292,19 @@ function BookingDetail({ booking, onClose, onChanged }: { booking: Booking; onCl
     pay: !['DRAFT', 'CANCELLED', 'REJECTED', 'NO_SHOW', 'CLOSED'].includes(s),
   }
 
-  const reschedule = async () => {
-    const v = prompt('New start time (YYYY-MM-DD HH:mm):')
-    if (!v) return
-    const d = new Date(v.replace(' ', 'T'))
-    if (Number.isNaN(d.getTime())) { setError('Invalid date'); return }
-    await run(() => api.rescheduleBooking(booking.id, d.toISOString()))
+  const closeAction = () => { setAction(null); setReason(''); setRescheduleAt(''); setError(null) }
+  const openReschedule = () => { setRescheduleAt(toDatetimeLocal(booking.appointmentStart)); setError(null); setAction('reschedule') }
+  const openReason = (a: 'cancel' | 'reject') => { setReason(''); setError(null); setAction(a) }
+
+  const confirmReschedule = async () => {
+    if (!rescheduleAt) return
+    await run(() => api.rescheduleBooking(booking.id, new Date(rescheduleAt).toISOString()))
+    closeAction()
+  }
+  const confirmReason = async () => {
+    const r = reason.trim() || undefined
+    await run(() => (action === 'reject' ? api.rejectBooking(booking.id, r) : api.cancelBooking(booking.id, r)))
+    closeAction()
   }
 
   return (
@@ -325,18 +344,45 @@ function BookingDetail({ booking, onClose, onChanged }: { booking: Booking; onCl
 
         {error && <div className="mt-4"><ErrorNote message={error} /></div>}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {can.approve && <button className="btn-primary" disabled={busy} onClick={() => run(() => api.approveBooking(booking.id))}>Approve</button>}
-          {can.reject && <button className="btn-ghost text-clay" disabled={busy} onClick={() => run(() => api.rejectBooking(booking.id, prompt('Reason (optional):') || undefined))}>Reject</button>}
-          {can.start && <button className="btn-quiet" disabled={busy} onClick={() => run(() => api.startBooking(booking.id))}>Start service</button>}
-          {can.complete && <button className="btn-primary" disabled={busy} onClick={() => run(() => api.completeBooking(booking.id))}>Mark completed</button>}
-          {can.noShow && <button className="btn-quiet text-clay" disabled={busy} onClick={() => run(() => api.noShowBooking(booking.id))}>No-show</button>}
-          {can.reschedule && <button className="btn-quiet" disabled={busy} onClick={reschedule}>Reschedule</button>}
-          {can.close && <button className="btn-primary" disabled={busy} onClick={() => run(() => api.closeBooking(booking.id))}>Close</button>}
-          {can.cancel && <button className="btn-quiet text-clay" disabled={busy} onClick={() => { if (confirm('Cancel this booking?')) run(() => api.cancelBooking(booking.id, prompt('Reason (optional):') || undefined)) }}>Cancel</button>}
-        </div>
+        {!action && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {can.approve && <button className="btn-primary" disabled={busy} onClick={() => run(() => api.approveBooking(booking.id))}>Approve</button>}
+            {can.reject && <button className="btn-ghost text-clay" disabled={busy} onClick={() => openReason('reject')}>Reject</button>}
+            {can.start && <button className="btn-quiet" disabled={busy} onClick={() => run(() => api.startBooking(booking.id))}>Start service</button>}
+            {can.complete && <button className="btn-primary" disabled={busy} onClick={() => run(() => api.completeBooking(booking.id))}>Mark completed</button>}
+            {can.noShow && <button className="btn-quiet text-clay" disabled={busy} onClick={() => run(() => api.noShowBooking(booking.id))}>No-show</button>}
+            {can.reschedule && <button className="btn-quiet" disabled={busy} onClick={openReschedule}>Reschedule</button>}
+            {can.close && <button className="btn-primary" disabled={busy} onClick={() => run(() => api.closeBooking(booking.id))}>Close</button>}
+            {can.cancel && <button className="btn-quiet text-clay" disabled={busy} onClick={() => openReason('cancel')}>Cancel</button>}
+          </div>
+        )}
 
-        {can.pay && <RecordPayment booking={booking} onRecorded={(b) => { onChanged(b); loadPayments() }} />}
+        {action === 'reschedule' && (
+          <div className="mt-4 rounded-xl border border-line bg-sand/40 p-4">
+            <p className="label">Reschedule appointment</p>
+            <input className="field" type="datetime-local" value={rescheduleAt} onChange={(e) => setRescheduleAt(e.target.value)} />
+            <div className="mt-3 flex justify-end gap-2">
+              <button className="btn-ghost" disabled={busy} onClick={closeAction}>Back</button>
+              <button className="btn-primary" disabled={busy || !rescheduleAt} onClick={confirmReschedule}>{busy ? <Spinner /> : 'Reschedule'}</button>
+            </div>
+          </div>
+        )}
+
+        {(action === 'cancel' || action === 'reject') && (
+          <div className="mt-4 rounded-xl border border-line bg-sand/40 p-4">
+            <p className="label">{action === 'cancel' ? 'Cancel this booking?' : 'Reject this request?'}</p>
+            <textarea className="field min-h-20" value={reason} onChange={(e) => setReason(e.target.value)}
+              placeholder="Reason (optional) — shared with the customer" />
+            <div className="mt-3 flex justify-end gap-2">
+              <button className="btn-ghost" disabled={busy} onClick={closeAction}>Back</button>
+              <button className="btn-primary text-clay" disabled={busy} onClick={confirmReason}>
+                {busy ? <Spinner /> : action === 'cancel' ? 'Cancel booking' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {can.pay && <RecordPayment booking={booking} alternativePayments={alternativePayments} onRecorded={(b) => { onChanged(b); loadPayments() }} />}
 
         {payments && payments.length > 0 && (
           <div className="mt-4">
@@ -363,11 +409,12 @@ function BookingDetail({ booking, onClose, onChanged }: { booking: Booking; onCl
 const PAYMENT_TYPES: BookingPaymentType[] = ['DEPOSIT', 'BALANCE', 'FULL', 'REFUND']
 const METHODS: PaymentMethod[] = ['CASH', 'INTERAC_ETRANSFER', 'BANK_TRANSFER', 'CARD', 'OTHER']
 
-function RecordPayment({ booking, onRecorded }: { booking: Booking; onRecorded: (b: Booking) => void }) {
+function RecordPayment({ booking, alternativePayments, onRecorded }: { booking: Booking; alternativePayments: boolean; onRecorded: (b: Booking) => void }) {
+  const methods = alternativePayments ? METHODS : (['CARD'] as PaymentMethod[])
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<BookingPaymentType>(booking.amountPaid <= 0 && booking.depositType !== 'NONE' ? 'DEPOSIT' : 'BALANCE')
   const [amount, setAmount] = useState('')
-  const [method, setMethod] = useState<PaymentMethod>('INTERAC_ETRANSFER')
+  const [method, setMethod] = useState<PaymentMethod>(alternativePayments ? 'INTERAC_ETRANSFER' : 'CARD')
   const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -412,7 +459,7 @@ function RecordPayment({ booking, onRecorded }: { booking: Booking; onRecorded: 
         <div>
           <label className="label">Method</label>
           <select className="field" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-            {METHODS.map((m) => <option key={m} value={m}>{titleCase(m)}</option>)}
+            {methods.map((m) => <option key={m} value={m}>{titleCase(m)}</option>)}
           </select>
         </div>
         <div>

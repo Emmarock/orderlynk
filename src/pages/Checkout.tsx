@@ -39,6 +39,8 @@ export default function Checkout() {
   })
   const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType | ''>('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CARD')
+  // Whether this vendor may accept non-card payments (admin-controlled); card-only otherwise.
+  const [altPay, setAltPay] = useState(false)
   const [quote, setQuote] = useState<Quote | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,6 +55,17 @@ export default function Checkout() {
   const [ratesLoading, setRatesLoading] = useState(false)
   const [ratesError, setRatesError] = useState<string | null>(null)
   const [selectedRateToken, setSelectedRateToken] = useState<string>('')
+
+  // Resolve the vendor's accepted-payment capability from its storefront; default to card-only.
+  useEffect(() => {
+    if (!cart?.vendorSlug) return
+    api.storefront(cart.vendorSlug)
+      .then((s) => setAltPay(s.vendor.alternativePaymentsEnabled))
+      .catch(() => setAltPay(false))
+  }, [cart?.vendorSlug])
+
+  // If the vendor doesn't accept transfers, force card.
+  useEffect(() => { if (!altPay && paymentMethod !== 'CARD') setPaymentMethod('CARD') }, [altPay, paymentMethod])
 
   const isShipping = fulfillmentType === 'DOMESTIC_SHIPPING'
   const destinationReady =
@@ -441,10 +454,10 @@ export default function Checkout() {
             </section>
           )}
 
-          {/* Payment — choose card (Stripe) or bank transfer / e-Transfer */}
+          {/* Payment — card (Stripe) by default; bank transfer only if the vendor is enabled for it */}
           <section className="card p-6">
             <h2 className="font-display text-xl font-semibold">Payment</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className={`mt-4 grid gap-3 ${altPay ? 'sm:grid-cols-2' : ''}`}>
               <button
                 type="button"
                 onClick={() => setPaymentMethod('CARD')}
@@ -455,16 +468,18 @@ export default function Checkout() {
                 <p className="font-medium">Pay by card</p>
                 <p className="text-xs text-muted">Secure card payment via Stripe</p>
               </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod(TRANSFER_METHOD)}
-                className={`rounded-xl border p-4 text-left transition-colors ${
-                  paymentMethod === TRANSFER_METHOD ? 'border-clay bg-clay/8' : 'border-line bg-cream hover:border-ink/30'
-                }`}
-              >
-                <p className="font-medium">Bank transfer / e-Transfer</p>
-                <p className="text-xs text-muted">Pay the vendor directly with the details shown after you order</p>
-              </button>
+              {altPay && (
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod(TRANSFER_METHOD)}
+                  className={`rounded-xl border p-4 text-left transition-colors ${
+                    paymentMethod === TRANSFER_METHOD ? 'border-clay bg-clay/8' : 'border-line bg-cream hover:border-ink/30'
+                  }`}
+                >
+                  <p className="font-medium">Bank transfer / e-Transfer</p>
+                  <p className="text-xs text-muted">Pay the vendor directly with the details shown after you order</p>
+                </button>
+              )}
             </div>
             <p className="mt-3 text-sm text-muted">
               {paymentMethod === 'CARD'
@@ -514,7 +529,7 @@ export default function Checkout() {
 
           {error && <div className="mt-4"><ErrorNote message={error} /></div>}
 
-          <button type="submit" disabled={submitting || !quote} className="btn-primary mt-6 w-full">
+          <button type="submit" disabled={submitting || !quote || !form.customerName.trim() || !form.customerPhone.trim() || ((fulfillmentType === 'LOCAL_DELIVERY' || fulfillmentType === 'DOMESTIC_SHIPPING') && (!form.customerStreet.trim() || !form.customerCity.trim()))} className="btn-primary mt-6 w-full">
             {submitting ? <Spinner /> : paymentMethod === 'CARD' ? 'Continue to payment' : 'Place order'}
           </button>
         </aside>

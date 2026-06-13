@@ -5,6 +5,7 @@ import type { Booking, ServiceOffering, ServiceStorefront, Slot } from '../lib/t
 import { money, titleCase, formatDay, formatTime } from '../lib/format'
 import { ErrorNote, PageLoader, SectionTitle, Spinner } from '../components/ui'
 import { BookingPayment } from '../components/BookingPayment'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 export default function ServiceProvider() {
   const { slug = '' } = useParams()
@@ -65,7 +66,10 @@ export default function ServiceProvider() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {store.services.map((s) => (
-                <div key={s.id} className="card flex flex-col gap-2 p-5">
+                <div key={s.id} className="card flex flex-col gap-2 overflow-hidden p-5">
+                  {s.imageUrl && (
+                    <img src={s.imageUrl} alt={s.name} className="-mx-5 -mt-5 mb-1 h-40 w-[calc(100%+2.5rem)] object-cover" />
+                  )}
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-display text-lg font-semibold">{s.name}</p>
@@ -270,7 +274,15 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
             {needsAddress && (
               <div className="rounded-xl border border-line bg-sand/40 p-4">
                 <p className="label !mb-2">Your address (mobile service)</p>
-                <div className="grid grid-cols-3 gap-3">
+                <AddressAutocomplete
+                  label="Search your address"
+                  onSelect={(addr) => {
+                    setHouseNumber(addr.houseNumber ?? '')
+                    setStreet(addr.street ?? '')
+                    setCity(addr.city ?? '')
+                  }}
+                />
+                <div className="mt-3 grid grid-cols-3 gap-3">
                   <div><label className="label">No.</label><input className="field" value={houseNumber} onChange={(e) => setHouseNumber(e.target.value)} /></div>
                   <div className="col-span-2"><label className="label">Street</label><input className="field" value={street} onChange={(e) => setStreet(e.target.value)} /></div>
                   <div className="col-span-3"><label className="label">City</label><input className="field" value={city} onChange={(e) => setCity(e.target.value)} /></div>
@@ -288,7 +300,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
             {error && <ErrorNote message={error} />}
             <div className="flex justify-end gap-2">
               <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-              <button className="btn-primary" disabled={submitting || !slot}>{submitting ? <Spinner /> : 'Confirm booking'}</button>
+              <button className="btn-primary" disabled={submitting || !slot || !name.trim() || !phone.trim() || (needsAddress && (!street.trim() || !city.trim()))}>{submitting ? <Spinner /> : 'Confirm booking'}</button>
             </div>
           </form>
         )}

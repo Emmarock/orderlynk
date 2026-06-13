@@ -71,7 +71,7 @@ function MessageUs({ onCreated }: { onCreated: (t: SupportTicket) => void }) {
             Thanks — your message has been sent. We’ll be in touch.
           </div>
         )}
-        <button className="btn-primary" disabled={sending}>{sending ? <Spinner /> : 'Send message'}</button>
+        <button className="btn-primary" disabled={sending || !subject.trim() || !message.trim()}>{sending ? <Spinner /> : 'Send message'}</button>
       </form>
     </div>
   )

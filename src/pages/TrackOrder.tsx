@@ -93,7 +93,7 @@ export default function TrackOrder() {
             onChange={(e) => setContact(e.target.value)}
           />
         </div>
-        <button className="btn-primary h-[42px]" disabled={loading}>
+        <button className="btn-primary h-[42px]" disabled={loading || !orderId.trim() || !contact.trim()}>
           {loading ? <Spinner /> : 'Track'}
         </button>
       </form>

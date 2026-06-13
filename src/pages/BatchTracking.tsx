@@ -38,7 +38,7 @@ export default function BatchTracking() {
       <form onSubmit={lookup} className="card grid gap-4 p-6 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <div><label className="label">Reference</label><input className="field" required value={publicId} onChange={(e) => setPublicId(e.target.value)} placeholder="BO-… or SR-…" /></div>
         <div><label className="label">Phone or email</label><input className="field" required value={contact} onChange={(e) => setContact(e.target.value)} /></div>
-        <button className="btn-primary" disabled={loading}>{loading ? <Spinner /> : 'Find'}</button>
+        <button className="btn-primary" disabled={loading || !publicId.trim() || !contact.trim()}>{loading ? <Spinner /> : 'Find'}</button>
       </form>
 
       {error && <div className="mt-6"><ErrorNote message={error} /></div>}

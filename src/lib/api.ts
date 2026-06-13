@@ -280,6 +280,8 @@ export const api = {
   approveVendor: (id: string) => request<Vendor>('POST', `/api/admin/vendors/${id}/approve`),
   rejectVendor: (id: string) => request<Vendor>('POST', `/api/admin/vendors/${id}/reject`),
   suspendVendor: (id: string) => request<Vendor>('POST', `/api/admin/vendors/${id}/suspend`),
+  setVendorAlternativePayments: (id: string, enabled: boolean) =>
+    request<Vendor>('POST', `/api/admin/vendors/${id}/alternative-payments?enabled=${enabled}`),
   adminOrders: () => request<Order[]>('GET', '/api/admin/orders'),
   adminUpdatePayment: (id: string, b: unknown) =>
     request<Order>('PATCH', `/api/admin/orders/${id}/payment`, b),
@@ -415,6 +417,8 @@ export const api = {
   vendorBatchOrders: (id: string) => request<BatchOrder[]>('GET', `/api/vendor/batches/${id}/orders`),
   updateBatchOrderStatus: (orderId: string, status: string, note?: string) =>
     request<BatchOrder>('PATCH', `/api/vendor/batch-orders/${orderId}/status`, { status, note }),
+  recordBatchOrderPayment: (orderId: string, b: { amount?: number; reference?: string }) =>
+    request<BatchOrder>('POST', `/api/vendor/batch-orders/${orderId}/payments`, b),
   vendorBatchShipmentRequests: (id: string) =>
     request<ShipmentRequest[]>('GET', `/api/vendor/batches/${id}/shipment-requests`),
   receiveShipment: (id: string) => request<ShipmentRequest>('POST', `/api/vendor/shipment-requests/${id}/receive`),
@@ -422,6 +426,8 @@ export const api = {
     request<ShipmentRequest>('POST', `/api/vendor/shipment-requests/${id}/weigh`, b),
   updateShipmentStatus: (id: string, status: string, note?: string) =>
     request<ShipmentRequest>('PATCH', `/api/vendor/shipment-requests/${id}/status`, { status, note }),
+  recordShipmentPayment: (id: string, b: { amount?: number; reference?: string }) =>
+    request<ShipmentRequest>('POST', `/api/vendor/shipment-requests/${id}/payments`, b),
 
   // ---- batch & cargo: admin ----
   adminBatches: () => request<BatchSummary[]>('GET', '/api/admin/batches'),

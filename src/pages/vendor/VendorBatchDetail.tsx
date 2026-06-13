@@ -31,8 +31,11 @@ export default function VendorBatchDetail() {
   const [tab, setTab] = useState<Tab>('products')
   const [error, setError] = useState<string | null>(null)
 
+  const [manualPayments, setManualPayments] = useState(false)
+
   const loadSummary = () => api.vendorBatch(id).then(setSummary).catch(() => setError('Could not load batch'))
   useEffect(() => { loadSummary() }, [id])
+  useEffect(() => { api.myVendor().then((v) => setManualPayments(v.alternativePaymentsEnabled)).catch(() => {}) }, [])
 
   if (!summary) return error ? <div className="mx-auto max-w-3xl px-5 py-10"><ErrorNote message={error} /></div> : <PageLoader />
   const b = summary.batch
@@ -75,8 +78,8 @@ export default function VendorBatchDetail() {
       </div>
 
       {tab === 'products' && <ProductsTab batchId={b.id} />}
-      {tab === 'orders' && <OrdersTab batchId={b.id} currency={b.currency} />}
-      {tab === 'shipments' && isCargo && <ShipmentsTab batchId={b.id} currency={b.currency} />}
+      {tab === 'orders' && <OrdersTab batchId={b.id} currency={b.currency} manualPayments={manualPayments} onPaid={loadSummary} />}
+      {tab === 'shipments' && isCargo && <ShipmentsTab batchId={b.id} currency={b.currency} manualPayments={manualPayments} onPaid={loadSummary} />}
     </ConsoleShell>
   )
 }
@@ -194,7 +197,7 @@ function AttachModal({ batchId, onClose, onDone }: { batchId: string; onClose: (
         {error && <div className="mt-3"><ErrorNote message={error} /></div>}
         <div className="mt-5 flex justify-end gap-2">
           <button className="btn-ghost" onClick={onClose}>Close</button>
-          <button className="btn-primary" onClick={attach} disabled={busy}>{busy ? <Spinner /> : 'Attach selected'}</button>
+          <button className="btn-primary" onClick={attach} disabled={busy || !Object.values(selected).some(Boolean)}>{busy ? <Spinner /> : 'Attach selected'}</button>
         </div>
       </div>
     </div>
@@ -203,8 +206,9 @@ function AttachModal({ batchId, onClose, onDone }: { batchId: string; onClose: (
 
 // ============================ Orders ============================
 
-function OrdersTab({ batchId, currency }: { batchId: string; currency: string }) {
+function OrdersTab({ batchId, currency, manualPayments, onPaid }: { batchId: string; currency: string; manualPayments: boolean; onPaid: () => void }) {
   const [orders, setOrders] = useState<BatchOrder[] | null>(null)
+  const [paying, setPaying] = useState<BatchOrder | null>(null)
   const load = () => api.vendorBatchOrders(batchId).then(setOrders).catch(() => setOrders([]))
   useEffect(() => { load() }, [batchId])
   if (orders === null) return <PageLoader />
@@ -214,7 +218,7 @@ function OrdersTab({ batchId, currency }: { batchId: string; currency: string })
     <div className="card overflow-hidden">
       <table className="w-full text-sm">
         <thead className="border-b border-line bg-sand/50 text-left text-xs uppercase tracking-wider text-muted">
-          <tr><th className="px-5 py-3">Order</th><th className="px-5 py-3">Customer</th><th className="px-5 py-3">Items</th><th className="px-5 py-3">Total</th><th className="px-5 py-3">Payment</th><th className="px-5 py-3">Status</th></tr>
+          <tr><th className="px-5 py-3">Order</th><th className="px-5 py-3">Customer</th><th className="px-5 py-3">Items</th><th className="px-5 py-3">Total</th><th className="px-5 py-3">Payment</th><th className="px-5 py-3">Status</th>{manualPayments && <th className="px-5 py-3" />}</tr>
         </thead>
         <tbody className="divide-y divide-line">
           {orders.map((o) => (
@@ -229,19 +233,33 @@ function OrdersTab({ batchId, currency }: { batchId: string; currency: string })
                   {ORDER_STATUSES.map((s) => <option key={s} value={s}>{titleCase(s)}</option>)}
                 </select>
               </td>
+              {manualPayments && (
+                <td className="px-5 py-3 text-right">
+                  {o.balanceDue > 0 && <button className="btn-quiet px-2 text-forest" onClick={() => setPaying(o)}>Record payment</button>}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </table>
+      {paying && (
+        <ManualPaymentModal
+          title={`Record payment · ${paying.publicOrderId}`} balance={paying.balanceDue} currency={currency}
+          onClose={() => setPaying(null)}
+          onSubmit={(amount, reference) => api.recordBatchOrderPayment(paying.id, { amount, reference })
+            .then(() => { setPaying(null); load(); onPaid() })}
+        />
+      )}
     </div>
   )
 }
 
 // ============================ Shipment requests ============================
 
-function ShipmentsTab({ batchId, currency }: { batchId: string; currency: string }) {
+function ShipmentsTab({ batchId, currency, manualPayments, onPaid }: { batchId: string; currency: string; manualPayments: boolean; onPaid: () => void }) {
   const [reqs, setReqs] = useState<ShipmentRequest[] | null>(null)
   const [weighing, setWeighing] = useState<ShipmentRequest | null>(null)
+  const [paying, setPaying] = useState<ShipmentRequest | null>(null)
   const load = () => api.vendorBatchShipmentRequests(batchId).then(setReqs).catch(() => setReqs([]))
   useEffect(() => { load() }, [batchId])
   if (reqs === null) return <PageLoader />
@@ -271,6 +289,9 @@ function ShipmentsTab({ batchId, currency }: { batchId: string; currency: string
               <button className="btn-quiet" onClick={() => api.receiveShipment(s.id).then(load)}>Mark received</button>
             )}
             <button className="btn-quiet text-forest" onClick={() => setWeighing(s)}>Weigh / invoice</button>
+            {manualPayments && s.actualWeight != null && s.balanceDue > 0 && (
+              <button className="btn-quiet text-forest" onClick={() => setPaying(s)}>Record payment</button>
+            )}
             <select className="field !py-1 ml-auto max-w-[12rem] text-xs" value={s.status} onChange={(e) => api.updateShipmentStatus(s.id, e.target.value).then(load)}>
               {SHIPMENT_STATUSES.map((st) => <option key={st} value={st}>{titleCase(st)}</option>)}
             </select>
@@ -278,6 +299,49 @@ function ShipmentsTab({ batchId, currency }: { batchId: string; currency: string
         </div>
       ))}
       {weighing && <WeighModal req={weighing} onClose={() => setWeighing(null)} onDone={() => { setWeighing(null); load() }} />}
+      {paying && (
+        <ManualPaymentModal
+          title={`Record payment · ${paying.publicRequestId}`} balance={paying.balanceDue} currency={currency}
+          onClose={() => setPaying(null)}
+          onSubmit={(amount, reference) => api.recordShipmentPayment(paying.id, { amount, reference })
+            .then(() => { setPaying(null); load(); onPaid() })}
+        />
+      )}
+    </div>
+  )
+}
+
+/** Vendor records a manual card payment (gated by app.batches.manual-payments-enabled). */
+function ManualPaymentModal({ title, balance, currency, onClose, onSubmit }: {
+  title: string; balance: number; currency: string
+  onClose: () => void; onSubmit: (amount: number, reference?: string) => Promise<void>
+}) {
+  const [amount, setAmount] = useState(String(balance))
+  const [reference, setReference] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async () => {
+    setBusy(true); setError(null)
+    try { await onSubmit(Number(amount), reference.trim() || undefined) }
+    catch (err) { setError(err instanceof ApiError ? err.message : 'Could not record payment'); setBusy(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="card w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+        <h2 className="font-display text-lg font-semibold">{title}</h2>
+        <p className="mt-1 text-sm text-muted">Record a payment received out-of-band (e.g. transfer). Balance due {money(balance, currency)}.</p>
+        <div className="mt-4 space-y-3">
+          <div><label className="label">Amount ({currency})</label><input className="field" type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+          <div><label className="label">Reference (optional)</label><input className="field" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g. card terminal receipt #" /></div>
+        </div>
+        {error && <div className="mt-3"><ErrorNote message={error} /></div>}
+        <div className="mt-5 flex justify-end gap-2">
+          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-primary" onClick={submit} disabled={busy || !amount || Number(amount) <= 0}>{busy ? <Spinner /> : 'Record payment'}</button>
+        </div>
+      </div>
     </div>
   )
 }

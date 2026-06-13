@@ -209,7 +209,7 @@ function BatchForm({ initial, onClose, onSaved }: { initial: Batch | null; onClo
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-1">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" disabled={saving}>{saving ? <Spinner /> : 'Save batch'}</button>
+            <button className="btn-primary" disabled={saving || !form.batchName.trim()}>{saving ? <Spinner /> : 'Save batch'}</button>
           </div>
         </form>
       </div>

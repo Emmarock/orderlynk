@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { BatchCard, BatchType } from '../lib/types'
 import { money, titleCase, formatDay } from '../lib/format'
-import { EmptyState, PageLoader, SectionTitle } from '../components/ui'
+import { CountrySelect, EmptyState, PageLoader, SectionTitle } from '../components/ui'
+import SuggestField from '../components/SuggestField'
 
 const TYPES: BatchType[] = ['PRODUCT_BATCH', 'CARGO_BATCH', 'HYBRID_BATCH']
 
@@ -27,7 +28,7 @@ export default function Batches() {
       batchType: batchType || undefined,
     }).then(setCards).catch(() => setCards([]))
   }
-  useEffect(() => { load() }, [batchType])
+  useEffect(() => { const t = setTimeout(load, 350); return () => clearTimeout(t) }, [origin, destination, batchType])
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12">
@@ -38,14 +39,12 @@ export default function Batches() {
       </p>
 
       <div className="mb-8 flex flex-wrap items-end gap-3">
-        <form className="min-w-40 flex-1" onSubmit={(e) => { e.preventDefault(); load() }}>
+        <div className="min-w-40 flex-1">
           <label className="label">Origin country</label>
-          <input className="field" value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="Any" onBlur={load} />
-        </form>
-        <form className="min-w-40 flex-1" onSubmit={(e) => { e.preventDefault(); load() }}>
-          <label className="label">Destination city</label>
-          <input className="field" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="Any" onBlur={load} />
-        </form>
+          <CountrySelect value={origin} onChange={setOrigin} placeholder="Any" />
+        </div>
+        <SuggestField className="min-w-40 flex-1" label="Destination city" value={destination}
+          onChange={setDestination} type="city" pick={(s) => s.city || s.formatted} placeholder="Any city" />
         <div className="min-w-40 flex-1">
           <label className="label">Type</label>
           <select className="field" value={batchType} onChange={(e) => setBatchType(e.target.value as BatchType | '')}>

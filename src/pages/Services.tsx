@@ -4,6 +4,7 @@ import { api } from '../lib/api'
 import type { ProviderCard, ServiceCategory } from '../lib/types'
 import { money, titleCase } from '../lib/format'
 import { EmptyState, PageLoader, SectionTitle } from '../components/ui'
+import SuggestField from '../components/SuggestField'
 
 const CATEGORIES: ServiceCategory[] = [
   'HAIR', 'NAILS', 'BARBER', 'MAKEUP', 'SPA_AND_MASSAGE', 'PHOTOGRAPHY', 'CLEANING',
@@ -35,19 +36,15 @@ export default function Services() {
       acceptsDeposits: depositsOnly,
     }).then(setProviders).catch(() => setProviders([]))
   }
-  useEffect(() => { load() }, [category, depositsOnly])
+  useEffect(() => { const t = setTimeout(load, 350); return () => clearTimeout(t) }, [city, category, depositsOnly])
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12">
       <SectionTitle eyebrow="Book a pro" title="Services marketplace" />
 
       <div className="mb-8 flex flex-wrap items-end gap-3">
-        <div className="min-w-44 flex-1">
-          <label className="label">City</label>
-          <form onSubmit={(e) => { e.preventDefault(); load() }}>
-            <input className="field" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Any city" onBlur={load} />
-          </form>
-        </div>
+        <SuggestField className="min-w-44 flex-1" label="City" value={city} onChange={setCity}
+          type="city" pick={(s) => s.city || s.formatted} placeholder="Any city" />
         <div className="min-w-44 flex-1">
           <label className="label">Category</label>
           <select className="field" value={category} onChange={(e) => setCategory(e.target.value as ServiceCategory | '')}>

@@ -51,7 +51,7 @@ function BroadcastModal({
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" disabled={sending}>{sending ? <Spinner /> : 'Send broadcast'}</button>
+            <button className="btn-primary" disabled={sending || !subject.trim() || !message.trim()}>{sending ? <Spinner /> : 'Send broadcast'}</button>
           </div>
         </form>
       </div>
