@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import type { PublicBatch, BatchProduct, BatchOrder, ShipmentRequest, FulfillmentType } from '../lib/types'
 import { money, titleCase, formatDay, cargoTone } from '../lib/format'
-import { ErrorNote, PageLoader, SectionTitle, Spinner } from '../components/ui'
+import { CopyOrderId, ErrorNote, PageLoader, SectionTitle, Spinner } from '../components/ui'
 import { BookingPayment } from '../components/BookingPayment'
 
 export default function BatchPage() {
@@ -168,7 +168,10 @@ function OrderModal({ batch, cart, onClose }: { batch: PublicBatch; cart: Record
           <div className="text-center">
             <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-forest/12 text-forest">✓</div>
             <h2 className="font-display text-2xl font-semibold">Order placed</h2>
-            <p className="mt-1 text-muted">Reference <span className="font-mono">{order.publicOrderId}</span></p>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-line bg-sand/50 px-3 py-2">
+              <span className="text-xs uppercase tracking-wider text-muted">Tracking ref</span>
+              <CopyOrderId value={order.publicOrderId} className="font-mono text-sm font-semibold" />
+            </div>
             <div className="mt-4 rounded-xl border border-line bg-sand/40 p-4 text-left text-sm">
               <p>{batch.batch.batchName}</p>
               <p className="mt-1 text-muted">Total {money(order.totalAmount, order.currency)}</p>
@@ -273,7 +276,11 @@ function ShipItemsModal({ batch, onClose }: { batch: PublicBatch; onClose: () =>
           <div className="text-center">
             <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-forest/12 text-forest">✓</div>
             <h2 className="font-display text-2xl font-semibold">Shipment request submitted</h2>
-            <p className="mt-1 text-muted">Reference <span className="font-mono">{created.publicRequestId}</span></p>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-line bg-sand/50 px-3 py-2">
+              <span className="text-xs uppercase tracking-wider text-muted">Tracking ref</span>
+              <CopyOrderId value={created.publicRequestId} className="font-mono text-sm font-semibold" />
+            </div>
+            <p className="mt-2 text-xs text-muted">Save this reference to track your shipment's location and pay your invoice.</p>
             <div className="mt-4 rounded-xl border border-line bg-sand/40 p-4 text-left text-sm">
               <p>Drop your items at: <span className="font-medium">{created.originDropOffLocation || b.pickupLocation || 'the collection point'}</span></p>
               <p className="mt-2 text-muted">Once received and weighed, you'll get a final invoice to pay before your items are added to the batch.</p>
