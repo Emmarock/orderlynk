@@ -14,8 +14,8 @@ export default function VendorCustomerDetail() {
   const [orders, setOrders] = useState<Order[] | null>(null)
 
   useEffect(() => {
-    api.vendorOrders().then(setOrders).catch(() => setOrders([]))
-  }, [])
+    api.vendorCustomerOrders(phone).then(setOrders).catch(() => setOrders([]))
+  }, [phone])
 
   // Match this customer by normalized phone (the same identity the customer list dedupes on).
   const target = digits(decodeURIComponent(phone))

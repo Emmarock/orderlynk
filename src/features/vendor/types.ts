@@ -58,10 +58,23 @@ export interface ProductSalesSummary {
 export interface VendorAnalytics {
   totalOrders: number
   paidOrders: number
+  openFulfillmentOrders: number
   grossRevenue: number
   uniqueCustomers: number
   topCustomers: CustomerSummary[]
   topProducts: ProductSalesSummary[]
+}
+
+/** Platform-wide admin dashboard summary (from /api/admin/summary). */
+export interface AdminSummary {
+  vendorCount: number
+  activeVendorCount: number
+  pendingCount: number
+  orderCount: number
+  paidOrderCount: number
+  grossRevenue: number
+  platformRevenue: number
+  pendingVendors: Vendor[]
 }
 
 export interface BroadcastResult {

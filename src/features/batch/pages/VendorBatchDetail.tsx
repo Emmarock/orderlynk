@@ -5,9 +5,10 @@ import type {
   BatchSummary, BatchProduct, BatchOrder, ShipmentRequest, Product,
   BatchStatus, BatchOrderStatus, ShipmentRequestStatus,
 } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, cargoTone } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS, StatCard } from '@/shared/components/Console'
-import { EmptyState, ErrorNote, PageLoader, Spinner } from '@/shared/components/ui'
+import { EmptyState, ErrorNote, LoadMore, PageLoader, Spinner } from '@/shared/components/ui'
 
 const BATCH_STATUSES: BatchStatus[] = [
   'DRAFT', 'OPEN', 'CLOSING_SOON', 'CLOSED', 'SOURCING', 'CONSOLIDATING', 'AT_CARGO_PARTNER',
@@ -146,8 +147,8 @@ function AttachModal({ batchId, onClose, onDone }: { batchId: string; onClose: (
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.vendorProducts().then(setCatalog).catch(() => setCatalog([]))
-    api.vendorBatches().then((bs) => setOtherBatches(bs.map((s) => s.batch).filter((b) => b.id !== batchId))).catch(() => {})
+    api.vendorProducts(0, 100).then((p) => setCatalog(p.content)).catch(() => setCatalog([]))
+    api.vendorBatches(0, 100).then((p) => setOtherBatches(p.content.map((s) => s.batch).filter((b) => b.id !== batchId))).catch(() => {})
   }, [batchId])
 
   const attach = async () => {
@@ -207,14 +208,16 @@ function AttachModal({ batchId, onClose, onDone }: { batchId: string; onClose: (
 // ============================ Orders ============================
 
 function OrdersTab({ batchId, currency, manualPayments, onPaid }: { batchId: string; currency: string; manualPayments: boolean; onPaid: () => void }) {
-  const [orders, setOrders] = useState<BatchOrder[] | null>(null)
   const [paying, setPaying] = useState<BatchOrder | null>(null)
-  const load = () => api.vendorBatchOrders(batchId).then(setOrders).catch(() => setOrders([]))
-  useEffect(() => { load() }, [batchId])
-  if (orders === null) return <PageLoader />
+  const { items: orders, total, loading, loadingMore, hasNext, loadMore, reload } = usePagedList(
+    (page, size) => api.vendorBatchOrders(batchId, page, size),
+    [batchId],
+  )
+  if (loading) return <PageLoader />
   if (orders.length === 0) return <EmptyState title="No orders yet" hint="Batch product orders will appear here." />
 
   return (
+    <>
     <div className="card overflow-hidden">
       <table className="w-full text-sm">
         <thead className="border-b border-line bg-sand/50 text-left text-xs uppercase tracking-wider text-muted">
@@ -229,7 +232,7 @@ function OrdersTab({ batchId, currency, manualPayments, onPaid }: { batchId: str
               <td className="px-5 py-3 font-mono">{money(o.totalAmount, currency)}</td>
               <td className="px-5 py-3"><span className={`chip ${cargoTone(o.paymentStatus)}`}>{titleCase(o.paymentStatus)}</span></td>
               <td className="px-5 py-3">
-                <select className="field !py-1 text-xs" value={o.status} onChange={(e) => api.updateBatchOrderStatus(o.id, e.target.value).then(load)}>
+                <select className="field !py-1 text-xs" value={o.status} onChange={(e) => api.updateBatchOrderStatus(o.id, e.target.value).then(reload)}>
                   {ORDER_STATUSES.map((s) => <option key={s} value={s}>{titleCase(s)}</option>)}
                 </select>
               </td>
@@ -247,22 +250,25 @@ function OrdersTab({ batchId, currency, manualPayments, onPaid }: { batchId: str
           title={`Record payment · ${paying.publicOrderId}`} balance={paying.balanceDue} currency={currency}
           onClose={() => setPaying(null)}
           onSubmit={(amount, reference) => api.recordBatchOrderPayment(paying.id, { amount, reference })
-            .then(() => { setPaying(null); load(); onPaid() })}
+            .then(() => { setPaying(null); reload(); onPaid() })}
         />
       )}
     </div>
+    <LoadMore shown={orders.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
+    </>
   )
 }
 
 // ============================ Shipment requests ============================
 
 function ShipmentsTab({ batchId, currency, manualPayments, onPaid }: { batchId: string; currency: string; manualPayments: boolean; onPaid: () => void }) {
-  const [reqs, setReqs] = useState<ShipmentRequest[] | null>(null)
   const [weighing, setWeighing] = useState<ShipmentRequest | null>(null)
   const [paying, setPaying] = useState<ShipmentRequest | null>(null)
-  const load = () => api.vendorBatchShipmentRequests(batchId).then(setReqs).catch(() => setReqs([]))
-  useEffect(() => { load() }, [batchId])
-  if (reqs === null) return <PageLoader />
+  const { items: reqs, total, loading, loadingMore, hasNext, loadMore, reload } = usePagedList(
+    (page, size) => api.vendorBatchShipmentRequests(batchId, page, size),
+    [batchId],
+  )
+  if (loading) return <PageLoader />
   if (reqs.length === 0) return <EmptyState title="No shipment requests" hint="Customer 'Send My Items' requests will appear here." />
 
   return (
@@ -286,27 +292,28 @@ function ShipmentsTab({ batchId, currency, manualPayments, onPaid }: { batchId: 
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {(s.status === 'REQUEST_CREATED' || s.status === 'AWAITING_DROP_OFF') && (
-              <button className="btn-quiet" onClick={() => api.receiveShipment(s.id).then(load)}>Mark received</button>
+              <button className="btn-quiet" onClick={() => api.receiveShipment(s.id).then(reload)}>Mark received</button>
             )}
             <button className="btn-quiet text-forest" onClick={() => setWeighing(s)}>Weigh / invoice</button>
             {manualPayments && s.actualWeight != null && s.balanceDue > 0 && (
               <button className="btn-quiet text-forest" onClick={() => setPaying(s)}>Record payment</button>
             )}
-            <select className="field !py-1 ml-auto max-w-[12rem] text-xs" value={s.status} onChange={(e) => api.updateShipmentStatus(s.id, e.target.value).then(load)}>
+            <select className="field !py-1 ml-auto max-w-[12rem] text-xs" value={s.status} onChange={(e) => api.updateShipmentStatus(s.id, e.target.value).then(reload)}>
               {SHIPMENT_STATUSES.map((st) => <option key={st} value={st}>{titleCase(st)}</option>)}
             </select>
           </div>
         </div>
       ))}
-      {weighing && <WeighModal req={weighing} onClose={() => setWeighing(null)} onDone={() => { setWeighing(null); load() }} />}
+      {weighing && <WeighModal req={weighing} onClose={() => setWeighing(null)} onDone={() => { setWeighing(null); reload() }} />}
       {paying && (
         <ManualPaymentModal
           title={`Record payment · ${paying.publicRequestId}`} balance={paying.balanceDue} currency={currency}
           onClose={() => setPaying(null)}
           onSubmit={(amount, reference) => api.recordShipmentPayment(paying.id, { amount, reference })
-            .then(() => { setPaying(null); load(); onPaid() })}
+            .then(() => { setPaying(null); reload(); onPaid() })}
         />
       )}
+      <LoadMore shown={reqs.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
     </div>
   )
 }

@@ -1,35 +1,36 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '@/shared/lib/api'
-import type { Order, Vendor } from '@/shared/lib/types'
+import type { AdminSummary, Order } from '@/shared/lib/types'
 import { money, titleCase } from '@/shared/lib/format'
 import { ADMIN_TABS, ConsoleShell, StatCard } from '@/shared/components/Console'
 import { CopyOrderId, PageLoader } from '@/shared/components/ui'
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 
 export default function AdminDashboard() {
-  const [vendors, setVendors] = useState<Vendor[] | null>(null)
-  const [orders, setOrders] = useState<Order[] | null>(null)
+  // Server-side platform aggregates + the approval-queue preview (not first-page-only derivations).
+  const [summary, setSummary] = useState<AdminSummary | null>(null)
+  // Recent-orders list only — its newest-first first page is correct for the preview.
+  const [orders, setOrders] = useState<Order[]>([])
+
+  const loadSummary = () => api.adminSummary().then(setSummary).catch(() => setSummary(null))
 
   useEffect(() => {
-    api.adminVendors().then(setVendors).catch(() => setVendors([]))
-    api.adminOrders().then(setOrders).catch(() => setOrders([]))
+    loadSummary()
+    api.adminOrders().then((p) => setOrders(p.content)).catch(() => setOrders([]))
   }, [])
 
-  if (vendors === null || orders === null) return <PageLoader />
+  if (summary === null) return <PageLoader />
 
-  const pending = vendors.filter((v) => ['SUBMITTED', 'UNDER_REVIEW'].includes(v.verificationStatus))
-  const paid = orders.filter((o) => o.paymentStatus === 'PAID')
-  const gross = paid.reduce((n, o) => n + o.totalAmount, 0)
-  const platformRevenue = paid.reduce((n, o) => n + o.platformRevenue, 0)
+  const pending = summary.pendingVendors
 
   return (
     <ConsoleShell title="Platform overview" subtitle="Vendors, orders and revenue at a glance" tabs={ADMIN_TABS}>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Vendors" value={String(vendors.length)} hint={`${vendors.filter((v) => v.active).length} active`} />
-        <StatCard label="Pending approval" value={String(pending.length)} hint="Awaiting review" />
-        <StatCard label="Orders" value={String(orders.length)} hint={`${paid.length} paid`} />
-        <StatCard label="Gross / platform rev." value={money(gross)} hint={`${money(platformRevenue)} platform`} />
+        <StatCard label="Vendors" value={String(summary.vendorCount)} hint={`${summary.activeVendorCount} active`} />
+        <StatCard label="Pending approval" value={String(summary.pendingCount)} hint="Awaiting review" />
+        <StatCard label="Orders" value={String(summary.orderCount)} hint={`${summary.paidOrderCount} paid`} />
+        <StatCard label="Gross / platform rev." value={money(summary.grossRevenue)} hint={`${money(summary.platformRevenue)} platform`} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -46,7 +47,7 @@ export default function AdminDashboard() {
                   <p className="font-medium">{v.businessName}</p>
                   <p className="text-xs text-muted">{v.city ?? '—'} · {titleCase(v.verificationStatus)}</p>
                 </div>
-                <button className="btn-forest px-4 py-1.5" onClick={() => api.approveVendor(v.id).then(() => setVendors((p) => p!.map((x) => (x.id === v.id ? { ...x, verificationStatus: 'APPROVED', active: true } : x))))}>
+                <button className="btn-forest px-4 py-1.5" onClick={() => api.approveVendor(v.id).then(loadSummary)}>
                   Approve
                 </button>
               </div>

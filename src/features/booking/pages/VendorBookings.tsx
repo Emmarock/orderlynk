@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, ApiError } from '@/shared/lib/api'
 import type { Booking, BookingPayment, BookingPaymentType, BookingStatus, PaymentMethod } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, formatDay, formatTime, bookingTone } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
-import { BookingBadge, EmptyState, ErrorNote, PageLoader, PaymentBadge, Spinner } from '@/shared/components/ui'
+import { BookingBadge, EmptyState, ErrorNote, LoadMore, PageLoader, PaymentBadge, Spinner } from '@/shared/components/ui'
 
 type Filter = 'all' | 'requests' | 'upcoming' | 'completed' | 'cancelled'
 
@@ -18,28 +19,31 @@ const FILTERS: { key: Filter; label: string; match: (s: BookingStatus) => boolea
 type View = 'list' | 'calendar'
 
 export default function VendorBookings() {
-  const [bookings, setBookings] = useState<Booking[] | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [view, setView] = useState<View>('list')
   const [selected, setSelected] = useState<Booking | null>(null)
   const [altPay, setAltPay] = useState(false)
 
-  const load = () => api.vendorBookings().then(setBookings).catch(() => setBookings([]))
-  useEffect(() => { load() }, [])
+  const { items: bookings, total, loading, loadingMore, hasNext, loadMore, reload, setItems } = usePagedList(
+    (page, size) => api.vendorBookings(undefined, undefined, page, size),
+    [],
+  )
   useEffect(() => { api.myVendor().then((v) => setAltPay(v.alternativePaymentsEnabled)).catch(() => {}) }, [])
 
   const visible = useMemo(() => {
-    if (!bookings) return []
     const m = FILTERS.find((f) => f.key === filter)!.match
     return bookings.filter((b) => m(b.status))
   }, [bookings, filter])
 
   const onChanged = (updated: Booking) => {
-    setBookings((list) => (list ? list.map((b) => (b.id === updated.id ? updated : b)) : list))
+    // Optimistically reflect the change in the loaded rows (and the open modal), then resync from
+    // the server so a status change that moves the booking across tabs is consistent.
+    setItems((list) => list.map((b) => (b.id === updated.id ? updated : b)))
     setSelected(updated)
+    reload()
   }
 
-  if (bookings === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   return (
     <ConsoleShell
@@ -82,6 +86,7 @@ export default function VendorBookings() {
       ) : visible.length === 0 ? (
         <EmptyState title="No bookings here" hint="Bookings from your service link and the marketplace will appear here." />
       ) : (
+        <>
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-line bg-sand/50 text-left text-xs uppercase tracking-wider text-muted">
@@ -110,6 +115,8 @@ export default function VendorBookings() {
             </tbody>
           </table>
         </div>
+        <LoadMore shown={bookings.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
+        </>
       )}
 
       {selected && <BookingDetail booking={selected} onClose={() => setSelected(null)} onChanged={onChanged} alternativePayments={altPay} />}

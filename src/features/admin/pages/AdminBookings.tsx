@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { api, ApiError } from '@/shared/lib/api'
 import type { Booking, BookingStatus } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, formatDay, formatTime } from '@/shared/lib/format'
 import { ADMIN_TABS, ConsoleShell, StatCard } from '@/shared/components/Console'
-import { BookingBadge, EmptyState, ErrorNote, PageLoader, PaymentBadge, Spinner } from '@/shared/components/ui'
+import { BookingBadge, EmptyState, ErrorNote, LoadMore, PageLoader, PaymentBadge, Spinner } from '@/shared/components/ui'
 
 type Filter = 'all' | 'requests' | 'upcoming' | 'completed' | 'cancelled'
 
@@ -16,41 +17,37 @@ const FILTERS: { key: Filter; label: string; match: (s: BookingStatus) => boolea
 ]
 
 export default function AdminBookings() {
-  const [bookings, setBookings] = useState<Booking[] | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [openId, setOpenId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { api.adminBookings().then(setBookings).catch(() => setBookings([])) }, [])
+  const { items: bookings, total, loading, loadingMore, hasNext, loadMore, reload } =
+    usePagedList<Booking>((page, size) => api.adminBookings(page, size), [])
 
+  // Status tabs and stat-cards are computed over the bookings loaded so far (client-side).
   const visible = useMemo(() => {
-    if (!bookings) return []
     const m = FILTERS.find((f) => f.key === filter)!.match
     return bookings.filter((b) => m(b.status))
   }, [bookings, filter])
 
   const stats = useMemo(() => {
-    const list = bookings ?? []
     return {
-      total: list.length,
-      pending: list.filter((b) => b.status === 'REQUESTED').length,
-      upcoming: list.filter((b) => ['APPROVED', 'DEPOSIT_PENDING', 'CONFIRMED', 'REMINDER_SENT', 'IN_PROGRESS'].includes(b.status)).length,
-      collected: list.reduce((sum, b) => sum + (b.amountPaid || 0), 0),
+      total: bookings.length,
+      pending: bookings.filter((b) => b.status === 'REQUESTED').length,
+      upcoming: bookings.filter((b) => ['APPROVED', 'DEPOSIT_PENDING', 'CONFIRMED', 'REMINDER_SENT', 'IN_PROGRESS'].includes(b.status)).length,
+      collected: bookings.reduce((sum, b) => sum + (b.amountPaid || 0), 0),
     }
   }, [bookings])
 
-  const replace = (updated: Booking) =>
-    setBookings((list) => (list ? list.map((b) => (b.id === updated.id ? updated : b)) : list))
-
   const run = async (id: string, fn: () => Promise<Booking>) => {
     setBusyId(id); setError(null)
-    try { replace(await fn()) } catch (err) {
+    try { await fn(); reload() } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Action failed')
     } finally { setBusyId(null) }
   }
 
-  if (bookings === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   return (
     <ConsoleShell title="All bookings" subtitle="Platform-wide service booking oversight" tabs={ADMIN_TABS}>
@@ -164,6 +161,7 @@ export default function AdminBookings() {
           })}
         </div>
       )}
+      <LoadMore shown={bookings.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
     </ConsoleShell>
   )
 }

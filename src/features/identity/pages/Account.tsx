@@ -5,9 +5,10 @@ import type { CustomerAddress, Order } from '@/shared/lib/types'
 import { useAuth } from '@/shared/context/AuthContext'
 import { formatDate, money, titleCase } from '@/shared/lib/format'
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { validateNewPassword } from '@/shared/lib/password'
 import { countryCode } from '@/shared/lib/countries'
-import { CountrySelect, ErrorNote, PasswordChecklist, Rail, Spinner } from '@/shared/components/ui'
+import { CountrySelect, ErrorNote, LoadMore, PasswordChecklist, Rail, Spinner } from '@/shared/components/ui'
 import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
 
 export default function Account() {
@@ -161,13 +162,11 @@ export default function Account() {
 }
 
 function OrderHistory() {
-  const [orders, setOrders] = useState<Order[] | null>(null)
+  const { items: orders, total, loading, loadingMore, hasNext, loadMore } =
+    usePagedList<Order>((page, size) => api.myOrders(page, size), [])
 
-  useEffect(() => {
-    api.myOrders().then(setOrders).catch(() => setOrders([]))
-  }, [])
-
-  if (orders === null || orders.length === 0) return null
+  // Hide the whole section while the first page loads or when the customer has no orders.
+  if (loading || total === 0) return null
 
   return (
     <div className="card mt-6 overflow-hidden">
@@ -191,6 +190,7 @@ function OrderHistory() {
             </Link>
           ))}
         </div>
+        <LoadMore shown={orders.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
       </div>
     </div>
   )

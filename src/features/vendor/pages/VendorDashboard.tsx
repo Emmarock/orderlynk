@@ -67,25 +67,20 @@ function ShareLinkPanel() {
 export default function VendorDashboard() {
   const navigate = useNavigate()
   const [vendor, setVendor] = useState<Vendor | null>(null)
-  const [orders, setOrders] = useState<Order[] | null>(null)
+  // Recent-orders list only — its newest-first first page is correct for the preview.
+  const [orders, setOrders] = useState<Order[]>([])
   const [analytics, setAnalytics] = useState<VendorAnalytics | null>(null)
-  const [products, setProducts] = useState<Product[]>([])
+  // Low-stock products come from a dedicated, server-scoped endpoint (not the paginated product list).
+  const [lowStock, setLowStock] = useState<Product[]>([])
 
   useEffect(() => {
     api.myVendor().then(setVendor).catch(() => setVendor(null))
-    api.vendorOrders().then(setOrders).catch(() => setOrders([]))
+    api.vendorOrders().then((p) => setOrders(p.content)).catch(() => setOrders([]))
     api.vendorAnalytics().then(setAnalytics).catch(() => setAnalytics(null))
-    api.vendorProducts().then(setProducts).catch(() => setProducts([]))
+    api.lowStockProducts().then(setLowStock).catch(() => setLowStock([]))
   }, [])
 
-  if (!vendor || orders === null) return <PageLoader />
-
-  const paid = orders.filter((o) => o.paymentStatus === 'PAID')
-  const openFulfillment = orders.filter(
-    (o) => !['COMPLETED', 'DELIVERED', 'CANCELLED'].includes(o.fulfillmentStatus),
-  )
-  const gross = paid.reduce((n, o) => n + o.totalAmount, 0)
-  const lowStock = products.filter((p) => p.lowStock)
+  if (!vendor || !analytics) return <PageLoader />
 
   return (
     <ConsoleShell
@@ -115,10 +110,10 @@ export default function VendorDashboard() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Total orders" value={String(orders.length)} />
-        <StatCard label="Paid orders" value={String(paid.length)} />
-        <StatCard label="Open fulfillment" value={String(openFulfillment.length)} hint="Need action" />
-        <StatCard label="Gross (paid)" value={money(gross)} />
+        <StatCard label="Total orders" value={String(analytics.totalOrders)} />
+        <StatCard label="Paid orders" value={String(analytics.paidOrders)} />
+        <StatCard label="Open fulfillment" value={String(analytics.openFulfillmentOrders)} hint="Need action" />
+        <StatCard label="Gross (paid)" value={money(analytics.grossRevenue)} />
         <StatCard label="Low stock" value={String(lowStock.length)} hint={lowStock.length ? 'Restock soon' : undefined} />
       </div>
 

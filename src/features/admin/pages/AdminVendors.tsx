@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api } from '@/shared/lib/api'
 import type { Vendor, VendorStatus } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { titleCase } from '@/shared/lib/format'
 import { ADMIN_TABS, ConsoleShell } from '@/shared/components/Console'
-import { EmptyState, PageLoader } from '@/shared/components/ui'
+import { EmptyState, LoadMore, PageLoader } from '@/shared/components/ui'
 
 const FILTERS: (VendorStatus | 'ALL')[] = ['ALL', 'SUBMITTED', 'APPROVED', 'REJECTED', 'SUSPENDED']
 
@@ -15,25 +16,29 @@ function statusTone(s: VendorStatus): string {
 }
 
 export default function AdminVendors() {
-  const [vendors, setVendors] = useState<Vendor[] | null>(null)
   const [filter, setFilter] = useState<VendorStatus | 'ALL'>('ALL')
   const [busyId, setBusyId] = useState<string | null>(null)
 
-  const load = () => api.adminVendors().then(setVendors).catch(() => setVendors([]))
-  useEffect(() => { load() }, [])
+  // Status filter is server-side now: it composes with pagination so "Approved" pages through
+  // every approved vendor, not just the ones already loaded.
+  const { items: vendors, total, loading, loadingMore, hasNext, loadMore, reload } =
+    usePagedList<Vendor>(
+      (page, size) => api.adminVendors(filter === 'ALL' ? undefined : filter, page, size),
+      [filter],
+    )
 
   const act = async (id: string, fn: (id: string) => Promise<Vendor>) => {
     setBusyId(id)
     try {
-      const updated = await fn(id)
-      setVendors((prev) => prev?.map((v) => (v.id === id ? updated : v)) ?? null)
+      await fn(id)
+      reload()
     } finally {
       setBusyId(null)
     }
   }
 
-  if (vendors === null) return <PageLoader />
-  const filtered = filter === 'ALL' ? vendors : vendors.filter((v) => v.verificationStatus === filter)
+  if (loading) return <PageLoader />
+  const filtered = vendors
 
   return (
     <ConsoleShell
@@ -108,6 +113,7 @@ export default function AdminVendors() {
           ))}
         </div>
       )}
+      <LoadMore shown={vendors.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
     </ConsoleShell>
   )
 }

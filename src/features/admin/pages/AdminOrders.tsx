@@ -1,31 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api } from '@/shared/lib/api'
 import type { Order } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { formatDate, money } from '@/shared/lib/format'
 import { ADMIN_TABS, ConsoleShell } from '@/shared/components/Console'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from '@/features/order/components/OrderViews'
-import { CopyOrderId, EmptyState, PageLoader, Spinner } from '@/shared/components/ui'
+import { CopyOrderId, EmptyState, LoadMore, PageLoader, Spinner } from '@/shared/components/ui'
 
 export default function AdminOrders() {
-  const [orders, setOrders] = useState<Order[] | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => {
-    api.adminOrders().then(setOrders).catch(() => setOrders([]))
-  }, [])
+  const { items: orders, total, loading, loadingMore, hasNext, loadMore, reload } =
+    usePagedList<Order>((page, size) => api.adminOrders(page, size), [])
 
   const markPaid = async (order: Order) => {
     setBusy(true)
     try {
-      const updated = await api.adminUpdatePayment(order.id, { status: 'PAID', method: 'OTHER' })
-      setOrders((prev) => prev?.map((o) => (o.id === updated.id ? updated : o)) ?? null)
+      await api.adminUpdatePayment(order.id, { status: 'PAID', method: 'OTHER' })
+      reload()
     } finally {
       setBusy(false)
     }
   }
 
-  if (orders === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   return (
     <ConsoleShell title="All orders" subtitle="Platform-wide order oversight" tabs={ADMIN_TABS}>
@@ -82,6 +81,7 @@ export default function AdminOrders() {
           })}
         </div>
       )}
+      <LoadMore shown={orders.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
     </ConsoleShell>
   )
 }

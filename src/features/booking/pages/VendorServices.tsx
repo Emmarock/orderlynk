@@ -12,9 +12,10 @@ import type {
   ServiceOffering,
   ServiceProviderProfile,
 } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, formatDay, formatTime } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
-import { EmptyState, ErrorNote, PageLoader, Spinner } from '@/shared/components/ui'
+import { EmptyState, ErrorNote, LoadMore, PageLoader, Spinner } from '@/shared/components/ui'
 
 const CATEGORIES: ServiceCategory[] = [
   'HAIR', 'NAILS', 'BARBER', 'MAKEUP', 'SPA_AND_MASSAGE', 'PHOTOGRAPHY', 'CLEANING',
@@ -57,14 +58,15 @@ export default function VendorServices() {
 // ============================= Catalog =============================
 
 function CatalogSection() {
-  const [services, setServices] = useState<ServiceOffering[] | null>(null)
   const [editing, setEditing] = useState<ServiceOffering | null>(null)
   const [creating, setCreating] = useState(false)
 
-  const load = () => api.vendorServices().then(setServices).catch(() => setServices([]))
-  useEffect(() => { load() }, [])
+  const { items: services, total, loading, loadingMore, hasNext, loadMore, reload } = usePagedList(
+    (page, size) => api.vendorServices(page, size),
+    [],
+  )
 
-  if (services === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   return (
     <div className="space-y-4">
@@ -90,7 +92,7 @@ function CatalogSection() {
                   <p className="text-xs uppercase tracking-wider text-muted">{titleCase(s.category)}</p>
                 </div>
                 <button
-                  onClick={() => api.toggleService(s.id, !s.active).then(load)}
+                  onClick={() => api.toggleService(s.id, !s.active).then(reload)}
                   className={`chip ${s.active ? 'bg-forest/12 text-forest' : 'bg-ink/8 text-muted'}`}
                 >
                   {s.active ? 'Active' : 'Hidden'}
@@ -109,7 +111,7 @@ function CatalogSection() {
                 <button className="btn-quiet px-2" onClick={() => setEditing(s)}>Edit</button>
                 <button
                   className="btn-quiet px-2 text-clay hover:text-clay-dark"
-                  onClick={() => { if (confirm(`Delete "${s.name}"?`)) api.deleteService(s.id).then(load) }}
+                  onClick={() => { if (confirm(`Delete "${s.name}"?`)) api.deleteService(s.id).then(reload) }}
                 >
                   Delete
                 </button>
@@ -118,8 +120,9 @@ function CatalogSection() {
           ))}
         </div>
       )}
+      <LoadMore shown={services.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
       {(creating || editing) && (
-        <ServiceForm initial={editing} onClose={() => { setEditing(null); setCreating(false) }} onSaved={() => { setEditing(null); setCreating(false); load() }} />
+        <ServiceForm initial={editing} onClose={() => { setEditing(null); setCreating(false) }} onSaved={() => { setEditing(null); setCreating(false); reload() }} />
       )}
     </div>
   )

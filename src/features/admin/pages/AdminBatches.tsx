@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
 import { api } from '@/shared/lib/api'
 import type { BatchSummary, BatchStatus } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, formatDay, cargoTone } from '@/shared/lib/format'
 import { ADMIN_TABS, ConsoleShell, StatCard } from '@/shared/components/Console'
-import { EmptyState, PageLoader } from '@/shared/components/ui'
+import { EmptyState, LoadMore, PageLoader } from '@/shared/components/ui'
 
 const BATCH_STATUSES: BatchStatus[] = [
   'DRAFT', 'OPEN', 'CLOSING_SOON', 'CLOSED', 'SOURCING', 'CONSOLIDATING', 'AT_CARGO_PARTNER',
@@ -11,12 +11,10 @@ const BATCH_STATUSES: BatchStatus[] = [
 ]
 
 export default function AdminBatches() {
-  const [list, setList] = useState<BatchSummary[] | null>(null)
+  const { items: list, total, loading, loadingMore, hasNext, loadMore, reload } =
+    usePagedList<BatchSummary>((page, size) => api.adminBatches(page, size), [])
 
-  const load = () => api.adminBatches().then(setList).catch(() => setList([]))
-  useEffect(() => { load() }, [])
-
-  if (list === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   const totalRevenue = list.reduce((s, b) => s + b.revenue, 0)
   const totalPending = list.reduce((s, b) => s + b.pendingPayments, 0)
@@ -53,7 +51,7 @@ export default function AdminBatches() {
                   <td className="px-5 py-3 font-mono">{money(revenue, b.currency)}</td>
                   <td className="px-5 py-3">
                     <select className="field !py-1 text-xs" value={b.batchStatus}
-                      onChange={(e) => api.adminUpdateBatchStatus(b.id, e.target.value).then(load)}>
+                      onChange={(e) => api.adminUpdateBatchStatus(b.id, e.target.value).then(reload)}>
                       {BATCH_STATUSES.map((s) => <option key={s} value={s}>{titleCase(s)}</option>)}
                     </select>
                     <span className={`chip mt-1 ${cargoTone(b.batchStatus)}`}>{titleCase(b.batchStatus)}</span>
@@ -64,6 +62,7 @@ export default function AdminBatches() {
           </table>
         </div>
       )}
+      <LoadMore shown={list.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
     </ConsoleShell>
   )
 }
