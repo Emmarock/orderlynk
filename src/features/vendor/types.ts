@@ -26,6 +26,14 @@ export interface Vendor {
   payoutAccountNumber?: string
   payoutBankName?: string
   payoutEmail?: string
+  payoutCurrency?: string
+  payoutSortCode?: string
+  payoutRoutingNumber?: string
+  payoutInstitutionNumber?: string
+  payoutTransitNumber?: string
+  payoutIban?: string
+  payoutBic?: string
+  payoutBankCode?: string
   notifyByEmail: boolean
   notifyByWhatsapp: boolean
   lowStockAlerts: boolean

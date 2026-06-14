@@ -80,10 +80,18 @@ export function PaymentInstructionsCard({ order }: { order: Order }) {
 
   const rows: [string, string | undefined][] = [
     ['Method', titleCase(pi.method)],
+    ['Currency', pi.currency],
     ['Interac e-Transfer to', pi.email],
     ['Account name', pi.accountName],
     ['Bank', pi.bankName],
+    ['Bank code', pi.bankCode],
     ['Account number', pi.accountNumber],
+    ['Sort code', pi.sortCode],
+    ['Routing number', pi.routingNumber],
+    ['Institution number', pi.institutionNumber],
+    ['Transit number', pi.transitNumber],
+    ['IBAN', pi.iban],
+    ['BIC / SWIFT', pi.bic],
   ]
 
   return (

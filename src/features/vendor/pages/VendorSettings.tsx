@@ -11,7 +11,80 @@ import StripeOnboardingCard from '@/features/vendor/components/StripeOnboardingC
 import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
 
 const FULFILLMENT: FulfillmentType[] = ['LOCAL_PICKUP', 'LOCAL_DELIVERY', 'DOMESTIC_SHIPPING', 'IMPORT_BATCH']
-const PAYOUT_METHODS = ['INTERAC', 'BANK_TRANSFER', 'OTHER']
+
+// ---- Manual bank-transfer details (currency-aware) ----
+// Card payouts go via Stripe Connect (above); these are the details a customer transfers to when
+// paying by bank transfer. Each currency requires its own routing identifiers, validated inline.
+
+const PAYOUT_CURRENCIES = ['NGN', 'USD', 'CAD', 'GBP', 'EUR'] as const
+
+type PayoutForm = {
+  payoutCurrency: string
+  payoutMethod: string
+  payoutAccountName: string
+  payoutBankName: string
+  payoutAccountNumber: string
+  payoutSortCode: string
+  payoutRoutingNumber: string
+  payoutInstitutionNumber: string
+  payoutTransitNumber: string
+  payoutIban: string
+  payoutBic: string
+  payoutBankCode: string
+  payoutEmail: string
+}
+
+type BankField = { key: keyof PayoutForm; label: string; hint?: string; test: (v: string) => boolean }
+
+const onlyDigits = (v: string) => v.replace(/[\s-]/g, '')
+const digitsOfLen = (n: number) => (v: string) => /^\d+$/.test(onlyDigits(v)) && onlyDigits(v).length === n
+const bicOk = (v: string) => /^[A-Za-z0-9]{8}([A-Za-z0-9]{3})?$/.test(v.replace(/\s/g, ''))
+
+/** Structural + ISO 7064 mod-97 IBAN check (no BigInt; runs the remainder digit by digit). */
+function ibanOk(value: string): boolean {
+  const iban = value.replace(/\s/g, '').toUpperCase()
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(iban)) return false
+  const rearranged = iban.slice(4) + iban.slice(0, 4)
+  const numeric = rearranged.replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55))
+  let rem = 0
+  for (const ch of numeric) rem = (rem * 10 + (ch.charCodeAt(0) - 48)) % 97
+  return rem === 1
+}
+
+const CURRENCY_FIELDS: Record<string, BankField[]> = {
+  NGN: [{ key: 'payoutAccountNumber', label: 'Account number (NUBAN)', hint: '10 digits', test: digitsOfLen(10) }],
+  USD: [
+    { key: 'payoutAccountNumber', label: 'Account number', test: (v) => v.trim().length > 0 },
+    { key: 'payoutRoutingNumber', label: 'Routing number', hint: '9 digits', test: digitsOfLen(9) },
+  ],
+  CAD: [
+    { key: 'payoutAccountNumber', label: 'Account number', test: (v) => v.trim().length > 0 },
+    { key: 'payoutInstitutionNumber', label: 'Institution number', hint: '3 digits', test: digitsOfLen(3) },
+    { key: 'payoutTransitNumber', label: 'Transit number', hint: '5 digits', test: digitsOfLen(5) },
+  ],
+  GBP: [
+    { key: 'payoutAccountNumber', label: 'Account number', hint: '8 digits', test: digitsOfLen(8) },
+    { key: 'payoutSortCode', label: 'Sort code', hint: '6 digits', test: digitsOfLen(6) },
+  ],
+  EUR: [
+    { key: 'payoutIban', label: 'IBAN', test: ibanOk },
+    { key: 'payoutBic', label: 'BIC / SWIFT', hint: '8 or 11 chars', test: bicOk },
+  ],
+}
+
+const EMPTY_PAYOUT: PayoutForm = {
+  payoutCurrency: '', payoutMethod: 'BANK_TRANSFER', payoutAccountName: '', payoutBankName: '',
+  payoutAccountNumber: '', payoutSortCode: '', payoutRoutingNumber: '', payoutInstitutionNumber: '',
+  payoutTransitNumber: '', payoutIban: '', payoutBic: '', payoutBankCode: '', payoutEmail: '',
+}
+
+/** Mirrors the backend validation: a currency is required, then the right fields for that currency. */
+function payoutValid(p: PayoutForm): boolean {
+  if (!p.payoutCurrency) return false
+  if (p.payoutCurrency === 'CAD' && p.payoutMethod === 'INTERAC') return p.payoutEmail.trim().length > 0
+  if (!p.payoutAccountName.trim() || !p.payoutBankName.trim()) return false
+  return (CURRENCY_FIELDS[p.payoutCurrency] ?? []).every((f) => f.test(p[f.key] ?? ''))
+}
 
 /** A settings section with its own form + save state. onSave throws ApiError on failure. */
 function SettingsCard({
@@ -143,7 +216,7 @@ export default function VendorSettings() {
   const [profile, setProfile] = useState({ fullName: '', phone: '', city: '', country: '' })
   const [emailForm, setEmailForm] = useState({ newEmail: '', currentPassword: '' })
   const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '', confirm: '' })
-  const [payout, setPayout] = useState({ payoutMethod: '', payoutAccountName: '', payoutAccountNumber: '', payoutBankName: '', payoutEmail: '' })
+  const [payout, setPayout] = useState<PayoutForm>(EMPTY_PAYOUT)
   const [prefs, setPrefs] = useState({ notifyByEmail: true, notifyByWhatsapp: false, lowStockAlerts: true })
 
   useEffect(() => {
@@ -157,8 +230,13 @@ export default function VendorSettings() {
       })
       setFulfillment(v.fulfillmentTypes)
       setPayout({
-        payoutMethod: v.payoutMethod ?? '', payoutAccountName: v.payoutAccountName ?? '',
-        payoutAccountNumber: v.payoutAccountNumber ?? '', payoutBankName: v.payoutBankName ?? '', payoutEmail: v.payoutEmail ?? '',
+        payoutCurrency: v.payoutCurrency ?? '',
+        payoutMethod: v.payoutMethod || 'BANK_TRANSFER',
+        payoutAccountName: v.payoutAccountName ?? '', payoutBankName: v.payoutBankName ?? '',
+        payoutAccountNumber: v.payoutAccountNumber ?? '', payoutSortCode: v.payoutSortCode ?? '',
+        payoutRoutingNumber: v.payoutRoutingNumber ?? '', payoutInstitutionNumber: v.payoutInstitutionNumber ?? '',
+        payoutTransitNumber: v.payoutTransitNumber ?? '', payoutIban: v.payoutIban ?? '',
+        payoutBic: v.payoutBic ?? '', payoutBankCode: v.payoutBankCode ?? '', payoutEmail: v.payoutEmail ?? '',
       })
       setPrefs({ notifyByEmail: v.notifyByEmail, notifyByWhatsapp: v.notifyByWhatsapp, lowStockAlerts: v.lowStockAlerts })
     }).catch(() => setVendor(null))
@@ -289,32 +367,75 @@ export default function VendorSettings() {
         {/* Stripe Connect onboarding — accept card payments */}
         <StripeOnboardingCard />
 
-        {/* Payout information (legacy manual payout details; Stripe handles card payouts automatically) */}
+        {/* Manual bank-transfer details (currency-aware). Stripe Connect above handles card payouts. */}
         <SettingsCard
-          title="Payment / payout information"
-          desc="Where OrderLynk sends your payouts."
+          title="Bank transfer / manual payment details"
+          desc="Shown to customers who pay you by bank transfer (non-card). Card sales are paid out automatically via Stripe above."
+          canSave={payoutValid(payout)}
           onSave={async () => {
-            const v = await api.updateVendor(payout)
+            // Only CAD offers Interac; every other currency is a plain bank transfer.
+            const method = payout.payoutCurrency === 'CAD' && payout.payoutMethod === 'INTERAC' ? 'INTERAC' : 'BANK_TRANSFER'
+            const v = await api.updateVendor({ ...payout, payoutMethod: method })
             setVendor(v)
           }}
         >
-          <Field label="Payout method">
-            <select className="field" value={payout.payoutMethod} onChange={(e) => setPayout({ ...payout, payoutMethod: e.target.value })}>
-              <option value="">Select…</option>
-              {PAYOUT_METHODS.map((m) => <option key={m} value={m}>{titleCase(m)}</option>)}
+          <Field label="Settlement currency">
+            <select
+              className="field"
+              value={payout.payoutCurrency}
+              onChange={(e) => setPayout({ ...payout, payoutCurrency: e.target.value, payoutMethod: 'BANK_TRANSFER' })}
+            >
+              <option value="">Select currency…</option>
+              {PAYOUT_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </Field>
-          {payout.payoutMethod === 'INTERAC' ? (
-            <Field label="Interac e-Transfer email"><input className="field" value={payout.payoutEmail} onChange={(e) => setPayout({ ...payout, payoutEmail: e.target.value })} /></Field>
-          ) : (
-            <>
-              <Field label="Account name"><input className="field" value={payout.payoutAccountName} onChange={(e) => setPayout({ ...payout, payoutAccountName: e.target.value })} /></Field>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Bank name"><input className="field" value={payout.payoutBankName} onChange={(e) => setPayout({ ...payout, payoutBankName: e.target.value })} /></Field>
-                <Field label="Account number"><input className="field" value={payout.payoutAccountNumber} onChange={(e) => setPayout({ ...payout, payoutAccountNumber: e.target.value })} /></Field>
-              </div>
-            </>
+
+          {!payout.payoutCurrency && (
+            <p className="text-sm text-muted">Select a currency to enter the bank details customers will transfer to.</p>
           )}
+
+          {payout.payoutCurrency === 'CAD' && (
+            <Field label="How customers pay you">
+              <select className="field" value={payout.payoutMethod} onChange={(e) => setPayout({ ...payout, payoutMethod: e.target.value })}>
+                <option value="BANK_TRANSFER">Bank transfer</option>
+                <option value="INTERAC">Interac e-Transfer</option>
+              </select>
+            </Field>
+          )}
+
+          {payout.payoutCurrency && payout.payoutMethod === 'INTERAC' ? (
+            <Field label="Interac e-Transfer email">
+              <input className="field" type="email" value={payout.payoutEmail} onChange={(e) => setPayout({ ...payout, payoutEmail: e.target.value })} />
+            </Field>
+          ) : payout.payoutCurrency ? (
+            <>
+              <Field label="Account holder name">
+                <input className="field" value={payout.payoutAccountName} onChange={(e) => setPayout({ ...payout, payoutAccountName: e.target.value })} />
+              </Field>
+              <Field label="Bank name">
+                <input className="field" value={payout.payoutBankName} onChange={(e) => setPayout({ ...payout, payoutBankName: e.target.value })} />
+              </Field>
+              {payout.payoutCurrency === 'NGN' && (
+                <Field label="Bank code (optional)">
+                  <input className="field" value={payout.payoutBankCode} onChange={(e) => setPayout({ ...payout, payoutBankCode: e.target.value })} />
+                </Field>
+              )}
+              {(CURRENCY_FIELDS[payout.payoutCurrency] ?? []).map((f) => {
+                const val = payout[f.key] ?? ''
+                const invalid = val.trim() !== '' && !f.test(val)
+                return (
+                  <Field key={f.key} label={f.hint ? `${f.label} (${f.hint})` : f.label}>
+                    <input
+                      className={`field ${invalid ? 'border-clay' : ''}`}
+                      value={val}
+                      onChange={(e) => setPayout({ ...payout, [f.key]: e.target.value })}
+                    />
+                    {invalid && <p className="mt-1 text-xs text-clay-dark">Enter a valid {f.label.toLowerCase()}.</p>}
+                  </Field>
+                )
+              })}
+            </>
+          ) : null}
         </SettingsCard>
 
         {/* Notification preferences */}

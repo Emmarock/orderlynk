@@ -14,6 +14,14 @@ export interface PaymentInstructions {
   bankName?: string
   accountNumber?: string
   email?: string
+  currency?: string
+  sortCode?: string
+  routingNumber?: string
+  institutionNumber?: string
+  transitNumber?: string
+  iban?: string
+  bic?: string
+  bankCode?: string
 }
 
 export interface Order {
