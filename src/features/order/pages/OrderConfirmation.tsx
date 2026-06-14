@@ -1,7 +1,7 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import type { Order } from '@/shared/lib/types'
-import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline, PaymentInstructionsCard } from '@/features/order/components/OrderViews'
+import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from '@/features/order/components/OrderViews'
 import { CopyOrderId, EmptyState } from '@/shared/components/ui'
 
 export default function OrderConfirmation() {
@@ -68,11 +68,8 @@ export default function OrderConfirmation() {
           <div className="card p-6">
             <h2 className="font-display text-xl font-semibold">Payment</h2>
             <div className="mt-3"><OrderFeeBreakdown order={order} /></div>
-            <div className="mt-4"><PaymentInstructionsCard order={order} /></div>
             <p className="mt-4 rounded-xl bg-sand p-3 text-xs text-muted">
-              {paid
-                ? "Your payment is complete. You'll be notified when your order is ready."
-                : "The vendor will confirm your payment. You'll be notified when your order is ready."}
+              Your payment is complete. You'll be notified when your order is ready.
             </p>
           </div>
         </div>

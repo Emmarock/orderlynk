@@ -1,6 +1,6 @@
 import type { Order } from '@/shared/lib/types'
 import { money, titleCase } from '@/shared/lib/format'
-import { CopyOrderId, FulfillmentBadge, PaymentBadge } from '@/shared/components/ui'
+import { FulfillmentBadge, PaymentBadge } from '@/shared/components/ui'
 
 /**
  * The ordered steps to render. Normally this is the server-provided `fulfillmentFlow`, but we guard
@@ -89,58 +89,14 @@ export function OrderItems({ order }: { order: Order }) {
   )
 }
 
-/**
- * Shows the vendor's payment details so the customer knows how to pay. Rendered only
- * when the vendor configured payout details and payment is still outstanding.
- */
-export function PaymentInstructionsCard({ order }: { order: Order }) {
-  const pi = order.paymentInstructions
-  const outstanding = order.paymentStatus === 'PENDING' || order.paymentStatus === 'PARTIAL'
-  if (!pi || !outstanding) return null
-
-  const rows: [string, string | undefined][] = [
-    ['Method', titleCase(pi.method)],
-    ['Currency', pi.currency],
-    ['Interac e-Transfer to', pi.email],
-    ['Account name', pi.accountName],
-    ['Bank', pi.bankName],
-    ['Bank code', pi.bankCode],
-    ['Account number', pi.accountNumber],
-    ['Sort code', pi.sortCode],
-    ['Routing number', pi.routingNumber],
-    ['Institution number', pi.institutionNumber],
-    ['Transit number', pi.transitNumber],
-    ['IBAN', pi.iban],
-    ['BIC / SWIFT', pi.bic],
-  ]
-
-  return (
-    <div className="rounded-xl border border-clay/30 bg-clay/8 p-4">
-      <h3 className="font-display text-base font-semibold text-clay-dark">How to pay</h3>
-      <p className="mt-1 text-sm text-muted">
-        Send {money(order.totalAmount, order.currency)} to {order.vendorName} using the details below, then
-        the vendor will confirm your payment.
-      </p>
-      <dl className="mt-3 space-y-1.5 text-sm">
-        {rows.filter(([, v]) => v && v.trim()).map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-3">
-            <dt className="text-muted">{label}</dt>
-            <dd className="text-right font-medium">{value}</dd>
-          </div>
-        ))}
-        <div className="flex justify-between gap-3 border-t border-clay/20 pt-2 font-semibold">
-          <dt>Reference</dt>
-          <dd className="font-mono"><CopyOrderId value={order.publicOrderId} /></dd>
-        </div>
-      </dl>
-    </div>
-  )
-}
-
 export function OrderStatusRow({ order }: { order: Order }) {
+  // Payment is taken before the order exists (card-first flow), so PENDING/PAID add no
+  // signal here — the fulfillment status is the order's real status. Only surface the
+  // payment badge when it deviates from the happy path (refund, partial, failed, cancelled).
+  const showPayment = order.paymentStatus !== 'PENDING' && order.paymentStatus !== 'PAID'
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <PaymentBadge status={order.paymentStatus} />
+      {showPayment && <PaymentBadge status={order.paymentStatus} />}
       <FulfillmentBadge status={order.fulfillmentStatus} />
       <span className="chip bg-sand text-muted">{titleCase(order.fulfillmentType)}</span>
     </div>

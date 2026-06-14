@@ -8,22 +8,6 @@ export interface OrderItem {
   lineTotal: number
 }
 
-export interface PaymentInstructions {
-  method: string
-  accountName?: string
-  bankName?: string
-  accountNumber?: string
-  email?: string
-  currency?: string
-  sortCode?: string
-  routingNumber?: string
-  institutionNumber?: string
-  transitNumber?: string
-  iban?: string
-  bic?: string
-  bankCode?: string
-}
-
 export interface Order {
   id: string
   publicOrderId: string
@@ -58,7 +42,6 @@ export interface Order {
   campaign?: string
   notes?: string
   createdAt: string
-  paymentInstructions?: PaymentInstructions | null
   trackToken?: string | null
   // Present only on the checkout response when card payment is initiated.
   clientSecret?: string | null
