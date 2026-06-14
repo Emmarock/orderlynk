@@ -25,8 +25,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
+  // Logged-in customers get their own orders hub; admins/vendors get their console.
   const dashboardLink =
-    user?.role === 'ADMIN' ? '/admin' : user?.role === 'VENDOR' ? '/vendor' : null
+    user?.role === 'ADMIN' ? '/admin' : user?.role === 'VENDOR' ? '/vendor' : user ? '/dashboard' : null
+  const dashboardLabel =
+    user?.role === 'ADMIN' ? 'Admin console' : user?.role === 'VENDOR' ? 'Vendor dashboard' : 'My orders'
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -49,7 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </NavLink>
             {dashboardLink ? (
               <NavLink to={dashboardLink} className="link-underline">
-                {user?.role === 'ADMIN' ? 'Admin console' : 'Vendor dashboard'}
+                {dashboardLabel}
               </NavLink>
             ) : (
               <NavLink to="/sell" className="link-underline">

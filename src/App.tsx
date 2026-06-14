@@ -22,6 +22,7 @@ import ForgotPassword from '@/features/identity/pages/ForgotPassword'
 import ResetPassword from '@/features/identity/pages/ResetPassword'
 import SellOnOrderlynk from '@/features/identity/pages/SellOnOrderlynk'
 import Account from '@/features/identity/pages/Account'
+import CustomerDashboard from '@/features/identity/pages/CustomerDashboard'
 import VendorDashboard from '@/features/vendor/pages/VendorDashboard'
 import VendorProducts from '@/features/catalog/pages/VendorProducts'
 import VendorServices from '@/features/booking/pages/VendorServices'
@@ -79,6 +80,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Account />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <CustomerDashboard />
             </ProtectedRoute>
           }
         />
