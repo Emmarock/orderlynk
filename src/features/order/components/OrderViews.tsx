@@ -2,8 +2,28 @@ import type { Order } from '@/shared/lib/types'
 import { money, titleCase } from '@/shared/lib/format'
 import { CopyOrderId, FulfillmentBadge, PaymentBadge } from '@/shared/components/ui'
 
+/**
+ * The ordered steps to render. Normally this is the server-provided `fulfillmentFlow`, but we guard
+ * against the order's current status being absent from that list (e.g. a stale/mismatched flow after
+ * a partial deploy): without this, `indexOf` returns -1 and the whole timeline renders muted, making a
+ * progressed order look stuck at "Order received". PAID always follows ORDER_RECEIVED; any other
+ * unexpected status is appended so it's at least shown as the current step rather than hidden.
+ */
+function timelineFlow(order: Order): string[] {
+  if (order.fulfillmentStatus === 'CANCELLED') return ['ORDER_RECEIVED', 'CANCELLED']
+  const flow = order.fulfillmentFlow ?? []
+  if (flow.includes(order.fulfillmentStatus)) return flow
+  const afterReceived = flow.indexOf('ORDER_RECEIVED')
+  if (order.fulfillmentStatus === 'PAID' && afterReceived !== -1) {
+    const merged = [...flow]
+    merged.splice(afterReceived + 1, 0, 'PAID')
+    return merged
+  }
+  return [...flow, order.fulfillmentStatus]
+}
+
 export function OrderTimeline({ order }: { order: Order }) {
-  const flow = order.fulfillmentStatus === 'CANCELLED' ? ['ORDER_RECEIVED', 'CANCELLED'] : order.fulfillmentFlow
+  const flow = timelineFlow(order)
   const currentIdx = flow.indexOf(order.fulfillmentStatus)
 
   return (
