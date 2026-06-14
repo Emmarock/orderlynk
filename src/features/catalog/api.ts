@@ -1,9 +1,11 @@
-import { request, upload } from '@/shared/lib/http'
-import type { Product } from '@/shared/lib/types'
+import { query, request, upload } from '@/shared/lib/http'
+import type { Page, Product } from '@/shared/lib/types'
 
 /** Vendor product catalog management. */
 export const catalogApi = {
-  vendorProducts: () => request<Product[]>('GET', '/api/vendor/products'),
+  vendorProducts: (page = 0, size = 20) =>
+    request<Page<Product>>('GET', `/api/vendor/products${query({ page, size })}`),
+  lowStockProducts: () => request<Product[]>('GET', '/api/vendor/products/low-stock'),
   uploadProductImage: (file: File) => upload('/api/vendor/products/image', file),
   generateProductDescription: (b: { name: string; category?: string }) =>
     request<{ description: string }>('POST', '/api/vendor/products/description', b),

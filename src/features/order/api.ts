@@ -1,5 +1,5 @@
-import { dateRangeQuery, request } from '@/shared/lib/http'
-import type { Order, Quote, RateQuoteResponse, Shipment, TrackingResponse } from '@/shared/lib/types'
+import { query, request } from '@/shared/lib/http'
+import type { Order, Page, Quote, RateQuoteResponse, Shipment, TrackingResponse } from '@/shared/lib/types'
 
 /** Customer ordering (quote/checkout/track) + vendor order fulfillment, payment and shipping. */
 export const orderApi = {
@@ -9,10 +9,13 @@ export const orderApi = {
   track: (orderId: string, contact: string) =>
     request<Order>('POST', '/api/orders/track', { orderId, contact }),
   trackByToken: (token: string) => request<Order>('POST', '/api/orders/track-token', { token }),
-  myOrders: () => request<Order[]>('GET', '/api/orders/mine'),
-  vendorOrders: (from?: string, to?: string) =>
-    request<Order[]>('GET', `/api/vendor/orders${dateRangeQuery(from, to)}`),
+  myOrders: (page = 0, size = 20) =>
+    request<Page<Order>>('GET', `/api/orders/mine${query({ page, size })}`),
+  vendorOrders: (from?: string, to?: string, page = 0, size = 20) =>
+    request<Page<Order>>('GET', `/api/vendor/orders${query({ from, to, page, size })}`),
   vendorOrder: (id: string) => request<Order>('GET', `/api/vendor/orders/${id}`),
+  vendorCustomerOrders: (phone: string) =>
+    request<Order[]>('GET', `/api/vendor/customers/${encodeURIComponent(phone)}/orders`),
   updateFulfillment: (id: string, status: string, note?: string) =>
     request<Order>('PATCH', `/api/vendor/orders/${id}/fulfillment`, { status, note }),
   vendorUpdatePayment: (id: string, b: unknown) =>

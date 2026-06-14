@@ -1,31 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api } from '@/shared/lib/api'
 import type { Order, PaymentStatus } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { formatDate, money, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 import { OrderDetailPanel } from '@/features/order/components/OrderDetailPanel'
-import { CopyOrderId, EmptyState, PageLoader } from '@/shared/components/ui'
+import { CopyOrderId, EmptyState, LoadMore, PageLoader } from '@/shared/components/ui'
 
 const PAYMENT_FILTERS: (PaymentStatus | 'ALL')[] = ['ALL', 'PENDING', 'PAID']
 
 export default function VendorOrders() {
-  const [orders, setOrders] = useState<Order[] | null>(null)
   const [filter, setFilter] = useState<PaymentStatus | 'ALL'>('ALL')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
 
   // Refetch from the server whenever the date range changes (server filters by created-at).
-  useEffect(() => {
-    api.vendorOrders(from || undefined, to || undefined).then(setOrders).catch(() => setOrders([]))
-  }, [from, to])
+  const { items, total, loading, loadingMore, hasNext, loadMore, setItems } = usePagedList<Order>(
+    (page, size) => api.vendorOrders(from || undefined, to || undefined, page, size),
+    [from, to],
+  )
 
   const replace = (updated: Order) =>
-    setOrders((prev) => prev?.map((o) => (o.id === updated.id ? updated : o)) ?? null)
+    setItems((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
 
-  if (orders === null) return <PageLoader />
-  const filtered = filter === 'ALL' ? orders : orders.filter((o) => o.paymentStatus === filter)
+  if (loading) return <PageLoader />
+  // Payment-status filter stays client-side, over the orders loaded so far.
+  const filtered = filter === 'ALL' ? items : items.filter((o) => o.paymentStatus === filter)
 
   return (
     <ConsoleShell
@@ -96,6 +98,7 @@ export default function VendorOrders() {
           })}
         </div>
       )}
+      <LoadMore shown={items.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
     </ConsoleShell>
   )
 }

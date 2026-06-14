@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { api } from '@/shared/lib/api'
 import type { Vendor } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { titleCase } from '@/shared/lib/format'
-import { PageLoader, SectionTitle } from '@/shared/components/ui'
+import { LoadMore, PageLoader, SectionTitle } from '@/shared/components/ui'
 
 const RAILS = [
   { name: 'Discovery', desc: 'Verified storefronts, product pages and marketplace search.' },
@@ -62,7 +63,6 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
 }
 
 export default function Landing() {
-  const [vendors, setVendors] = useState<Vendor[] | null>(null)
   const [city, setCity] = useState('')
   const [category, setCategory] = useState('')
   const [categories, setCategories] = useState<string[]>([])
@@ -74,13 +74,12 @@ export default function Landing() {
 
   // Reload from the server whenever the category changes — the backend filters by
   // category and returns vendors already sorted highest-rated first.
-  useEffect(() => {
-    setVendors(null)
-    api.marketplace(undefined, category || undefined).then(setVendors).catch(() => setVendors([]))
-  }, [category])
+  const { items: vendors, total, loading, loadingMore, hasNext, loadMore } =
+    usePagedList<Vendor>((page, size) => api.marketplace(undefined, category || undefined, page, size), [category])
 
-  const cities = Array.from(new Set((vendors ?? []).map((v) => v.city).filter(Boolean))) as string[]
-  const filtered = city ? (vendors ?? []).filter((v) => v.city === city) : vendors ?? []
+  // City filter is client-side, over the vendors loaded so far.
+  const cities = Array.from(new Set(vendors.map((v) => v.city).filter(Boolean))) as string[]
+  const filtered = city ? vendors.filter((v) => v.city === city) : vendors
 
   return (
     <div>
@@ -234,18 +233,21 @@ export default function Landing() {
           </div>
         )}
 
-        {vendors === null ? (
+        {loading ? (
           <PageLoader />
         ) : filtered.length === 0 ? (
           <p className="text-muted">
             {category ? `No vendors in ${titleCase(category)} yet — try another category.` : 'No vendors available yet — check back soon.'}
           </p>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((v) => (
-              <VendorCard key={v.id} vendor={v} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((v) => (
+                <VendorCard key={v.id} vendor={v} />
+              ))}
+            </div>
+            <LoadMore shown={vendors.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
+          </>
         )}
       </section>
 

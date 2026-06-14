@@ -95,6 +95,19 @@ export interface AddressSuggestion extends Address {
   confidence?: number
 }
 
+/**
+ * One page of a paginated list endpoint. Mirrors the backend `PageResponse<T>` envelope: `content`
+ * is the rows for this page, the rest is the metadata the "load more" UI needs.
+ */
+export interface Page<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+}
+
 // ---- Feature-owned types (barrel) ----
 export * from '@/features/catalog/types'
 export * from '@/features/order/types'

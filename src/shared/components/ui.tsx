@@ -214,6 +214,43 @@ export function CountrySelect({
   )
 }
 
+/**
+ * "Load more" footer for paginated lists: a button shown while there are more pages, plus a running
+ * "Showing X of N" count. Renders nothing when the list is empty so empty states stay clean.
+ */
+export function LoadMore({
+  shown,
+  total,
+  hasNext,
+  loading,
+  onLoadMore,
+}: {
+  shown: number
+  total: number
+  hasNext: boolean
+  loading: boolean
+  onLoadMore: () => void
+}) {
+  if (total === 0) return null
+  return (
+    <div className="flex flex-col items-center gap-2 pt-4">
+      {hasNext && (
+        <button
+          type="button"
+          onClick={onLoadMore}
+          disabled={loading}
+          className="btn-ghost px-5 py-1.5 disabled:opacity-60"
+        >
+          {loading ? <Spinner className="h-4 w-4" /> : 'Load more'}
+        </button>
+      )}
+      <p className="text-xs text-muted">
+        Showing {shown} of {total}
+      </p>
+    </div>
+  )
+}
+
 export function SectionTitle({ eyebrow, title }: { eyebrow?: string; title: string }) {
   return (
     <div className="mb-6">

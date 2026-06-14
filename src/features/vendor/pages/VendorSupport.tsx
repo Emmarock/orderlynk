@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api, ApiError } from '@/shared/lib/api'
 import type { SupportTicket } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { formatDate, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
-import { ErrorNote, Spinner } from '@/shared/components/ui'
+import { ErrorNote, LoadMore, Spinner } from '@/shared/components/ui'
 
 const CATEGORIES = ['PAYMENT', 'ORDER', 'PRODUCT', 'ACCOUNT', 'TECHNICAL', 'OTHER']
 
@@ -18,7 +19,7 @@ const FAQS: { q: string; a: string }[] = [
   { q: 'How do I contact support?', a: 'Use the “Message Us” form on this page. Pick a category, add a subject and message, and we’ll follow up.' },
 ]
 
-function MessageUs({ onCreated }: { onCreated: (t: SupportTicket) => void }) {
+function MessageUs({ onCreated }: { onCreated: () => void }) {
   const [category, setCategory] = useState('PAYMENT')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
@@ -32,8 +33,8 @@ function MessageUs({ onCreated }: { onCreated: (t: SupportTicket) => void }) {
     setError(null)
     setDone(false)
     try {
-      const t = await api.createSupportTicket({ category, subject, message })
-      onCreated(t)
+      await api.createSupportTicket({ category, subject, message })
+      onCreated()
       setSubject('')
       setMessage('')
       setDone(true)
@@ -101,16 +102,13 @@ function Faq() {
 }
 
 export default function VendorSupport() {
-  const [tickets, setTickets] = useState<SupportTicket[]>([])
-
-  useEffect(() => {
-    api.vendorSupportTickets().then(setTickets).catch(() => setTickets([]))
-  }, [])
+  const { items: tickets, total, loadingMore, hasNext, loadMore, reload } =
+    usePagedList<SupportTicket>((page, size) => api.vendorSupportTickets(page, size), [])
 
   return (
     <ConsoleShell title="Support" subtitle="Get help and find answers" tabs={VENDOR_TABS}>
       <div className="grid gap-6 lg:grid-cols-2">
-        <MessageUs onCreated={(t) => setTickets((prev) => [t, ...prev])} />
+        <MessageUs onCreated={reload} />
         <Faq />
       </div>
 
@@ -130,6 +128,7 @@ export default function VendorSupport() {
               </div>
             ))}
           </div>
+          <LoadMore shown={tickets.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
         </div>
       )}
     </ConsoleShell>

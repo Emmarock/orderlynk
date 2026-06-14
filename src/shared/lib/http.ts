@@ -33,6 +33,19 @@ export function apiMessage(err: unknown, fallback: string): string {
   return fallback
 }
 
+/**
+ * Build a `?a=1&b=2` query string from a params object, skipping `undefined`/`null`/`''` values.
+ * Used by paginated endpoints to merge filters with `page`/`size` in one place.
+ */
+export function query(params: Record<string, string | number | boolean | undefined | null>): string {
+  const qs = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+  }
+  const s = qs.toString()
+  return s ? `?${s}` : ''
+}
+
 /** Build a `?from=&to=` query string from optional ISO dates (yyyy-MM-dd). */
 export function dateRangeQuery(from?: string, to?: string): string {
   const qs = new URLSearchParams()

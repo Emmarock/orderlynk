@@ -1,20 +1,14 @@
-import { dateRangeQuery, request, upload } from '@/shared/lib/http'
+import { query, request, upload } from '@/shared/lib/http'
 import type {
-  AvailabilityRule, BlockedSlot, Booking, BookingPayment, DayAvailability, PaymentInit,
+  AvailabilityRule, BlockedSlot, Booking, BookingPayment, DayAvailability, Page, PaymentInit,
   ProviderCard, Review, ServiceAddOn, ServiceOffering, ServiceProviderProfile, ServiceStorefront,
 } from '@/shared/lib/types'
 
 /** Service Provider Booking: public discovery + customer bookings, and the vendor services console. */
 export const bookingApi = {
   // ---- public discovery + customer bookings ----
-  serviceMarketplace: (opts?: { category?: string; city?: string; acceptsDeposits?: boolean }) => {
-    const qs = new URLSearchParams()
-    if (opts?.category) qs.set('category', opts.category)
-    if (opts?.city) qs.set('city', opts.city)
-    if (opts?.acceptsDeposits) qs.set('acceptsDeposits', 'true')
-    const s = qs.toString()
-    return request<ProviderCard[]>('GET', `/api/services${s ? `?${s}` : ''}`)
-  },
+  serviceMarketplace: (opts?: { category?: string; city?: string; acceptsDeposits?: boolean }, page = 0, size = 20) =>
+    request<Page<ProviderCard>>('GET', `/api/services${query({ category: opts?.category, city: opts?.city, acceptsDeposits: opts?.acceptsDeposits || undefined, page, size })}`),
   serviceStorefront: (slug: string) => request<ServiceStorefront>('GET', `/api/services/${slug}`),
   bookingAvailability: (serviceId: string, date: string) =>
     request<DayAvailability>('GET', `/api/bookings/availability?serviceId=${serviceId}&date=${date}`),
@@ -23,14 +17,14 @@ export const bookingApi = {
     request<Booking>('POST', '/api/bookings/track', { publicBookingId, contact }),
   payBooking: (publicBookingId: string, contact?: string) =>
     request<PaymentInit>('POST', `/api/bookings/${publicBookingId}/pay`, { contact }),
-  myBookings: () => request<Booking[]>('GET', '/api/bookings/mine'),
+  myBookings: (page = 0, size = 20) => request<Page<Booking>>('GET', `/api/bookings/mine${query({ page, size })}`),
   reviewBooking: (publicBookingId: string, b: { rating: number; comment?: string }, contact?: string) =>
     request<Review>('POST', `/api/bookings/${publicBookingId}/review${contact ? `?contact=${encodeURIComponent(contact)}` : ''}`, b),
 
   // ---- vendor: services module ----
   serviceProfile: () => request<ServiceProviderProfile>('GET', '/api/vendor/service-profile'),
   updateServiceProfile: (b: unknown) => request<ServiceProviderProfile>('PUT', '/api/vendor/service-profile', b),
-  vendorServices: () => request<ServiceOffering[]>('GET', '/api/vendor/services'),
+  vendorServices: (page = 0, size = 20) => request<Page<ServiceOffering>>('GET', `/api/vendor/services${query({ page, size })}`),
   uploadServiceImage: (file: File) => upload('/api/vendor/services/image', file),
   createService: (b: unknown) => request<ServiceOffering>('POST', '/api/vendor/services', b),
   updateService: (id: string, b: unknown) => request<ServiceOffering>('PUT', `/api/vendor/services/${id}`, b),
@@ -53,8 +47,8 @@ export const bookingApi = {
   deleteBlockedSlot: (id: string) => request<void>('DELETE', `/api/vendor/blocked-slots/${id}`),
 
   // ---- vendor: booking dashboard ----
-  vendorBookings: (from?: string, to?: string) =>
-    request<Booking[]>('GET', `/api/vendor/bookings${dateRangeQuery(from, to)}`),
+  vendorBookings: (from?: string, to?: string, page = 0, size = 20) =>
+    request<Page<Booking>>('GET', `/api/vendor/bookings${query({ from, to, page, size })}`),
   vendorBooking: (id: string) => request<Booking>('GET', `/api/vendor/bookings/${id}`),
   approveBooking: (id: string) => request<Booking>('POST', `/api/vendor/bookings/${id}/approve`),
   rejectBooking: (id: string, reason?: string) =>

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
 import type { CustomerSummary } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { formatDate, money } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
-import { EmptyState, ErrorNote, PageLoader, Spinner } from '@/shared/components/ui'
+import { EmptyState, ErrorNote, LoadMore, PageLoader, Spinner } from '@/shared/components/ui'
 
 function BroadcastModal({
   customerCount,
@@ -61,15 +62,16 @@ function BroadcastModal({
 
 export default function VendorCustomers() {
   const navigate = useNavigate()
-  const [customers, setCustomers] = useState<CustomerSummary[] | null>(null)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [composing, setComposing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
-  useEffect(() => {
-    api.vendorCustomers(from || undefined, to || undefined).then(setCustomers).catch(() => setCustomers([]))
-  }, [from, to])
+  const { items: customers, total, loading, loadingMore, hasNext, loadMore } =
+    usePagedList<CustomerSummary>(
+      (page, size) => api.vendorCustomers(from || undefined, to || undefined, page, size),
+      [from, to],
+    )
 
   const sendBroadcast = async (subject: string, message: string) => {
     const res = await api.vendorBroadcast({ subject, message }, from || undefined, to || undefined)
@@ -78,7 +80,7 @@ export default function VendorCustomers() {
     setTimeout(() => setToast(null), 4000)
   }
 
-  if (customers === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   return (
     <ConsoleShell
@@ -154,6 +156,7 @@ export default function VendorCustomers() {
           </table>
         </div>
       )}
+      <LoadMore shown={customers.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
 
       {composing && (
         <BroadcastModal customerCount={customers.length} onClose={() => setComposing(false)} onSend={sendBroadcast} />

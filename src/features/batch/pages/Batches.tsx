@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '@/shared/lib/api'
 import type { BatchCard, BatchType } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, formatDay } from '@/shared/lib/format'
-import { CountrySelect, EmptyState, PageLoader, SectionTitle } from '@/shared/components/ui'
+import { CountrySelect, EmptyState, LoadMore, PageLoader, SectionTitle } from '@/shared/components/ui'
 import SuggestField from '@/shared/components/SuggestField'
 
 const TYPES: BatchType[] = ['PRODUCT_BATCH', 'CARGO_BATCH', 'HYBRID_BATCH']
@@ -15,20 +16,20 @@ function badge(b: BatchCard) {
 }
 
 export default function Batches() {
-  const [cards, setCards] = useState<BatchCard[] | null>(null)
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
   const [batchType, setBatchType] = useState<BatchType | ''>('')
+  const trimmedOrigin = origin.trim()
+  const trimmedDestination = destination.trim()
 
-  const load = () => {
-    setCards(null)
-    api.batchMarketplace({
-      originCountry: origin.trim() || undefined,
-      destinationCity: destination.trim() || undefined,
+  const { items: cards, total, loading, loadingMore, hasNext, loadMore } = usePagedList(
+    (page, size) => api.batchMarketplace({
+      originCountry: trimmedOrigin || undefined,
+      destinationCity: trimmedDestination || undefined,
       batchType: batchType || undefined,
-    }).then(setCards).catch(() => setCards([]))
-  }
-  useEffect(() => { const t = setTimeout(load, 350); return () => clearTimeout(t) }, [origin, destination, batchType])
+    }, page, size),
+    [trimmedOrigin, trimmedDestination, batchType],
+  )
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12">
@@ -54,11 +55,12 @@ export default function Batches() {
         </div>
       </div>
 
-      {cards === null ? (
+      {loading ? (
         <PageLoader />
       ) : cards.length === 0 ? (
         <EmptyState title="No open batches" hint="Check back soon, or try different filters." />
       ) : (
+        <>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((b) => {
             const bg = badge(b)
@@ -85,6 +87,8 @@ export default function Batches() {
             )
           })}
         </div>
+        <LoadMore shown={cards.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
+        </>
       )}
     </div>
   )

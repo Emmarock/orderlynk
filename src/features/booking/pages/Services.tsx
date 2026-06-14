@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '@/shared/lib/api'
-import type { ProviderCard, ServiceCategory } from '@/shared/lib/types'
+import type { ServiceCategory } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase } from '@/shared/lib/format'
-import { EmptyState, PageLoader, SectionTitle } from '@/shared/components/ui'
+import { EmptyState, LoadMore, PageLoader, SectionTitle } from '@/shared/components/ui'
 import SuggestField from '@/shared/components/SuggestField'
 
 const CATEGORIES: ServiceCategory[] = [
@@ -23,20 +24,19 @@ function Stars({ rating, count }: { rating?: number | null; count: number }) {
 }
 
 export default function Services() {
-  const [providers, setProviders] = useState<ProviderCard[] | null>(null)
   const [category, setCategory] = useState<ServiceCategory | ''>('')
   const [city, setCity] = useState('')
   const [depositsOnly, setDepositsOnly] = useState(false)
+  const trimmedCity = city.trim()
 
-  const load = () => {
-    setProviders(null)
-    api.serviceMarketplace({
+  const { items: providers, total, loading, loadingMore, hasNext, loadMore } = usePagedList(
+    (page, size) => api.serviceMarketplace({
       category: category || undefined,
-      city: city.trim() || undefined,
+      city: trimmedCity || undefined,
       acceptsDeposits: depositsOnly,
-    }).then(setProviders).catch(() => setProviders([]))
-  }
-  useEffect(() => { const t = setTimeout(load, 350); return () => clearTimeout(t) }, [city, category, depositsOnly])
+    }, page, size),
+    [category, trimmedCity, depositsOnly],
+  )
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12">
@@ -58,11 +58,12 @@ export default function Services() {
         </label>
       </div>
 
-      {providers === null ? (
+      {loading ? (
         <PageLoader />
       ) : providers.length === 0 ? (
         <EmptyState title="No providers found" hint="Try a different category or city." />
       ) : (
+        <>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {providers.map((p) => (
             <Link key={p.vendorId} to={`/services/${p.storeSlug}`} className="card group overflow-hidden transition-shadow hover:shadow-lg">
@@ -92,6 +93,8 @@ export default function Services() {
             </Link>
           ))}
         </div>
+        <LoadMore shown={providers.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
+        </>
       )}
     </div>
   )

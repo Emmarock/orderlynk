@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
-import type { Batch, BatchSummary, BatchType, ShippingMethod, BatchVisibility } from '@/shared/lib/types'
+import type { Batch, BatchType, ShippingMethod, BatchVisibility } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, formatDay, cargoTone } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
-import { CountrySelect, EmptyState, ErrorNote, PageLoader, Spinner } from '@/shared/components/ui'
+import { CountrySelect, EmptyState, ErrorNote, LoadMore, PageLoader, Spinner } from '@/shared/components/ui'
 import SuggestField from '@/shared/components/SuggestField'
 
 const BATCH_TYPES: BatchType[] = ['PRODUCT_BATCH', 'CARGO_BATCH', 'HYBRID_BATCH']
@@ -218,14 +219,15 @@ function BatchForm({ initial, onClose, onSaved }: { initial: Batch | null; onClo
 }
 
 export default function VendorBatches() {
-  const [list, setList] = useState<BatchSummary[] | null>(null)
   const [editing, setEditing] = useState<Batch | null>(null)
   const [creating, setCreating] = useState(false)
 
-  const load = () => api.vendorBatches().then(setList).catch(() => setList([]))
-  useEffect(() => { load() }, [])
+  const { items: list, total, loading, loadingMore, hasNext, loadMore, reload } = usePagedList(
+    (page, size) => api.vendorBatches(page, size),
+    [],
+  )
 
-  if (list === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   return (
     <ConsoleShell
@@ -264,7 +266,7 @@ export default function VendorBatches() {
               </div>
               <div className="mt-auto flex flex-wrap justify-end gap-2 pt-1">
                 {b.visibility === 'DRAFT' && (
-                  <button className="btn-quiet text-forest" onClick={() => api.publishBatch(b.id, 'MARKETPLACE').then(load)}>Publish</button>
+                  <button className="btn-quiet text-forest" onClick={() => api.publishBatch(b.id, 'MARKETPLACE').then(reload)}>Publish</button>
                 )}
                 <Link className="btn-quiet" to={`/vendor/manage/batches/${b.id}`}>Manage</Link>
                 <button className="btn-quiet" onClick={() => setEditing(b)}>Edit</button>
@@ -273,9 +275,10 @@ export default function VendorBatches() {
           ))}
         </div>
       )}
+      <LoadMore shown={list.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
 
       {(creating || editing) && (
-        <BatchForm initial={editing} onClose={() => { setCreating(false); setEditing(null) }} onSaved={() => { setCreating(false); setEditing(null); load() }} />
+        <BatchForm initial={editing} onClose={() => { setCreating(false); setEditing(null) }} onSaved={() => { setCreating(false); setEditing(null); reload() }} />
       )}
     </ConsoleShell>
   )

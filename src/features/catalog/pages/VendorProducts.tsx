@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api, ApiError } from '@/shared/lib/api'
 import type { DimensionUnit, FulfillmentType, Product, ProductCategory, WeightUnit } from '@/shared/lib/types'
+import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
-import { EmptyState, ErrorNote, PageLoader, Spinner } from '@/shared/components/ui'
+import { EmptyState, ErrorNote, LoadMore, PageLoader, Spinner } from '@/shared/components/ui'
 
 const CATEGORIES: ProductCategory[] = [
   'GROCERIES', 'BEAUTY', 'FASHION', 'HOUSEHOLD', 'ELECTRONICS', 'BABY_AND_KIDS', 'EVENT_ITEMS', 'OTHER',
@@ -325,12 +326,11 @@ function ProductForm({
 }
 
 export default function VendorProducts() {
-  const [products, setProducts] = useState<Product[] | null>(null)
   const [editing, setEditing] = useState<Product | null>(null)
   const [creating, setCreating] = useState(false)
 
-  const load = () => api.vendorProducts().then(setProducts).catch(() => setProducts([]))
-  useEffect(() => { load() }, [])
+  const { items: products, total, loading, loadingMore, hasNext, loadMore, reload } =
+    usePagedList<Product>((page, size) => api.vendorProducts(page, size), [])
 
   const closeForm = () => {
     setEditing(null)
@@ -338,10 +338,10 @@ export default function VendorProducts() {
   }
   const afterSave = () => {
     closeForm()
-    load()
+    reload()
   }
 
-  if (products === null) return <PageLoader />
+  if (loading) return <PageLoader />
 
   return (
     <ConsoleShell
@@ -395,7 +395,7 @@ export default function VendorProducts() {
                   <td className="px-5 py-3 text-muted">{titleCase(p.fulfillmentType)}</td>
                   <td className="px-5 py-3">
                     <button
-                      onClick={() => api.toggleProduct(p.id, !p.active).then(load)}
+                      onClick={() => api.toggleProduct(p.id, !p.active).then(reload)}
                       className={`chip ${p.active ? 'bg-forest/12 text-forest' : 'bg-ink/8 text-muted'}`}
                     >
                       {p.active ? 'Active' : 'Inactive'}
@@ -406,7 +406,7 @@ export default function VendorProducts() {
                     <button
                       className="btn-quiet px-2 text-clay hover:text-clay-dark"
                       onClick={() => {
-                        if (confirm(`Delete "${p.name}"?`)) api.deleteProduct(p.id).then(load)
+                        if (confirm(`Delete "${p.name}"?`)) api.deleteProduct(p.id).then(reload)
                       }}
                     >
                       Delete
@@ -418,6 +418,7 @@ export default function VendorProducts() {
           </table>
         </div>
       )}
+      <LoadMore shown={products.length} total={total} hasNext={hasNext} loading={loadingMore} onLoadMore={loadMore} />
 
       {(creating || editing) && (
         <ProductForm initial={editing} onClose={closeForm} onSaved={afterSave} />
