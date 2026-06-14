@@ -20,6 +20,7 @@ import Register from '@/features/identity/pages/Register'
 import VerifyEmail from '@/features/identity/pages/VerifyEmail'
 import ForgotPassword from '@/features/identity/pages/ForgotPassword'
 import ResetPassword from '@/features/identity/pages/ResetPassword'
+import AcceptInvite from '@/features/identity/pages/AcceptInvite'
 import SellOnOrderlynk from '@/features/identity/pages/SellOnOrderlynk'
 import Account from '@/features/identity/pages/Account'
 import CustomerDashboard from '@/features/identity/pages/CustomerDashboard'
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/sell" element={<SellOnOrderlynk />} />
         <Route
           path="/account"

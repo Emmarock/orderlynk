@@ -15,6 +15,8 @@ export const identityApi = {
   forgotPassword: (email: string) => request<void>('POST', '/api/auth/forgot-password', { email }),
   resetPassword: (token: string, newPassword: string) =>
     request<void>('POST', '/api/auth/reset-password', { token, newPassword }),
+  acceptInvite: (b: { token: string; password: string; confirmPassword: string }) =>
+    request<AuthResponse>('POST', '/api/auth/accept-invite', b),
   updateProfile: (b: { fullName: string; phone?: string; city?: string; country?: string }) =>
     request<AuthResponse>('PUT', '/api/auth/profile', b),
   changeEmail: (b: { newEmail: string; currentPassword: string }) =>
