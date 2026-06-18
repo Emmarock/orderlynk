@@ -211,7 +211,7 @@ export default function VendorSettings() {
   const [vendor, setVendor] = useState<Vendor | null>(null)
 
   // Local form state per section.
-  const [biz, setBiz] = useState({ businessName: '', description: '', houseNumber: '', street: '', city: '', state: '', postcode: '', country: '', whatsappNumber: '', instagramHandle: '', logoUrl: '', bannerUrl: '' })
+  const [biz, setBiz] = useState({ businessName: '', description: '', houseNumber: '', street: '', city: '', state: '', postcode: '', country: '', whatsappNumber: '', instagramHandle: '', tiktokHandle: '', facebookPage: '', logoUrl: '', bannerUrl: '' })
   const [fulfillment, setFulfillment] = useState<FulfillmentType[]>([])
   const [profile, setProfile] = useState({ fullName: '', phone: '', city: '', country: '' })
   const [emailForm, setEmailForm] = useState({ newEmail: '', currentPassword: '' })
@@ -225,7 +225,7 @@ export default function VendorSettings() {
       setBiz({
         businessName: v.businessName, description: v.description ?? '',
         houseNumber: v.houseNumber ?? '', street: v.street ?? '', city: v.city ?? '', state: v.state ?? '', postcode: v.postcode ?? '', country: v.country ?? '',
-        whatsappNumber: v.whatsappNumber ?? '', instagramHandle: v.instagramHandle ?? '', logoUrl: v.logoUrl ?? '',
+        whatsappNumber: v.whatsappNumber ?? '', instagramHandle: v.instagramHandle ?? '', tiktokHandle: v.tiktokHandle ?? '', facebookPage: v.facebookPage ?? '', logoUrl: v.logoUrl ?? '',
         bannerUrl: v.bannerUrl ?? '',
       })
       setFulfillment(v.fulfillmentTypes)
@@ -291,6 +291,12 @@ export default function VendorSettings() {
           <div className="grid grid-cols-2 gap-4">
             <Field label="WhatsApp number"><input className="field" placeholder={`${countryDialCode(biz.country) ?? '+1'}…`} value={biz.whatsappNumber} onChange={(e) => setBiz({ ...biz, whatsappNumber: e.target.value })} /></Field>
             <Field label="Instagram handle"><input className="field" value={biz.instagramHandle} onChange={(e) => setBiz({ ...biz, instagramHandle: e.target.value })} /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+
+            <Field label="Tiktok handle"><input className="field" value={biz.tiktokHandle} onChange={(e) => setBiz({ ...biz, tiktokHandle: e.target.value })} /></Field>
+            <Field label="Facebook Page"><input className="field" value={biz.facebookPage} onChange={(e) => setBiz({ ...biz, facebookPage: e.target.value })} /></Field>
+
           </div>
           <BrandingUpload
             label="Logo" kind="logo" shape="square"

@@ -12,6 +12,8 @@ export interface Vendor {
   country?: string
   whatsappNumber?: string
   instagramHandle?: string
+  tiktokHandle?: string
+  facebookPage?: string
   logoUrl?: string
   bannerUrl?: string
   storeSlug: string

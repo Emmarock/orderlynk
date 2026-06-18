@@ -43,6 +43,8 @@ export default function SellOnOrderlynk() {
     country: '',
     whatsappNumber: '',
     instagramHandle: '',
+    tiktokHandle: '',
+    facebookPage: '',
   })
   const [types, setTypes] = useState<Set<FulfillmentType>>(new Set(['LOCAL_PICKUP']))
   const [error, setError] = useState<string | null>(null)
@@ -88,6 +90,8 @@ export default function SellOnOrderlynk() {
       country: form.country || undefined,
       whatsappNumber: form.whatsappNumber || undefined,
       instagramHandle: form.instagramHandle || undefined,
+      tiktokHandle: form.tiktokHandle || undefined,
+      facebookHandle: form.facebookPage || undefined,
       fulfillmentTypes: Array.from(types),
     }
 
@@ -227,6 +231,17 @@ export default function SellOnOrderlynk() {
                 <div>
                   <label className="label">Instagram</label>
                   <input className="field" placeholder="@handle" value={form.instagramHandle} onChange={set('instagramHandle')} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">TikTok</label>
+                  <input className="field" placeholder="@yourtiktok" value={form.tiktokHandle} onChange={set('tiktokHandle')}/>
+                </div>
+
+                <div>
+                  <label className="label">Facebook</label>
+                  <input className="field" placeholder="yourfacebookpage" value={form.facebookPage} onChange={set('facebookPage')}/>
                 </div>
               </div>
               <div>

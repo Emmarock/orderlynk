@@ -226,6 +226,26 @@ export default function Storefront() {
                   Instagram
                 </a>
               )}
+              {vendor.tiktokHandle && (
+                  <a
+                      href={`https://tiktok.com/${vendor.tiktokHandle}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-ghost"
+                  >
+                    TikTok
+                  </a>
+              )}
+              {vendor.facebookPage && (
+                  <a
+                      href={`https://facebook.com/${vendor.facebookPage}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-ghost"
+                  >
+                    Facebook
+                  </a>
+              )}
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
