@@ -78,7 +78,11 @@ export default function ServiceProvider() {
                     <span className="font-mono font-semibold">{money(s.basePrice, s.currency)}</span>
                   </div>
                   {s.description && <p className="text-sm text-muted">{s.description}</p>}
-                  {s.depositType !== 'NONE' && <p className="text-xs text-muted">Deposit to confirm: {money(s.depositAmount, s.currency)}</p>}
+                  {s.depositType !== 'NONE' && s.depositAmount > 0 && (
+                    <span className="chip mt-1 self-start bg-clay/12 font-medium text-clay-dark">
+                      {money(s.depositAmount, s.currency)} deposit to book
+                    </span>
+                  )}
                   <button className="btn-primary mt-2 self-start" onClick={() => setBooking(s)}>Book now</button>
                 </div>
               ))}
@@ -138,8 +142,13 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
   const [error, setError] = useState<string | null>(null)
   const [confirmed, setConfirmed] = useState<Booking | null>(null)
   const [paid, setPaid] = useState(false)
+  // For HYBRID providers the customer chooses where the service happens; default to the provider.
+  const [atCustomer, setAtCustomer] = useState(false)
 
-  const needsAddress = store.profile.locationType === 'CUSTOMER_LOCATION'
+  const isHybrid = service.locationType === 'HYBRID'
+  const atCustomerLocation = service.locationType === 'CUSTOMER_LOCATION' || (isHybrid && atCustomer)
+  const needsAddress = atCustomerLocation
+  const travelFee = atCustomerLocation ? service.customerLocationFee || 0 : 0
 
   useEffect(() => {
     setSlots(null); setSlot(null)
@@ -150,8 +159,19 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
     let price = service.basePrice
     for (const a of service.addOns) price += (a.priceDelta || 0) * (addOnQty[a.id] || (a.required ? 1 : 0))
     const tax = price * (service.taxRate || 0)
-    return { price, total: price + tax }
-  }, [service, addOnQty])
+    return { price, tax, total: price + travelFee + tax }
+  }, [service, addOnQty, travelFee])
+
+  // Deposit due to confirm, mirroring the backend (computed from the gross total).
+  const depositDue = useMemo(() => {
+    const total = estimate.total
+    switch (service.depositType) {
+      case 'FIXED': return Math.min(service.depositValue || 0, total)
+      case 'PERCENTAGE': return +(total * (service.depositValue || 0) / 100).toFixed(2)
+      case 'FULL': return total
+      default: return 0
+    }
+  }, [service.depositType, service.depositValue, estimate.total])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -166,6 +186,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
         customerEmail: email || undefined,
         appointmentStart: slot.start,
         addOns: Object.entries(addOnQty).filter(([, q]) => q > 0).map(([addOnId, quantity]) => ({ addOnId, quantity })),
+        locationType: isHybrid ? (atCustomer ? 'CUSTOMER_LOCATION' : 'AT_PROVIDER') : undefined,
         customerHouseNumber: needsAddress ? houseNumber : undefined,
         customerStreet: needsAddress ? street : undefined,
         customerCity: needsAddress ? city : undefined,
@@ -271,9 +292,37 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
               <div><label className="label">Email (optional)</label><input className="field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             </div>
 
+            {isHybrid && (
+              <div>
+                <label className="label">Where should this happen?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAtCustomer(false)}
+                    className={`rounded-xl border p-3 text-left text-sm transition ${!atCustomer ? 'border-ink bg-ink/5' : 'border-line hover:bg-sand'}`}
+                  >
+                    <span className="block font-medium">At the provider</span>
+                    <span className="block text-xs text-muted">Come to {store.businessName}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAtCustomer(true)}
+                    className={`rounded-xl border p-3 text-left text-sm transition ${atCustomer ? 'border-ink bg-ink/5' : 'border-line hover:bg-sand'}`}
+                  >
+                    <span className="block font-medium">At my location</span>
+                    <span className="block text-xs text-muted">
+                      {service.customerLocationFee > 0
+                        ? `+${money(service.customerLocationFee, service.currency)} travel`
+                        : 'No travel fee'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {needsAddress && (
               <div className="rounded-xl border border-line bg-sand/40 p-4">
-                <p className="label !mb-2">Your address (mobile service)</p>
+                <p className="label !mb-2">Your address (service at your location)</p>
                 <AddressAutocomplete
                   label="Search your address"
                   onSelect={(addr) => {
@@ -292,10 +341,37 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
 
             <div><label className="label">Notes (optional)</label><textarea className="field min-h-16" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
 
-            <div className="flex items-center justify-between rounded-xl border border-line bg-sand/40 px-4 py-3 text-sm">
-              <span className="text-muted">Estimated total</span>
-              <span className="font-mono font-semibold">{money(estimate.total, service.currency)}</span>
+            <div className="space-y-1.5 rounded-xl border border-line bg-sand/40 px-4 py-3 text-sm">
+              {travelFee > 0 && (
+                <>
+                  <div className="flex items-center justify-between text-muted">
+                    <span>Service</span>
+                    <span className="font-mono">{money(estimate.price + estimate.tax, service.currency)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-muted">
+                    <span>Travel to your location</span>
+                    <span className="font-mono">{money(travelFee, service.currency)}</span>
+                  </div>
+                </>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-muted">Estimated total</span>
+                <span className="font-mono font-semibold">{money(estimate.total, service.currency)}</span>
+              </div>
             </div>
+
+            {service.depositType !== 'NONE' && depositDue > 0 && (
+              <div className="flex items-start gap-2 rounded-xl border border-clay/30 bg-clay/10 px-4 py-3">
+                <span aria-hidden className="text-base leading-5 text-clay">●</span>
+                <p className="text-sm text-ink">
+                  <span className="font-semibold text-clay-dark">
+                    {money(depositDue, service.currency)} deposit required
+                  </span>{' '}
+                  to confirm this booking — you'll pay it securely after booking
+                  {service.depositType === 'FULL' ? '.' : '. The balance is due at your appointment.'}
+                </p>
+              </div>
+            )}
 
             {error && <ErrorNote message={error} />}
             <div className="flex justify-end gap-2">

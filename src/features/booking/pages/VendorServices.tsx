@@ -23,7 +23,41 @@ const CATEGORIES: ServiceCategory[] = [
 ]
 const DAYS: DayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 const DEPOSIT_TYPES: DepositType[] = ['NONE', 'FIXED', 'PERCENTAGE', 'FULL']
-const LOCATION_TYPES: ServiceLocationType[] = ['AT_PROVIDER', 'CUSTOMER_LOCATION', 'REMOTE']
+const LOCATION_TYPES: ServiceLocationType[] = ['AT_PROVIDER', 'CUSTOMER_LOCATION', 'REMOTE', 'HYBRID']
+const LOCATION_LABELS: Record<ServiceLocationType, string> = {
+  AT_PROVIDER: 'At my location',
+  CUSTOMER_LOCATION: "At customer's location",
+  REMOTE: 'Remote / online',
+  HYBRID: 'Both — customer chooses',
+}
+
+// Major timezones for the markets OrderLynk serves, grouped by country (IANA ids).
+const TIMEZONE_GROUPS: { region: string; zones: { id: string; label: string }[] }[] = [
+  { region: 'Canada', zones: [
+    { id: 'America/Toronto', label: 'Eastern — Toronto' },
+    { id: 'America/Winnipeg', label: 'Central — Winnipeg' },
+    { id: 'America/Edmonton', label: 'Mountain — Edmonton' },
+    { id: 'America/Vancouver', label: 'Pacific — Vancouver' },
+    { id: 'America/Halifax', label: 'Atlantic — Halifax' },
+    { id: 'America/St_Johns', label: "Newfoundland — St. John's" },
+  ] },
+  { region: 'United States', zones: [
+    { id: 'America/New_York', label: 'Eastern — New York' },
+    { id: 'America/Chicago', label: 'Central — Chicago' },
+    { id: 'America/Denver', label: 'Mountain — Denver' },
+    { id: 'America/Phoenix', label: 'Arizona — Phoenix' },
+    { id: 'America/Los_Angeles', label: 'Pacific — Los Angeles' },
+    { id: 'America/Anchorage', label: 'Alaska — Anchorage' },
+    { id: 'Pacific/Honolulu', label: 'Hawaii — Honolulu' },
+  ] },
+  { region: 'United Kingdom', zones: [
+    { id: 'Europe/London', label: 'London (GMT/BST)' },
+  ] },
+  { region: 'Nigeria', zones: [
+    { id: 'Africa/Lagos', label: 'Lagos (WAT)' },
+  ] },
+]
+const KNOWN_TIMEZONES = TIMEZONE_GROUPS.flatMap((g) => g.zones.map((z) => z.id))
 
 const num = (v: string): number => (v.trim() === '' || Number.isNaN(Number(v)) ? 0 : Number(v))
 const numOrNull = (v: string): number | null => (v.trim() === '' ? null : num(v))
@@ -56,6 +90,7 @@ export default function VendorServices() {
 }
 
 // ============================= Catalog =============================
+
 
 function CatalogSection() {
   const [editing, setEditing] = useState<ServiceOffering | null>(null)
@@ -135,6 +170,8 @@ interface ServiceFormState {
   basePrice: string
   durationMinutes: string
   taxRate: string
+  locationType: ServiceLocationType
+  customerLocationFee: string
   depositType: DepositType
   depositValue: string
   imageUrl: string
@@ -148,12 +185,15 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: ServiceOffering |
     basePrice: String(initial.basePrice),
     durationMinutes: String(initial.durationMinutes),
     taxRate: String(initial.taxRate ?? 0),
+    locationType: initial.locationType,
+    customerLocationFee: String(initial.customerLocationFee ?? 0),
     depositType: initial.depositType,
     depositValue: initial.depositValue != null ? String(initial.depositValue) : '',
     imageUrl: initial.imageUrl ?? '',
   } : {
     name: '', category: 'HAIR', description: '', basePrice: '', durationMinutes: '60',
-    taxRate: '0', depositType: 'NONE', depositValue: '', imageUrl: '',
+    taxRate: '0', locationType: 'AT_PROVIDER', customerLocationFee: '0',
+    depositType: 'NONE', depositValue: '', imageUrl: '',
   })
   const [addOns, setAddOns] = useState<ServiceAddOn[]>(initial?.addOns ?? [])
   const [error, setError] = useState<string | null>(null)
@@ -190,6 +230,9 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: ServiceOffering |
       basePrice: num(form.basePrice),
       durationMinutes: num(form.durationMinutes),
       taxRate: num(form.taxRate),
+      locationType: form.locationType,
+      customerLocationFee: form.locationType === 'CUSTOMER_LOCATION' || form.locationType === 'HYBRID'
+        ? num(form.customerLocationFee) : 0,
       depositType: form.depositType,
       depositValue: form.depositType === 'FIXED' || form.depositType === 'PERCENTAGE' ? num(form.depositValue) : undefined,
       imageUrl: form.imageUrl || undefined,
@@ -237,6 +280,30 @@ function ServiceForm({ initial, onClose, onSaved }: { initial: ServiceOffering |
               <label className="label">Tax rate (e.g. 0.13)</label>
               <input className="field" type="number" min="0" step="0.01" value={form.taxRate} onChange={set('taxRate')} />
             </div>
+          </div>
+          <div className="rounded-xl border border-line bg-sand/40 p-4">
+            <p className="label !mb-2">Where it's delivered</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="label">Location</label>
+                <select className="field" value={form.locationType}
+                        onChange={(e) => setForm((f) => ({ ...f, locationType: e.target.value as ServiceLocationType }))}>
+                  {LOCATION_TYPES.map((l) => <option key={l} value={l}>{LOCATION_LABELS[l]}</option>)}
+                </select>
+              </div>
+              {(form.locationType === 'CUSTOMER_LOCATION' || form.locationType === 'HYBRID') && (
+                <div>
+                  <label className="label">Travel fee (CAD)</label>
+                  <input className="field" type="number" min="0" step="0.01" value={form.customerLocationFee} onChange={set('customerLocationFee')} />
+                </div>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-muted">
+              {form.locationType === 'AT_PROVIDER' && 'Customers come to you.'}
+              {form.locationType === 'CUSTOMER_LOCATION' && 'You travel to the customer; the travel fee is added to their total.'}
+              {form.locationType === 'REMOTE' && 'Delivered online — no address needed.'}
+              {form.locationType === 'HYBRID' && 'Customer chooses; the travel fee applies only when they pick their location.'}
+            </p>
           </div>
           <div className="rounded-xl border border-line bg-sand/40 p-4">
             <p className="label !mb-2">Deposit rule</p>
@@ -496,6 +563,7 @@ function SettingsSection() {
         bio: profile.bio,
         serviceArea: profile.serviceArea,
         locationType: profile.locationType,
+        customerLocationFee: profile.customerLocationFee,
         approvalMode: profile.approvalMode,
         cancellationPolicy: profile.cancellationPolicy,
         depositPolicy: profile.depositPolicy,
@@ -534,17 +602,39 @@ function SettingsSection() {
           </select>
         </div>
         <div>
-          <label className="label">Where you work</label>
+          <label className="label">Default location for new services</label>
           <select className="field" value={profile.locationType} onChange={(e) => set('locationType', e.target.value as ServiceLocationType)}>
-            {LOCATION_TYPES.map((l) => <option key={l} value={l}>{titleCase(l)}</option>)}
+            {LOCATION_TYPES.map((l) => <option key={l} value={l}>{LOCATION_LABELS[l]}</option>)}
           </select>
+          <p className="mt-1 text-xs text-muted">Seeds new services — each service can override its own location &amp; travel fee.</p>
         </div>
+        {(profile.locationType === 'CUSTOMER_LOCATION' || profile.locationType === 'HYBRID') && (
+          <div>
+            <label className="label">Default travel fee</label>
+            <input className="field" type="number" min="0" step="0.01" value={profile.customerLocationFee}
+                   onChange={(e) => set('customerLocationFee', num(e.target.value))} />
+            <p className="mt-1 text-xs text-muted">Default travel surcharge for new services. Leave 0 for none.</p>
+          </div>
+        )}
         <div><label className="label">Lead time (hours)</label><input className="field" type="number" min="0" value={profile.leadTimeHours} onChange={(e) => set('leadTimeHours', num(e.target.value))} /></div>
         <div><label className="label">Buffer between bookings (min)</label><input className="field" type="number" min="0" value={profile.bufferMinutes} onChange={(e) => set('bufferMinutes', num(e.target.value))} /></div>
         <div><label className="label">Max advance booking (days)</label><input className="field" type="number" min="1" value={profile.maxAdvanceDays} onChange={(e) => set('maxAdvanceDays', num(e.target.value))} /></div>
         <div><label className="label">Capacity per slot</label><input className="field" type="number" min="1" value={profile.defaultCapacity} onChange={(e) => set('defaultCapacity', num(e.target.value))} /></div>
         <div><label className="label">Deposit hold (min)</label><input className="field" type="number" min="1" value={profile.slotHoldMinutes} onChange={(e) => set('slotHoldMinutes', num(e.target.value))} /></div>
-        <div><label className="label">Timezone</label><input className="field" value={profile.timezone} onChange={(e) => set('timezone', e.target.value)} /></div>
+        <div>
+          <label className="label">Timezone</label>
+          <select className="field" value={profile.timezone} onChange={(e) => set('timezone', e.target.value)}>
+            {profile.timezone && !KNOWN_TIMEZONES.includes(profile.timezone) && (
+              <option value={profile.timezone}>{profile.timezone}</option>
+            )}
+            {TIMEZONE_GROUPS.map((g) => (
+              <optgroup key={g.region} label={g.region}>
+                {g.zones.map((z) => <option key={z.id} value={z.id}>{z.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-muted">Availability hours and booking slots use this timezone.</p>
+        </div>
       </div>
 
       <div className="card grid gap-4 p-5">

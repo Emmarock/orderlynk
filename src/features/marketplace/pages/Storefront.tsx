@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
-import type { Product, RatingSummary, Storefront as StorefrontData, Vendor } from '@/shared/lib/types'
-import { titleCase } from '@/shared/lib/format'
+import type {
+  BatchCard,
+  Product,
+  RatingSummary,
+  ServiceOffering,
+  Storefront as StorefrontData,
+  Vendor,
+} from '@/shared/lib/types'
+import { formatDay, money, titleCase } from '@/shared/lib/format'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useCart } from '@/shared/context/CartContext'
 import { EmptyState, PageLoader, Spinner } from '@/shared/components/ui'
@@ -148,6 +155,77 @@ function ProductTile({
   )
 }
 
+function ServiceTile({ service, to }: { service: ServiceOffering; to: string }) {
+  return (
+    <Link to={to} className="card group flex flex-col overflow-hidden">
+      <div className="relative block aspect-[4/3] overflow-hidden bg-sand">
+        {service.imageUrl ? (
+          <img
+            src={service.imageUrl}
+            alt={service.name}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="grid h-full place-items-center">
+            <span className="font-display text-3xl text-line">{service.name[0]}</span>
+          </div>
+        )}
+        <span className="absolute left-3 top-3 chip bg-cream/90 text-muted backdrop-blur">
+          {titleCase(service.category)}
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <span className="font-display text-lg font-semibold leading-tight group-hover:text-clay">
+          {service.name}
+        </span>
+        {service.description && <p className="line-clamp-2 text-sm text-muted">{service.description}</p>}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <span className="text-lg font-semibold">{money(service.basePrice, service.currency)}</span>
+          <span className="btn-forest px-4 py-2">Book</span>
+        </div>
+        <p className="text-xs text-muted">{service.durationMinutes} min</p>
+        {service.depositType !== 'NONE' && service.depositAmount > 0 && (
+          <span className="chip self-start bg-clay/12 font-medium text-clay-dark">
+            {money(service.depositAmount, service.currency)} deposit to book
+          </span>
+        )}
+      </div>
+    </Link>
+  )
+}
+
+function BatchTile({ batch }: { batch: BatchCard }) {
+  const badge =
+    batch.batchType === 'CARGO_BATCH'
+      ? { label: 'Cargo Batch', cls: 'bg-clay/12 text-clay-dark' }
+      : batch.batchType === 'HYBRID_BATCH'
+        ? { label: 'Batch + Cargo', cls: 'bg-gold/15 text-[#9A6A10]' }
+        : { label: 'Batch Order', cls: 'bg-forest/12 text-forest' }
+  return (
+    <Link to={`/batches/${batch.id}`} className="card group flex flex-col gap-3 p-5 transition-shadow hover:shadow-lg">
+      <div className="flex items-center justify-between">
+        <span className={`chip ${badge.cls}`}>{badge.label}</span>
+        {batch.shippingMethod && <span className="text-xs text-muted">{titleCase(batch.shippingMethod)}</span>}
+      </div>
+      <p className="font-display text-lg font-semibold group-hover:text-clay">{batch.batchName}</p>
+      {batch.route && <p className="text-sm text-muted">{batch.route}</p>}
+      <div className="mt-auto space-y-1 text-xs text-muted">
+        {batch.originCountry && (
+          <p>From {batch.originCountry}{batch.destinationCity ? ` → ${batch.destinationCity}` : ''}</p>
+        )}
+        {batch.closeDate && <p>Orders close {formatDay(batch.closeDate)}</p>}
+        {batch.estimatedArrival && <p>Est. arrival {formatDay(batch.estimatedArrival)}</p>}
+      </div>
+      <div className="flex items-center justify-between border-t border-line pt-3 text-sm">
+        <span className="text-muted">{batch.productCount} product{batch.productCount !== 1 ? 's' : ''}</span>
+        {batch.acceptsShipmentRequests && batch.ratePerKg != null && (
+          <span className="font-medium">{money(batch.ratePerKg, batch.currency)}/kg</span>
+        )}
+      </div>
+    </Link>
+  )
+}
+
 export default function Storefront() {
   const { slug = '' } = useParams()
   const [data, setData] = useState<StorefrontData | null>(null)
@@ -176,7 +254,10 @@ export default function Storefront() {
   }
   if (!data) return <PageLoader />
 
-  const { vendor, products } = data
+  const { vendor, products, services, batches } = data
+  const hasProducts = products.length > 0
+  const hasServices = services.length > 0
+  const hasBatches = batches.length > 0
 
   return (
     <div>
@@ -258,25 +339,59 @@ export default function Storefront() {
         </div>
       </section>
 
-      {/* Products */}
       <section className="mx-auto max-w-6xl px-5 py-12">
-        {products.length === 0 ? (
-          <EmptyState title="No products yet" hint="This vendor hasn't published any products." />
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((p) => (
-              <ProductTile
-                key={p.id}
-                product={p}
-                to={`/vendor/${vendor.storeSlug}/product/${p.id}`}
-                onAdd={() => add(p, vendor.businessName, vendor.storeSlug)}
-              />
-            ))}
+        {/* Nothing published yet */}
+        {!hasProducts && !hasServices && !hasBatches && (
+          <EmptyState title="Nothing here yet" hint="This vendor hasn't published anything yet." />
+        )}
+
+        {/* Products */}
+        {hasProducts && (
+          <div>
+            <h2 className="mb-4 font-display text-2xl font-semibold tracking-tight">Products</h2>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((p) => (
+                <ProductTile
+                  key={p.id}
+                  product={p}
+                  to={`/vendor/${vendor.storeSlug}/product/${p.id}`}
+                  onAdd={() => add(p, vendor.businessName, vendor.storeSlug)}
+                />
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Ratings & reviews — below the products so customers see the menu first */}
-        <div className="mt-12 max-w-md">
+        {/* Services */}
+        {hasServices && (
+          <div className={hasProducts ? 'mt-14' : ''}>
+            <h2 className="mb-4 font-display text-2xl font-semibold tracking-tight">Services</h2>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {services.map((s) => (
+                <ServiceTile key={s.id} service={s} to={`/services/${vendor.storeSlug}`} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Batch & Cargo */}
+        {hasBatches && (
+          <div className={hasProducts || hasServices ? 'mt-14' : ''}>
+            <h2 className="mb-1 font-display text-2xl font-semibold tracking-tight">Batch &amp; Cargo</h2>
+            <p className="mb-4 max-w-2xl text-sm text-muted">
+              Pre-order from an import batch, or send your own items into a cargo batch. Items ship on a
+              schedule — check each batch's estimated arrival.
+            </p>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {batches.map((b) => (
+                <BatchTile key={b.id} batch={b} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Ratings & reviews — below the offerings so customers see the menu first */}
+        <div className="mt-14 max-w-md">
           <h2 className="mb-3 font-display text-xl font-semibold tracking-tight">Ratings &amp; reviews</h2>
           <RatingWidget vendor={vendor} />
         </div>

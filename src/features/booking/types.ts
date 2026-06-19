@@ -19,7 +19,7 @@ export type ApprovalMode = 'MANUAL' | 'AUTO'
 
 export type DepositType = 'NONE' | 'FIXED' | 'PERCENTAGE' | 'FULL'
 
-export type ServiceLocationType = 'AT_PROVIDER' | 'CUSTOMER_LOCATION' | 'REMOTE'
+export type ServiceLocationType = 'AT_PROVIDER' | 'CUSTOMER_LOCATION' | 'REMOTE' | 'HYBRID'
 
 export type BookingPaymentType = 'DEPOSIT' | 'BALANCE' | 'FULL' | 'REFUND'
 
@@ -56,6 +56,8 @@ export interface ServiceProviderProfile {
   bio?: string
   serviceArea?: string
   locationType: ServiceLocationType
+  /** Travel surcharge added when a service is rendered at the customer's location (0 = free). */
+  customerLocationFee: number
   approvalMode: ApprovalMode
   cancellationPolicy?: string
   depositPolicy?: string
@@ -89,6 +91,9 @@ export interface ServiceOffering {
   currency: string
   durationMinutes: number
   imageUrl?: string
+  locationType: ServiceLocationType
+  /** Travel surcharge when rendered at the customer's location (0 = free). */
+  customerLocationFee: number
   depositType: DepositType
   depositValue?: number | null
   depositAmount: number
@@ -183,6 +188,7 @@ export interface Booking {
   customerPostcode?: string
   customerCountry?: string
   servicePrice: number
+  travelFee: number
   taxAmount: number
   totalAmount: number
   depositType: DepositType

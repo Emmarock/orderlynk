@@ -50,6 +50,8 @@ export const bookingApi = {
   vendorBookings: (from?: string, to?: string, page = 0, size = 20) =>
     request<Page<Booking>>('GET', `/api/vendor/bookings${query({ from, to, page, size })}`),
   vendorBooking: (id: string) => request<Booking>('GET', `/api/vendor/bookings/${id}`),
+  vendorCustomerBookings: (phone: string) =>
+    request<Booking[]>('GET', `/api/vendor/customers/${encodeURIComponent(phone)}/bookings`),
   approveBooking: (id: string) => request<Booking>('POST', `/api/vendor/bookings/${id}/approve`),
   rejectBooking: (id: string, reason?: string) =>
     request<Booking>('POST', `/api/vendor/bookings/${id}/reject`, { reason }),

@@ -1,5 +1,6 @@
 import type { DimensionUnit, FulfillmentType, ProductCategory, WeightUnit } from '@/shared/lib/types'
 import type { Vendor } from '@/features/vendor/types'
+import type { BatchCard, ServiceOffering } from '@/shared/lib/types'
 
 export interface Product {
   id: string
@@ -31,4 +32,6 @@ export interface Product {
 export interface Storefront {
   vendor: Vendor
   products: Product[]
+  services: ServiceOffering[]
+  batches: BatchCard[]
 }
