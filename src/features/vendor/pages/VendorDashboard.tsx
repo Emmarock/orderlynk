@@ -7,7 +7,7 @@ import { ConsoleShell, StatCard, VENDOR_TABS } from '@/shared/components/Console
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 import { CopyOrderId, PageLoader, Rail } from '@/shared/components/ui'
 
-const SOURCES = ['whatsapp', 'instagram', 'marketplace', 'vendor_link']
+const SOURCES = ['whatsapp', 'tiktok', 'facebook', 'instagram', 'marketplace', 'vendor_link']
 
 function ShareLinkPanel() {
   const [source, setSource] = useState('whatsapp')
