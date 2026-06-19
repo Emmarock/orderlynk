@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
 import type { Booking, ServiceOffering, ServiceStorefront, Slot } from '@/shared/lib/types'
@@ -126,10 +126,22 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10)
 }
 
+/** Add days to a YYYY-MM-DD string, timezone-safe (treats the value as a plain calendar date). */
+function addDays(iso: string, days: number) {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
 function BookingModal({ store, service, onClose }: { store: ServiceStorefront; service: ServiceOffering; onClose: () => void }) {
   const [date, setDate] = useState(todayISO())
   const [slots, setSlots] = useState<Slot[] | null>(null)
+  const [slotsError, setSlotsError] = useState(false)
   const [slot, setSlot] = useState<Slot | null>(null)
+  // Auto-scan forward to the first day that has openings, so opening on "today" (often blocked by
+  // the lead-time window) doesn't look empty. Disabled once the customer picks a date themselves.
+  const auto = useRef({ active: true, tries: 0 })
+  const maxScanDays = Math.min(store.profile.maxAdvanceDays ?? 30, 21)
   const [addOnQty, setAddOnQty] = useState<Record<string, number>>({})
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -151,9 +163,28 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
   const travelFee = atCustomerLocation ? service.customerLocationFee || 0 : 0
 
   useEffect(() => {
-    setSlots(null); setSlot(null)
-    api.bookingAvailability(service.id, date).then((d) => setSlots(d.slots)).catch(() => setSlots([]))
-  }, [service.id, date])
+    let cancelled = false
+    setSlots(null); setSlot(null); setSlotsError(false)
+    api.bookingAvailability(service.id, date)
+      .then((d) => {
+        if (cancelled) return
+        // No openings on this date — quietly roll forward to the next day until we find some.
+        if (d.slots.length === 0 && auto.current.active && auto.current.tries < maxScanDays) {
+          auto.current.tries += 1
+          setDate(addDays(date, 1))
+          return
+        }
+        auto.current.active = false
+        setSlots(d.slots)
+      })
+      .catch(() => {
+        if (cancelled) return
+        auto.current.active = false
+        setSlots([])
+        setSlotsError(true)
+      })
+    return () => { cancelled = true }
+  }, [service.id, date, maxScanDays])
 
   const estimate = useMemo(() => {
     let price = service.basePrice
@@ -261,15 +292,18 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
 
             <div>
               <label className="label">Date</label>
-              <input className="field" type="date" min={todayISO()} value={date} onChange={(e) => setDate(e.target.value)} />
+              <input className="field" type="date" min={todayISO()} value={date}
+                     onChange={(e) => { auto.current.active = false; setDate(e.target.value) }} />
             </div>
 
             <div>
               <label className="label">Available times</label>
               {slots === null ? (
                 <div className="py-3"><Spinner /></div>
+              ) : slotsError ? (
+                <p className="text-sm text-clay">Couldn't load times right now — please try again in a moment.</p>
               ) : slots.length === 0 ? (
-                <p className="text-sm text-muted">No open slots on this date — try another day.</p>
+                <p className="text-sm text-muted">No open slots on this date — try a later date.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {slots.map((s) => (
