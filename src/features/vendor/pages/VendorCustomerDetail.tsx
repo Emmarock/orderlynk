@@ -127,7 +127,7 @@ export default function VendorCustomerDetail() {
                     <div className="min-w-0">
                       <p className="font-mono text-sm font-semibold">{b.publicBookingId}</p>
                       <p className="truncate text-xs text-muted">
-                        {b.serviceName} · {formatDay(b.appointmentStart)}, {formatTime(b.appointmentStart)}
+                        {b.serviceName}{b.variantName ? ` — ${b.variantName}` : ''} · {formatDay(b.appointmentStart)}, {formatTime(b.appointmentStart)}
                       </p>
                     </div>
                     <span className={`chip ${bookingTone(b.status)}`}>{titleCase(b.status)}</span>

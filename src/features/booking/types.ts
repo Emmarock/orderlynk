@@ -81,6 +81,17 @@ export interface ServiceAddOn {
   active: boolean
 }
 
+/** A priced sub-service / variant of a parent service (e.g. a braiding style). */
+export interface ServiceVariant {
+  id: string
+  serviceId: string
+  vendorId: string
+  name: string
+  price: number
+  durationMinutes: number
+  active: boolean
+}
+
 export interface ServiceOffering {
   id: string
   vendorId: string
@@ -99,6 +110,7 @@ export interface ServiceOffering {
   depositAmount: number
   taxRate: number
   active: boolean
+  variants: ServiceVariant[]
   addOns: ServiceAddOn[]
 }
 
@@ -175,6 +187,8 @@ export interface Booking {
   vendorName: string
   serviceId: string
   serviceName: string
+  serviceVariantId?: string | null
+  variantName?: string | null
   addOns: BookingAddOn[]
   appointmentStart: string
   appointmentEnd: string

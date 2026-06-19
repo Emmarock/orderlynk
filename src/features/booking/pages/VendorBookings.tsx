@@ -105,7 +105,7 @@ export default function VendorBookings() {
                 <tr key={b.id} className="cursor-pointer hover:bg-sand/40" onClick={() => setSelected(b)}>
                   <td className="px-5 py-3 font-mono text-xs">{b.publicBookingId}</td>
                   <td className="px-5 py-3 font-medium">{b.customerName}</td>
-                  <td className="px-5 py-3 text-muted">{b.serviceName}</td>
+                  <td className="px-5 py-3 text-muted">{b.serviceName}{b.variantName ? ` — ${b.variantName}` : ''}</td>
                   <td className="px-5 py-3">{formatDay(b.appointmentStart)}<span className="block text-xs text-muted">{formatTime(b.appointmentStart)}</span></td>
                   <td className="px-5 py-3"><BookingBadge status={b.status} /></td>
                   <td className="px-5 py-3"><PaymentBadge status={b.paymentStatus} /></td>
@@ -320,7 +320,7 @@ function BookingDetail({ booking, onClose, onChanged, alternativePayments }: { b
         <div className="flex items-start justify-between">
           <div>
             <p className="font-mono text-xs text-muted">{booking.publicBookingId}</p>
-            <h2 className="font-display text-xl font-semibold">{booking.serviceName}</h2>
+            <h2 className="font-display text-xl font-semibold">{booking.serviceName}{booking.variantName ? ` — ${booking.variantName}` : ''}</h2>
           </div>
           <BookingBadge status={booking.status} />
         </div>

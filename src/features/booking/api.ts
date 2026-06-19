@@ -1,7 +1,7 @@
 import { query, request, upload } from '@/shared/lib/http'
 import type {
   AvailabilityRule, BlockedSlot, Booking, BookingPayment, DayAvailability, Page, PaymentInit,
-  ProviderCard, Review, ServiceAddOn, ServiceOffering, ServiceProviderProfile, ServiceStorefront,
+  ProviderCard, Review, ServiceAddOn, ServiceOffering, ServiceProviderProfile, ServiceStorefront, ServiceVariant,
 } from '@/shared/lib/types'
 
 /** Service Provider Booking: public discovery + customer bookings, and the vendor services console. */
@@ -37,6 +37,12 @@ export const bookingApi = {
     request<ServiceAddOn>('PUT', `/api/vendor/services/${serviceId}/add-ons/${addOnId}`, b),
   deleteServiceAddOn: (serviceId: string, addOnId: string) =>
     request<void>('DELETE', `/api/vendor/services/${serviceId}/add-ons/${addOnId}`),
+  addServiceVariant: (serviceId: string, b: unknown) =>
+    request<ServiceVariant>('POST', `/api/vendor/services/${serviceId}/variants`, b),
+  updateServiceVariant: (serviceId: string, variantId: string, b: unknown) =>
+    request<ServiceVariant>('PUT', `/api/vendor/services/${serviceId}/variants/${variantId}`, b),
+  deleteServiceVariant: (serviceId: string, variantId: string) =>
+    request<void>('DELETE', `/api/vendor/services/${serviceId}/variants/${variantId}`),
   availabilityRules: () => request<AvailabilityRule[]>('GET', '/api/vendor/availability'),
   addAvailabilityRule: (b: unknown) => request<AvailabilityRule>('POST', '/api/vendor/availability', b),
   updateAvailabilityRule: (id: string, b: unknown) =>

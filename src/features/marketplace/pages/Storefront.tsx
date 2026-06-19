@@ -9,7 +9,7 @@ import type {
   Storefront as StorefrontData,
   Vendor,
 } from '@/shared/lib/types'
-import { formatDay, money, titleCase } from '@/shared/lib/format'
+import { formatDay, money, serviceStartingPrice, titleCase } from '@/shared/lib/format'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useCart } from '@/shared/context/CartContext'
 import { EmptyState, PageLoader, Spinner } from '@/shared/components/ui'
@@ -180,7 +180,9 @@ function ServiceTile({ service, to }: { service: ServiceOffering; to: string }) 
         </span>
         {service.description && <p className="line-clamp-2 text-sm text-muted">{service.description}</p>}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <span className="text-lg font-semibold">{money(service.basePrice, service.currency)}</span>
+          <span className="text-lg font-semibold">
+            {serviceStartingPrice(service).from ? 'from ' : ''}{money(serviceStartingPrice(service).amount, service.currency)}
+          </span>
           <span className="btn-forest px-4 py-2">Book</span>
         </div>
         <p className="text-xs text-muted">{service.durationMinutes} min</p>

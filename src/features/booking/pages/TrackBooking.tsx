@@ -44,7 +44,7 @@ export default function TrackBooking() {
           <div className="flex items-start justify-between">
             <div>
               <p className="font-mono text-xs text-muted">{booking.publicBookingId}</p>
-              <h2 className="font-display text-xl font-semibold">{booking.serviceName}</h2>
+              <h2 className="font-display text-xl font-semibold">{booking.serviceName}{booking.variantName ? ` — ${booking.variantName}` : ''}</h2>
               <p className="text-sm text-muted">with {booking.vendorName}</p>
             </div>
             <BookingBadge status={booking.status} />

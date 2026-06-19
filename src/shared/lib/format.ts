@@ -1,8 +1,19 @@
-import type { BookingStatus, FulfillmentStatus, PaymentStatus } from './types'
+import type { BookingStatus, FulfillmentStatus, PaymentStatus, ServiceOffering } from './types'
 
 /** The price actually charged for a product (discounted price when a discount applies). */
 export function effectivePrice(p: { price: number; discountedPrice: number; discountPercent: number }): number {
   return p.discountPercent > 0 ? p.discountedPrice : p.price
+}
+
+/**
+ * Price to advertise for a service: the lowest active sub-service (variant) price when the service
+ * has variants — flagged so callers can prefix "from" — otherwise the flat base price.
+ */
+export function serviceStartingPrice(s: ServiceOffering): { amount: number; from: boolean } {
+  const active = (s.variants ?? []).filter((v) => v.active)
+  return active.length
+    ? { amount: Math.min(...active.map((v) => v.price)), from: true }
+    : { amount: s.basePrice, from: false }
 }
 
 export function money(amount: number, currency = 'CAD'): string {

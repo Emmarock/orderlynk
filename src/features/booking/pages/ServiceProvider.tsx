@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
 import type { Booking, ServiceOffering, ServiceStorefront, Slot } from '@/shared/lib/types'
-import { money, titleCase, formatDay, formatTime } from '@/shared/lib/format'
+import { money, titleCase, formatDay, formatTime, serviceStartingPrice } from '@/shared/lib/format'
 import { ErrorNote, PageLoader, SectionTitle, Spinner } from '@/shared/components/ui'
 import { BookingPayment } from '@/features/booking/components/BookingPayment'
 import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
@@ -75,9 +75,14 @@ export default function ServiceProvider() {
                       <p className="font-display text-lg font-semibold">{s.name}</p>
                       <p className="text-xs uppercase tracking-wider text-muted">{titleCase(s.category)} · {s.durationMinutes} min</p>
                     </div>
-                    <span className="font-mono font-semibold">{money(s.basePrice, s.currency)}</span>
+                    <span className="font-mono font-semibold">
+                      {serviceStartingPrice(s).from ? 'from ' : ''}{money(serviceStartingPrice(s).amount, s.currency)}
+                    </span>
                   </div>
                   {s.description && <p className="text-sm text-muted">{s.description}</p>}
+                  {s.variants.filter((v) => v.active).length > 0 && (
+                    <p className="text-xs text-muted">{s.variants.filter((v) => v.active).length} options</p>
+                  )}
                   {s.depositType !== 'NONE' && s.depositAmount > 0 && (
                     <span className="chip mt-1 self-start bg-clay/12 font-medium text-clay-dark">
                       {money(s.depositAmount, s.currency)} deposit to book
@@ -156,6 +161,12 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
   const [paid, setPaid] = useState(false)
   // For HYBRID providers the customer chooses where the service happens; default to the provider.
   const [atCustomer, setAtCustomer] = useState(false)
+  // Sub-services: when the service defines variants the customer must pick one; it sets the base price.
+  const activeVariants = useMemo(() => (service.variants ?? []).filter((v) => v.active), [service.variants])
+  const [variantId, setVariantId] = useState(activeVariants[0]?.id ?? '')
+  const variant = activeVariants.find((v) => v.id === variantId) ?? null
+  const basePrice = variant ? variant.price : service.basePrice
+  const fromPrice = activeVariants.length ? Math.min(...activeVariants.map((v) => v.price)) : service.basePrice
 
   const isHybrid = service.locationType === 'HYBRID'
   const atCustomerLocation = service.locationType === 'CUSTOMER_LOCATION' || (isHybrid && atCustomer)
@@ -187,11 +198,11 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
   }, [service.id, date, maxScanDays])
 
   const estimate = useMemo(() => {
-    let price = service.basePrice
+    let price = basePrice
     for (const a of service.addOns) price += (a.priceDelta || 0) * (addOnQty[a.id] || (a.required ? 1 : 0))
     const tax = price * (service.taxRate || 0)
     return { price, tax, total: price + travelFee + tax }
-  }, [service, addOnQty, travelFee])
+  }, [service, basePrice, addOnQty, travelFee])
 
   // Deposit due to confirm, mirroring the backend (computed from the gross total).
   const depositDue = useMemo(() => {
@@ -212,6 +223,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
       const created = await api.createBooking({
         vendorId: store.vendorId,
         serviceId: service.id,
+        serviceVariantId: variant ? variant.id : undefined,
         customerName: name,
         customerPhone: phone,
         customerEmail: email || undefined,
@@ -246,7 +258,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
             </h2>
             <p className="mt-1 text-muted">Reference <span className="font-mono">{confirmed.publicBookingId}</span></p>
             <div className="mt-4 rounded-xl border border-line bg-sand/40 p-4 text-left text-sm">
-              <p>{service.name} · {formatDay(confirmed.appointmentStart)}, {formatTime(confirmed.appointmentStart)}</p>
+              <p>{service.name}{confirmed.variantName ? ` — ${confirmed.variantName}` : ''} · {formatDay(confirmed.appointmentStart)}, {formatTime(confirmed.appointmentStart)}</p>
               <p className="mt-1 text-muted">Total {money(confirmed.totalAmount, confirmed.currency)}</p>
               {confirmed.status === 'REQUESTED' && <p className="mt-2">We've sent your request to {store.businessName}. You'll hear back once it's approved.</p>}
               {confirmed.status === 'DEPOSIT_PENDING' && !paid && <p className="mt-2">Please pay the {money(confirmed.depositAmount, confirmed.currency)} deposit to lock your time.</p>}
@@ -273,8 +285,36 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
           <form onSubmit={submit} className="space-y-4">
             <div>
               <h2 className="font-display text-xl font-semibold">Book {service.name}</h2>
-              <p className="text-sm text-muted">{service.durationMinutes} min · from {money(service.basePrice, service.currency)}</p>
+              <p className="text-sm text-muted">
+                {(variant?.durationMinutes ?? service.durationMinutes)} min · from {money(fromPrice, service.currency)}
+              </p>
             </div>
+
+            {activeVariants.length > 0 && (
+              <div className="rounded-xl border border-line bg-sand/40 p-4">
+                <p className="label !mb-2">Choose an option</p>
+                <div className="space-y-2">
+                  {activeVariants.map((v) => (
+                    <label
+                      key={v.id}
+                      className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition ${variantId === v.id ? 'border-ink bg-ink/5' : 'border-line bg-cream hover:bg-sand'}`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="variant"
+                          className="accent-clay"
+                          checked={variantId === v.id}
+                          onChange={() => setVariantId(v.id)}
+                        />
+                        <span>{v.name} <span className="text-muted">· {v.durationMinutes}m</span></span>
+                      </span>
+                      <span className="font-medium">{money(v.price, service.currency)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {service.addOns.filter((a) => a.active).length > 0 && (
               <div className="rounded-xl border border-line bg-sand/40 p-4">
