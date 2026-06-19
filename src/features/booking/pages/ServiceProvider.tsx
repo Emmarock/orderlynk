@@ -237,7 +237,13 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
         {confirmed ? (
           <div className="text-center">
             <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-forest/12 text-forest">✓</div>
-            <h2 className="font-display text-2xl font-semibold">Booking {confirmed.status === 'REQUESTED' ? 'requested' : 'confirmed'}</h2>
+            <h2 className="font-display text-2xl font-semibold">
+              {confirmed.status === 'REQUESTED'
+                ? 'Booking requested'
+                : confirmed.status === 'DEPOSIT_PENDING' && !paid
+                  ? 'Pay deposit to confirm'
+                  : 'Booking confirmed'}
+            </h2>
             <p className="mt-1 text-muted">Reference <span className="font-mono">{confirmed.publicBookingId}</span></p>
             <div className="mt-4 rounded-xl border border-line bg-sand/40 p-4 text-left text-sm">
               <p>{service.name} · {formatDay(confirmed.appointmentStart)}, {formatTime(confirmed.appointmentStart)}</p>
