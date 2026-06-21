@@ -11,6 +11,7 @@ export default function ProductDetail() {
   const { slug = '', productId } = useParams()
   const [product, setProduct] = useState<Product | null>(null)
   const [vendor, setVendor] = useState<Vendor | null>(null)
+  const [active, setActive] = useState(0)
   const [qty, setQty] = useState(1)
   const [notFound, setNotFound] = useState(false)
   const { add } = useCart()
@@ -38,6 +39,12 @@ export default function ProductDetail() {
   if (!product || !vendor) return <PageLoader />
 
   const soldOut = product.quantityAvailable <= 0
+  const images = product.imageUrls?.length
+    ? product.imageUrls
+    : product.productImageUrl
+      ? [product.productImageUrl]
+      : []
+  const cover = images[Math.min(active, images.length - 1)]
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10">
@@ -62,16 +69,43 @@ export default function ProductDetail() {
       </Link>
 
       <div className="grid gap-10 md:grid-cols-2">
-        <div className="card overflow-hidden">
-          <div className="aspect-square bg-sand">
-            {product.productImageUrl ? (
-              <img src={product.productImageUrl} alt={product.name} className="h-full w-full object-cover" />
-            ) : (
-              <div className="grid h-full place-items-center">
-                <span className="font-display text-6xl text-line">{product.name[0]}</span>
-              </div>
-            )}
+        <div>
+          <div className="card overflow-hidden">
+            <div className="aspect-square bg-sand">
+              {cover ? (
+                <img src={cover} alt={product.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="grid h-full place-items-center">
+                  <span className="font-display text-6xl text-line">{product.name[0]}</span>
+                </div>
+              )}
+            </div>
           </div>
+
+          {images.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto">
+              {images.map((url, i) => (
+                <button
+                  key={url + i}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  className={`aspect-square h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${
+                    i === Math.min(active, images.length - 1) ? 'border-forest' : 'border-line'
+                  }`}
+                >
+                  <img src={url} alt={`${product.name} ${i + 1}`} className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {product.videoUrl && (
+            <video
+              src={product.videoUrl}
+              controls
+              className="mt-4 aspect-video w-full rounded-xl border border-line bg-ink/5"
+            />
+          )}
         </div>
 
         <div>
