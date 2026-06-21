@@ -23,7 +23,8 @@ interface FormState {
   discountPercent: string
   quantityAvailable: string
   lowStockThreshold: string
-  productImageUrl: string
+  imageUrls: string[]
+  videoUrl: string
   fulfillmentType: FulfillmentType
   originCountry: string
   weight: string
@@ -42,7 +43,8 @@ const EMPTY: FormState = {
   discountPercent: '0',
   quantityAvailable: '0',
   lowStockThreshold: '0',
-  productImageUrl: '',
+  imageUrls: [],
+  videoUrl: '',
   fulfillmentType: 'LOCAL_PICKUP',
   originCountry: '',
   weight: '',
@@ -67,7 +69,8 @@ function fromProduct(p: Product): FormState {
     discountPercent: String(p.discountPercent),
     quantityAvailable: String(p.quantityAvailable),
     lowStockThreshold: String(p.lowStockThreshold),
-    productImageUrl: p.productImageUrl ?? '',
+    imageUrls: p.imageUrls?.length ? p.imageUrls : p.productImageUrl ? [p.productImageUrl] : [],
+    videoUrl: p.videoUrl ?? '',
     fulfillmentType: p.fulfillmentType,
     originCountry: p.originCountry ?? '',
     weight: p.weight != null ? String(p.weight) : '',
@@ -92,7 +95,10 @@ function ProductForm({
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
   const [generating, setGenerating] = useState(false)
+
+  const MAX_IMAGES = 6
 
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -125,11 +131,40 @@ function ProductForm({
     setError(null)
     try {
       const { url } = await api.uploadProductImage(file)
-      setForm((f) => ({ ...f, productImageUrl: url }))
+      setForm((f) => ({ ...f, imageUrls: [...f.imageUrls, url].slice(0, MAX_IMAGES) }))
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not upload image')
     } finally {
       setUploading(false)
+    }
+  }
+
+  const removeImage = (i: number) =>
+    setForm((f) => ({ ...f, imageUrls: f.imageUrls.filter((_, idx) => idx !== i) }))
+
+  // Promote an image to the front of the list — index 0 is the cover/thumbnail.
+  const makeCover = (i: number) =>
+    setForm((f) => {
+      if (i === 0) return f
+      const next = [...f.imageUrls]
+      const [picked] = next.splice(i, 1)
+      next.unshift(picked)
+      return { ...f, imageUrls: next }
+    })
+
+  const pickVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploadingVideo(true)
+    setError(null)
+    try {
+      const { url } = await api.uploadProductVideo(file)
+      setForm((f) => ({ ...f, videoUrl: url }))
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not upload video')
+    } finally {
+      setUploadingVideo(false)
     }
   }
 
@@ -145,7 +180,8 @@ function ProductForm({
       discountPercent: Number(form.discountPercent) || 0,
       quantityAvailable: Number(form.quantityAvailable),
       lowStockThreshold: Number(form.lowStockThreshold),
-      productImageUrl: form.productImageUrl || undefined,
+      imageUrls: form.imageUrls,
+      videoUrl: form.videoUrl || undefined,
       fulfillmentType: form.fulfillmentType,
       originCountry: form.originCountry || undefined,
       weight: numOrUndefined(form.weight),
@@ -230,34 +266,67 @@ function ProductForm({
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">Product image</label>
-              {form.productImageUrl ? (
-                <div className="flex items-center gap-3">
-                  <img
-                    src={form.productImageUrl}
-                    alt={form.name || 'Product'}
-                    className="h-16 w-16 shrink-0 rounded-lg border border-line object-cover"
-                  />
-                  <div className="flex flex-col items-start gap-1">
-                    <label className="btn-quiet cursor-pointer px-2 text-sm">
-                      {uploading ? <Spinner /> : 'Replace'}
-                      <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
-                    </label>
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="label">Product images</label>
+              <span className="text-xs text-muted">{form.imageUrls.length}/{MAX_IMAGES} · first is the cover</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {form.imageUrls.map((url, i) => (
+                <div key={url + i} className="group relative aspect-square overflow-hidden rounded-lg border border-line">
+                  <img src={url} alt={`Image ${i + 1}`} className="h-full w-full object-cover" />
+                  {i === 0 ? (
+                    <span className="absolute left-1 top-1 chip bg-cream/90 px-1.5 py-0.5 text-[10px] text-muted backdrop-blur">Cover</span>
+                  ) : (
                     <button
                       type="button"
-                      className="btn-quiet px-2 text-sm text-clay hover:text-clay-dark"
-                      onClick={() => setForm((f) => ({ ...f, productImageUrl: '' }))}
+                      className="absolute left-1 top-1 chip bg-cream/90 px-1.5 py-0.5 text-[10px] text-forest backdrop-blur"
+                      onClick={() => makeCover(i)}
+                      title="Use as cover image"
                     >
-                      Remove
+                      Make cover
                     </button>
-                  </div>
+                  )}
+                  <button
+                    type="button"
+                    className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/60 text-xs text-cream"
+                    onClick={() => removeImage(i)}
+                    title="Remove image"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {form.imageUrls.length < MAX_IMAGES && (
+                <label className="grid aspect-square cursor-pointer place-items-center rounded-lg border border-dashed border-line text-center text-xs text-muted hover:border-forest hover:text-forest">
+                  {uploading ? <Spinner /> : <span>+ Add<br />image</span>}
+                  <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+                </label>
+              )}
+            </div>
+            {form.imageUrls.length === 0 && (
+              <p className="mt-1 text-xs text-muted">Add at least one image (front, side, back…). Up to {MAX_IMAGES}.</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Product video <span className="font-normal text-muted">(optional)</span></label>
+              {form.videoUrl ? (
+                <div className="space-y-2">
+                  <video src={form.videoUrl} controls className="aspect-video w-full rounded-lg border border-line bg-ink/5" />
+                  <button
+                    type="button"
+                    className="btn-quiet px-2 text-sm text-clay hover:text-clay-dark"
+                    onClick={() => setForm((f) => ({ ...f, videoUrl: '' }))}
+                  >
+                    Remove video
+                  </button>
                 </div>
               ) : (
                 <label className="field flex cursor-pointer items-center justify-center gap-2 text-muted">
-                  {uploading ? <Spinner /> : 'Browse device…'}
-                  <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+                  {uploadingVideo ? <Spinner /> : 'Browse device…'}
+                  <input type="file" accept="video/*" className="hidden" onChange={pickVideo} disabled={uploadingVideo} />
                 </label>
               )}
             </div>
@@ -317,7 +386,7 @@ function ProductForm({
           {error && <ErrorNote message={error} />}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" disabled={saving || uploading || generating || !form.name.trim() || !form.price.trim()}>{saving ? <Spinner /> : 'Save product'}</button>
+            <button className="btn-primary" disabled={saving || uploading || uploadingVideo || generating || !form.name.trim() || !form.price.trim() || form.imageUrls.length === 0}>{saving ? <Spinner /> : 'Save product'}</button>
           </div>
         </form>
       </div>

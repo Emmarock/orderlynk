@@ -16,6 +16,8 @@ export interface Product {
   lowStockThreshold: number
   lowStock: boolean
   productImageUrl?: string
+  imageUrls?: string[]
+  videoUrl?: string
   fulfillmentType: FulfillmentType
   originCountry?: string
   weight?: number | null

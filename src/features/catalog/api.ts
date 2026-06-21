@@ -7,6 +7,7 @@ export const catalogApi = {
     request<Page<Product>>('GET', `/api/vendor/products${query({ page, size })}`),
   lowStockProducts: () => request<Product[]>('GET', '/api/vendor/products/low-stock'),
   uploadProductImage: (file: File) => upload('/api/vendor/products/image', file),
+  uploadProductVideo: (file: File) => upload('/api/vendor/products/video', file),
   generateProductDescription: (b: { name: string; category?: string }) =>
     request<{ description: string }>('POST', '/api/vendor/products/description', b),
   createProduct: (b: unknown) => request<Product>('POST', '/api/vendor/products', b),
