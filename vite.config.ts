@@ -10,7 +10,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // Proxy API calls to the Spring Boot backend during dev.
-      '/api': 'http://localhost:8080',
+      '/api': 'http://localhost:8090',
     },
   },
 })

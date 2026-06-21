@@ -430,17 +430,31 @@ function VariantEditor({ serviceId, variants, onChange }: { serviceId: string; v
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [durationMinutes, setDurationMinutes] = useState('60')
+  const [imageUrl, setImageUrl] = useState('')
   const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploading(true)
+    try {
+      const { url } = await api.uploadServiceImage(file)
+      setImageUrl(url)
+    } finally { setUploading(false) }
+  }
 
   const add = async () => {
     if (!name.trim()) return
     setBusy(true)
     try {
       const created = await api.addServiceVariant(serviceId, {
-        name, price: num(price), durationMinutes: num(durationMinutes) || 60, active: true,
+        name, price: num(price), durationMinutes: num(durationMinutes) || 60,
+        imageUrl: imageUrl || undefined, active: true,
       })
       onChange([...variants, created])
-      setName(''); setPrice(''); setDurationMinutes('60')
+      setName(''); setPrice(''); setDurationMinutes('60'); setImageUrl('')
     } finally { setBusy(false) }
   }
 
@@ -452,22 +466,42 @@ function VariantEditor({ serviceId, variants, onChange }: { serviceId: string; v
   return (
     <div className="rounded-xl border border-line bg-sand/40 p-4">
       <p className="label !mb-1">Sub-services</p>
-      <p className="mb-2 text-xs text-muted">Priced options the customer picks one of (e.g. styles). When set, they replace the base price at booking.</p>
+      <p className="mb-2 text-xs text-muted">Priced options the customer picks one of (e.g. styles). When set, they replace the base price at booking. Add an optional photo for each.</p>
       {variants.length > 0 && (
         <ul className="mb-3 space-y-1.5">
           {variants.map((v) => (
-            <li key={v.id} className="flex items-center justify-between rounded-lg bg-cream px-3 py-2 text-sm">
-              <span>{v.name} · {money(v.price)} · {v.durationMinutes}m</span>
-              <button type="button" className="text-clay hover:text-clay-dark" onClick={() => remove(v.id)}>Remove</button>
+            <li key={v.id} className="flex items-center justify-between gap-3 rounded-lg bg-cream px-3 py-2 text-sm">
+              <span className="flex min-w-0 items-center gap-2">
+                {v.imageUrl
+                  ? <img src={v.imageUrl} alt={v.name} className="h-9 w-9 shrink-0 rounded-md object-cover" />
+                  : <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-ink/8 text-xs text-muted">{v.name.charAt(0)}</span>}
+                <span className="truncate">{v.name} · {money(v.price)} · {v.durationMinutes}m</span>
+              </span>
+              <button type="button" className="shrink-0 text-clay hover:text-clay-dark" onClick={() => remove(v.id)}>Remove</button>
             </li>
           ))}
         </ul>
       )}
-      <div className="grid grid-cols-[1fr_auto_auto_auto] items-end gap-2">
+      <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
         <div><label className="label">Name</label><input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. 1 Million braids" /></div>
         <div className="w-24"><label className="label">Price</label><input className="field" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
         <div className="w-20"><label className="label">Min</label><input className="field" type="number" min="5" step="5" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} /></div>
-        <button type="button" className="btn-quiet mb-0.5" onClick={add} disabled={busy || !name.trim()}>{busy ? <Spinner /> : 'Add'}</button>
+      </div>
+      <div className="mt-2 flex items-center gap-3">
+        {imageUrl
+          ? (
+            <span className="flex items-center gap-2 text-sm">
+              <img src={imageUrl} alt="" className="h-10 w-10 rounded-md object-cover" />
+              <button type="button" className="text-clay hover:text-clay-dark" onClick={() => setImageUrl('')}>Remove photo</button>
+            </span>
+          )
+          : (
+            <label className="btn-quiet cursor-pointer px-3 text-sm">
+              {uploading ? <Spinner /> : 'Add photo (optional)'}
+              <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+            </label>
+          )}
+        <button type="button" className="btn-quiet ml-auto px-4" onClick={add} disabled={busy || uploading || !name.trim()}>{busy ? <Spinner /> : 'Add sub-service'}</button>
       </div>
     </div>
   )

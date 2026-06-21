@@ -89,6 +89,7 @@ export interface ServiceVariant {
   name: string
   price: number
   durationMinutes: number
+  imageUrl?: string
   active: boolean
 }
 

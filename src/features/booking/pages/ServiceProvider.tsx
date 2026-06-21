@@ -299,7 +299,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
                       key={v.id}
                       className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition ${variantId === v.id ? 'border-ink bg-ink/5' : 'border-line bg-cream hover:bg-sand'}`}
                     >
-                      <span className="flex items-center gap-2">
+                      <span className="flex min-w-0 items-center gap-2">
                         <input
                           type="radio"
                           name="variant"
@@ -307,9 +307,12 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
                           checked={variantId === v.id}
                           onChange={() => setVariantId(v.id)}
                         />
-                        <span>{v.name} <span className="text-muted">· {v.durationMinutes}m</span></span>
+                        {v.imageUrl && (
+                          <img src={v.imageUrl} alt={v.name} className="h-10 w-10 shrink-0 rounded-md object-cover" />
+                        )}
+                        <span className="truncate">{v.name} <span className="text-muted">· {v.durationMinutes}m</span></span>
                       </span>
-                      <span className="font-medium">{money(v.price, service.currency)}</span>
+                      <span className="shrink-0 font-medium">{money(v.price, service.currency)}</span>
                     </label>
                   ))}
                 </div>
