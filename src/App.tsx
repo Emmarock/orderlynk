@@ -3,6 +3,12 @@ import { Route, Routes, useLocation } from 'react-router-dom'
 import Layout from '@/shared/components/Layout'
 import ProtectedRoute from '@/shared/components/ProtectedRoute'
 import Landing from '@/features/marketplace/pages/Landing'
+import HomeKojo from '@/features/marketplace/pages/HomeKojo'
+import HomeApple from '@/features/marketplace/pages/HomeApple'
+import HomeStripe from '@/features/marketplace/pages/HomeStripe'
+import HomeLinear from '@/features/marketplace/pages/HomeLinear'
+import HomeAirbnb from '@/features/marketplace/pages/HomeAirbnb'
+import HomePreviews from '@/features/marketplace/pages/HomePreviews'
 import Storefront from '@/features/marketplace/pages/Storefront'
 import Services from '@/features/booking/pages/Services'
 import ServiceProvider from '@/features/booking/pages/ServiceProvider'
@@ -52,6 +58,70 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  return (
+    <Routes>
+      {/* Standalone dark "KojoForex-style" home preview — renders without the
+          global light Layout so the dark theme reads end-to-end. */}
+      <Route
+        path="/preview"
+        element={
+          <>
+            <ScrollToTop />
+            <HomeKojo />
+          </>
+        }
+      />
+      <Route
+        path="/preview/apple"
+        element={
+          <>
+            <ScrollToTop />
+            <HomeApple />
+          </>
+        }
+      />
+      <Route
+        path="/preview/stripe"
+        element={
+          <>
+            <ScrollToTop />
+            <HomeStripe />
+          </>
+        }
+      />
+      <Route
+        path="/preview/linear"
+        element={
+          <>
+            <ScrollToTop />
+            <HomeLinear />
+          </>
+        }
+      />
+      <Route
+        path="/preview/airbnb"
+        element={
+          <>
+            <ScrollToTop />
+            <HomeAirbnb />
+          </>
+        }
+      />
+      <Route
+        path="/previews"
+        element={
+          <>
+            <ScrollToTop />
+            <HomePreviews />
+          </>
+        }
+      />
+      <Route path="*" element={<MainApp />} />
+    </Routes>
+  )
+}
+
+function MainApp() {
   return (
     <Layout>
       <ScrollToTop />
