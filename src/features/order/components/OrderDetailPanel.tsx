@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { api } from '@/shared/lib/api'
 import type { FulfillmentStatus, Order } from '@/shared/lib/types'
-import { titleCase } from '@/shared/lib/format'
+import { money, titleCase } from '@/shared/lib/format'
 import { OrderFeeBreakdown, OrderItems, OrderStatusRow, OrderTimeline } from './OrderViews'
 import { OrderShippingPanel } from './OrderShippingPanel'
+import SharePaymentLink from './SharePaymentLink'
 import { Spinner } from '@/shared/components/ui'
 
 /** Full vendor view of a single order: customer + address, items, fees, and status actions. */
@@ -95,6 +96,16 @@ export function OrderDetailPanel({ order, onUpdated }: { order: Order; onUpdated
           )}
           <OrderStatusRow order={order} />
         </div>
+
+        {/* Re-share a card-payment link for any unpaid order. Hidden in the list (no token there). */}
+        {order.trackToken && order.paymentStatus !== 'PAID' && (
+          <div className="mt-5 rounded-xl border border-line bg-cream p-4">
+            <SharePaymentLink
+              url={`${window.location.origin}/pay?token=${encodeURIComponent(order.trackToken)}`}
+              message={`Hi ${order.customerName?.split(' ')[0] ?? 'there'}! Here's your secure payment link for order ${order.publicOrderId} (${money(order.totalAmount, order.currency)}) from ${order.vendorName}:`}
+            />
+          </div>
+        )}
 
         {order.fulfillmentType === 'DOMESTIC_SHIPPING' && <OrderShippingPanel order={order} />}
       </div>
