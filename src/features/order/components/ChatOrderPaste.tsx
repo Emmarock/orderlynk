@@ -7,6 +7,7 @@ import { money, titleCase } from '@/shared/lib/format'
 import { countryCode } from '@/shared/lib/countries'
 import { CountrySelect, ErrorNote, Spinner } from '@/shared/components/ui'
 import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
+import SharePaymentLink from '@/features/order/components/SharePaymentLink'
 
 /**
  * "New order from chat": paste a WhatsApp/Instagram conversation, parse it into a structured draft,
@@ -15,7 +16,8 @@ import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
  */
 
 const FULFILLMENT_OPTIONS: FulfillmentType[] = ['LOCAL_PICKUP', 'LOCAL_DELIVERY', 'DOMESTIC_SHIPPING']
-const PAYMENT_OPTIONS: PaymentMethod[] = ['BANK_TRANSFER', 'CASH', 'INTERAC_ETRANSFER', 'OTHER', 'CARD']
+// Card first: the typical chat-order flow is to share a card-payment link with the customer.
+const PAYMENT_OPTIONS: PaymentMethod[] = ['CARD', 'BANK_TRANSFER', 'CASH', 'INTERAC_ETRANSFER', 'OTHER']
 
 /** Fulfillment types that need a destination address for a shipping/delivery rate. */
 const NEEDS_ADDRESS: FulfillmentType[] = ['LOCAL_DELIVERY', 'DOMESTIC_SHIPPING']
@@ -47,7 +49,7 @@ export default function ChatOrderPaste({ onCreated }: { onCreated?: (order: Orde
   const [customerPhone, setCustomerPhone] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType>('LOCAL_PICKUP')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('BANK_TRANSFER')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CARD')
   const [address, setAddress] = useState<AddressForm>(EMPTY_ADDRESS)
   const [notes, setNotes] = useState('')
 
@@ -95,7 +97,7 @@ export default function ChatOrderPaste({ onCreated }: { onCreated?: (order: Orde
     setCustomerPhone('')
     setCustomerEmail('')
     setFulfillmentType('LOCAL_PICKUP')
-    setPaymentMethod('BANK_TRANSFER')
+    setPaymentMethod('CARD')
     setAddress(EMPTY_ADDRESS)
     setNotes('')
     setQuote(null)
@@ -206,9 +208,20 @@ export default function ChatOrderPaste({ onCreated }: { onCreated?: (order: Orde
         <div className="mt-5 rounded-2xl border border-forest/30 bg-forest/5 p-5">
           <p className="font-display text-lg font-semibold text-forest">Order created</p>
           <p className="mt-1 text-sm text-muted">
-            <span className="font-mono font-semibold text-ink">{created.publicOrderId}</span> · {created.customerName}
+            <span className="font-mono font-semibold text-ink">{created.publicOrderId}</span> · {created.customerName} · {money(created.totalAmount, created.currency)}
           </p>
-          <div className="mt-4 flex gap-2">
+
+          {/* Share a card-payment link with the customer over social. */}
+          {created.trackToken && (
+            <div className="mt-5 border-t border-forest/20 pt-5">
+              <SharePaymentLink
+                url={`${window.location.origin}/pay?token=${encodeURIComponent(created.trackToken)}`}
+                message={`Hi ${created.customerName?.split(' ')[0] ?? 'there'}! Here's your secure payment link for order ${created.publicOrderId} (${money(created.totalAmount, created.currency)}) from ${created.vendorName}:`}
+              />
+            </div>
+          )}
+
+          <div className="mt-5 flex gap-2">
             <Link to={`/vendor/manage/orders/${created.id}`} className="btn-primary">View order</Link>
             <button className="btn-ghost" onClick={resetAll}>New order from chat</button>
           </div>

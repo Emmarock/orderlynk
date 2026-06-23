@@ -21,6 +21,7 @@ import Cart from '@/features/order/pages/Cart'
 import Checkout from '@/features/order/pages/Checkout'
 import OrderConfirmation from '@/features/order/pages/OrderConfirmation'
 import TrackOrder from '@/features/order/pages/TrackOrder'
+import PayOrder from '@/features/order/pages/PayOrder'
 import Login from '@/features/identity/pages/Login'
 import Register from '@/features/identity/pages/Register'
 import VerifyEmail from '@/features/identity/pages/VerifyEmail'
@@ -140,6 +141,7 @@ function MainApp() {
         <Route path="/order/:orderId" element={<OrderConfirmation />} />
         <Route path="/track" element={<TrackOrder />} />
         <Route path="/orders" element={<TrackOrder />} />
+        <Route path="/pay" element={<PayOrder />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

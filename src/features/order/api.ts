@@ -9,6 +9,8 @@ export const orderApi = {
   track: (orderId: string, contact: string) =>
     request<Order>('POST', '/api/orders/track', { orderId, contact }),
   trackByToken: (token: string) => request<Order>('POST', '/api/orders/track-token', { token }),
+  /** Resolve a shared order link to a card-payment session (order + Stripe client secret). */
+  payByToken: (token: string) => request<Order>('POST', '/api/orders/pay-token', { token }),
   myOrders: (page = 0, size = 20) =>
     request<Page<Order>>('GET', `/api/orders/mine${query({ page, size })}`),
   vendorOrders: (from?: string, to?: string, page = 0, size = 20) =>
