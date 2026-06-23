@@ -11,6 +11,8 @@ export const adminApi = {
   suspendVendor: (id: string) => request<Vendor>('POST', `/api/admin/vendors/${id}/suspend`),
   setVendorAlternativePayments: (id: string, enabled: boolean) =>
     request<Vendor>('POST', `/api/admin/vendors/${id}/alternative-payments?enabled=${enabled}`),
+  setVendorChatOrders: (id: string, enabled: boolean) =>
+    request<Vendor>('POST', `/api/admin/vendors/${id}/chat-orders?enabled=${enabled}`),
   adminOrders: (page = 0, size = 20) =>
     request<Page<Order>>('GET', `/api/admin/orders${query({ page, size })}`),
   adminUpdatePayment: (id: string, b: unknown) =>

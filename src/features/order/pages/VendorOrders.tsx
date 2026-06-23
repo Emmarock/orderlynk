@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '@/shared/lib/api'
 import type { Order, PaymentStatus } from '@/shared/lib/types'
 import { usePagedList } from '@/shared/lib/usePagedList'
@@ -6,6 +6,7 @@ import { formatDate, money, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 import { OrderDetailPanel } from '@/features/order/components/OrderDetailPanel'
+import ChatOrderPaste from '@/features/order/components/ChatOrderPaste'
 import { CopyOrderId, EmptyState, LoadMore, PageLoader } from '@/shared/components/ui'
 
 const PAYMENT_FILTERS: (PaymentStatus | 'ALL')[] = ['ALL', 'PENDING', 'PAID']
@@ -15,6 +16,12 @@ export default function VendorOrders() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
+
+  // Chat-order import is an admin-granted, per-vendor capability — only surface it when enabled.
+  const [chatOrders, setChatOrders] = useState(false)
+  useEffect(() => {
+    api.myVendor().then((v) => setChatOrders(v.chatOrderEnabled)).catch(() => setChatOrders(false))
+  }, [])
 
   // Refetch from the server whenever the date range changes (server filters by created-at).
   const { items, total, loading, loadingMore, hasNext, loadMore, setItems } = usePagedList<Order>(
@@ -70,6 +77,11 @@ export default function VendorOrders() {
         </div>
       }
     >
+      {chatOrders && (
+        <div className="mb-5">
+          <ChatOrderPaste onCreated={(o) => setItems((prev) => [o, ...prev])} />
+        </div>
+      )}
       {filtered.length === 0 ? (
         <EmptyState title="No orders here" hint="Orders placed through your storefront will appear here." />
       ) : (

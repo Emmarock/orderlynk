@@ -1,5 +1,5 @@
 import { query, request } from '@/shared/lib/http'
-import type { Order, Page, Quote, RateQuoteResponse, Shipment, TrackingResponse } from '@/shared/lib/types'
+import type { DraftOrder, Order, Page, Quote, RateQuoteResponse, Shipment, TrackingResponse } from '@/shared/lib/types'
 
 /** Customer ordering (quote/checkout/track) + vendor order fulfillment, payment and shipping. */
 export const orderApi = {
@@ -13,6 +13,11 @@ export const orderApi = {
     request<Page<Order>>('GET', `/api/orders/mine${query({ page, size })}`),
   vendorOrders: (from?: string, to?: string, page = 0, size = 20) =>
     request<Page<Order>>('GET', `/api/vendor/orders${query({ from, to, page, size })}`),
+  /** Parse a pasted chat thread into a structured draft order (vendor-only, advisory). */
+  parseChatOrder: (text: string) =>
+    request<DraftOrder>('POST', '/api/vendor/orders/parse-chat', { text }),
+  /** Vendor records an order on a customer's behalf (e.g. confirming a chat-parsed draft). */
+  vendorCreateOrder: (b: unknown) => request<Order>('POST', '/api/vendor/orders', b),
   vendorOrder: (id: string) => request<Order>('GET', `/api/vendor/orders/${id}`),
   vendorCustomerOrders: (phone: string) =>
     request<Order[]>('GET', `/api/vendor/customers/${encodeURIComponent(phone)}/orders`),

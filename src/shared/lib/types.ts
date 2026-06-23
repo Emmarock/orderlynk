@@ -59,6 +59,31 @@ export type ProductCategory =
 
 export type SourceChannel = 'WHATSAPP' | 'INSTAGRAM' | 'MARKETPLACE' | 'VENDOR_LINK' | 'MANUAL'
 
+/** A catalogue-matched line in a chat-parsed draft order; `confidence` is 0–1. */
+export interface DraftLine {
+  productId: string
+  productName: string
+  quantity: number
+  confidence: number
+}
+
+/** Structured draft extracted from a pasted chat thread (advisory — vendor reviews before creating). */
+export interface DraftOrder {
+  items: DraftLine[]
+  unmatched: string[]
+  customerName: string | null
+  customerPhone: string | null
+  customerEmail: string | null
+  fulfillmentType: FulfillmentType | null
+  customerHouseNumber: string | null
+  customerStreet: string | null
+  customerCity: string | null
+  customerState: string | null
+  customerPostcode: string | null
+  customerCountry: string | null
+  notes: string | null
+}
+
 export type WeightUnit = 'G' | 'KG' | 'OZ' | 'LB'
 
 export type DimensionUnit = 'MM' | 'CM' | 'M' | 'IN' | 'FT' | 'YD'

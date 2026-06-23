@@ -86,6 +86,16 @@ export default function AdminVendors() {
                   >
                     {v.alternativePaymentsEnabled ? 'Disable transfers' : 'Enable transfers'}
                   </button>
+                  <span className={`chip ${v.chatOrderEnabled ? 'bg-forest/12 text-forest' : 'bg-ink/8 text-muted'}`}>
+                    {v.chatOrderEnabled ? 'Chat orders on' : 'Chat orders off'}
+                  </span>
+                  <button
+                    className="btn-quiet px-2 text-xs"
+                    disabled={busyId === v.id}
+                    onClick={() => act(v.id, (id) => api.setVendorChatOrders(id, !v.chatOrderEnabled))}
+                  >
+                    {v.chatOrderEnabled ? 'Disable chat orders' : 'Enable chat orders'}
+                  </button>
                 </div>
               </div>
               <div className="flex gap-2">

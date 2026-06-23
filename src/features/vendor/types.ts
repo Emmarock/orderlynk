@@ -40,6 +40,7 @@ export interface Vendor {
   notifyByWhatsapp: boolean
   lowStockAlerts: boolean
   alternativePaymentsEnabled: boolean
+  chatOrderEnabled: boolean
 }
 
 export interface RatingSummary {
