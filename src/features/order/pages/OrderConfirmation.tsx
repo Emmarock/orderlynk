@@ -9,7 +9,8 @@ export default function OrderConfirmation() {
   const location = useLocation()
   const state = location.state as { order?: Order; paid?: boolean } | null
   const order = state?.order
-  const paid = state?.paid === true
+  // Trust the order's real status; the nav-state `paid` flag is only a hint from checkout.
+  const paid = state?.paid === true || order?.paymentStatus === 'PAID'
 
   if (!order) {
     return (
@@ -69,7 +70,9 @@ export default function OrderConfirmation() {
             <h2 className="font-display text-xl font-semibold">Payment</h2>
             <div className="mt-3"><OrderFeeBreakdown order={order} /></div>
             <p className="mt-4 rounded-xl bg-sand p-3 text-xs text-muted">
-              Your payment is complete. You'll be notified when your order is ready.
+              {paid
+                ? "Your payment is complete. You'll be notified when your order is ready."
+                : `Payment is pending. ${order.vendorName} will confirm your order once payment is received.`}
             </p>
           </div>
         </div>
