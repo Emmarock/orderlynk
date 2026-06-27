@@ -28,7 +28,7 @@ import VerifyEmail from '@/features/identity/pages/VerifyEmail'
 import ForgotPassword from '@/features/identity/pages/ForgotPassword'
 import ResetPassword from '@/features/identity/pages/ResetPassword'
 import AcceptInvite from '@/features/identity/pages/AcceptInvite'
-import SellOnOrderLynk from '@/features/identity/pages/SellOnOrderLynk'
+import SellOnOrderlynk from '@/features/identity/pages/SellOnOrderlynk'
 import Account from '@/features/identity/pages/Account'
 import CustomerDashboard from '@/features/identity/pages/CustomerDashboard'
 import VendorDashboard from '@/features/vendor/pages/VendorDashboard'
@@ -149,7 +149,7 @@ function MainApp() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
-        <Route path="/sell" element={<SellOnOrderLynk />} />
+        <Route path="/sell" element={<SellOnOrderlynk />} />
         <Route
           path="/account"
           element={
