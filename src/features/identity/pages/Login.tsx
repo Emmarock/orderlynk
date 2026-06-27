@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { ApiError } from '@/shared/lib/api'
-import { ErrorNote, Rail, Spinner } from '@/shared/components/ui'
+import { ErrorNote, Rail, Spinner, ThemeToggle } from '@/shared/components/ui'
 import type { UserRole } from '@/shared/lib/types'
 
 function destinationFor(role: UserRole, from?: string): string {
@@ -38,6 +38,7 @@ export default function Login() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-16">
+      <div className="mb-3 flex justify-end"><ThemeToggle /></div>
       <div className="card overflow-hidden">
         <Rail />
         <div className="p-8">
@@ -69,7 +70,7 @@ export default function Login() {
           </form>
 
           <p className="mt-6 text-center text-sm text-muted">
-            New to Orderlynk?{' '}
+            New to OrderLynk?{' '}
             <Link to="/register" className="link-underline">Create an account</Link>
           </p>
         </div>

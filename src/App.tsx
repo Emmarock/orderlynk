@@ -28,7 +28,7 @@ import VerifyEmail from '@/features/identity/pages/VerifyEmail'
 import ForgotPassword from '@/features/identity/pages/ForgotPassword'
 import ResetPassword from '@/features/identity/pages/ResetPassword'
 import AcceptInvite from '@/features/identity/pages/AcceptInvite'
-import SellOnOrderlynk from '@/features/identity/pages/SellOnOrderlynk'
+import SellOnOrderLynk from '@/features/identity/pages/SellOnOrderLynk'
 import Account from '@/features/identity/pages/Account'
 import CustomerDashboard from '@/features/identity/pages/CustomerDashboard'
 import VendorDashboard from '@/features/vendor/pages/VendorDashboard'
@@ -61,8 +61,9 @@ function ScrollToTop() {
 export default function App() {
   return (
     <Routes>
-      {/* Standalone dark "KojoForex-style" home preview — renders without the
-          global light Layout so the dark theme reads end-to-end. */}
+      {/* Standalone "KojoForex-style" home preview — renders its own nav/footer
+          outside the global Layout. The dark/gold theme it pioneered is now the
+          app-wide default; these /preview routes remain for design reference. */}
       <Route
         path="/preview"
         element={
@@ -148,7 +149,7 @@ function MainApp() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
-        <Route path="/sell" element={<SellOnOrderlynk />} />
+        <Route path="/sell" element={<SellOnOrderLynk />} />
         <Route
           path="/account"
           element={

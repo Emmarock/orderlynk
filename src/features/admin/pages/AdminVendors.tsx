@@ -10,7 +10,7 @@ const FILTERS: (VendorStatus | 'ALL')[] = ['ALL', 'SUBMITTED', 'APPROVED', 'REJE
 
 function statusTone(s: VendorStatus): string {
   if (s === 'APPROVED') return 'bg-forest/12 text-forest'
-  if (s === 'SUBMITTED' || s === 'UNDER_REVIEW') return 'bg-gold/15 text-[#8a5d0c]'
+  if (s === 'SUBMITTED' || s === 'UNDER_REVIEW') return 'bg-gold/15 text-gold'
   if (s === 'REJECTED' || s === 'SUSPENDED') return 'bg-clay/12 text-clay-dark'
   return 'bg-ink/8 text-muted'
 }

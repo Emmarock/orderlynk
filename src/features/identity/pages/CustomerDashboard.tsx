@@ -9,7 +9,7 @@ import { OrderStatusRow } from '@/features/order/components/OrderViews'
 import { BookingBadge, EmptyState, ErrorNote, LoadMore, PageLoader, PaymentBadge, Rail } from '@/shared/components/ui'
 
 /**
- * Customer hub: a single place to see everything they've transacted on Orderlynk — product orders,
+ * Customer hub: a single place to see everything they've transacted on OrderLynk — product orders,
  * service bookings, batch/cargo orders and shipment requests — each sourced from its own paginated
  * `…/mine` endpoint and shown with live status. Account settings (profile, password, addresses) stay
  * on /account.
@@ -30,7 +30,7 @@ export default function CustomerDashboard() {
       <p className="eyebrow">Dashboard</p>
       <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Welcome back, {firstName}</h1>
       <p className="mt-2 text-sm text-muted">
-        Everything you've ordered on Orderlynk — orders, bookings, batches and shipments, all in one place.
+        Everything you've ordered on OrderLynk — orders, bookings, batches and shipments, all in one place.
       </p>
 
       {anyLoading && totalAll === 0 ? (

@@ -4,22 +4,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        sand: '#F4EEE1',
-        cream: '#FFFDF7',
-        ink: '#1B1915',
-        muted: '#6E665A',
+        // Tokens resolve to CSS variables (space-separated RGB channels) so the whole app
+        // can swap between the default KojoForex dark theme and a warm light theme at runtime
+        // — the values live in index.css under `:root` (dark) and `.light`. Token *roles* are
+        // unchanged: `sand` = page canvas, `cream` = raised surface/cards, `ink` = primary text,
+        // `clay` = primary accent, `forest` = semantic success green.
+        sand: 'rgb(var(--c-sand) / <alpha-value>)',
+        cream: 'rgb(var(--c-cream) / <alpha-value>)',
+        ink: 'rgb(var(--c-ink) / <alpha-value>)',
+        muted: 'rgb(var(--c-muted) / <alpha-value>)',
         clay: {
-          DEFAULT: '#C0522F',
-          dark: '#9E3F22',
-          soft: '#E7A582',
+          DEFAULT: 'rgb(var(--c-clay) / <alpha-value>)',
+          dark: 'rgb(var(--c-clay-dark) / <alpha-value>)',
+          soft: 'rgb(var(--c-clay-soft) / <alpha-value>)',
         },
         forest: {
-          DEFAULT: '#1E4A38',
-          dark: '#143228',
+          DEFAULT: 'rgb(var(--c-forest) / <alpha-value>)',
+          dark: 'rgb(var(--c-forest-dark) / <alpha-value>)',
         },
-        gold: '#D99A2B',
-        plum: '#79324F',
-        line: '#E2D9C6',
+        gold: 'rgb(var(--c-gold) / <alpha-value>)',
+        plum: 'rgb(var(--c-plum) / <alpha-value>)',
+        line: 'rgb(var(--c-line) / <alpha-value>)',
       },
       fontFamily: {
         display: ['Fraunces', 'Georgia', 'serif'],
@@ -27,8 +32,8 @@ export default {
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       boxShadow: {
-        card: '0 1px 2px rgba(27,25,21,0.04), 0 12px 32px -16px rgba(27,25,21,0.18)',
-        lift: '0 18px 50px -20px rgba(27,25,21,0.35)',
+        card: '0 1px 2px rgba(0,0,0,0.4), 0 12px 32px -16px rgba(0,0,0,0.7)',
+        lift: '0 18px 50px -20px rgba(0,0,0,0.85)',
       },
       borderRadius: {
         xl: '0.9rem',

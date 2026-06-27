@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { apiMessage } from '@/shared/lib/api'
 import { validateNewPassword } from '@/shared/lib/password'
-import { CountrySelect, ErrorNote, PasswordChecklist, Rail, Spinner } from '@/shared/components/ui'
+import { CountrySelect, ErrorNote, PasswordChecklist, Rail, Spinner, ThemeToggle } from '@/shared/components/ui'
 import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
 import { applyDialCode, countryCode, countryDialCode } from '@/shared/lib/countries'
 
@@ -76,6 +76,7 @@ export default function Register() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-16">
+      <div className="mb-3 flex justify-end"><ThemeToggle /></div>
       <div className="card overflow-hidden">
         <Rail />
         <div className="p-8">

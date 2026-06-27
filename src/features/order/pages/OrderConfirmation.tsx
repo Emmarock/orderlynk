@@ -30,7 +30,7 @@ export default function OrderConfirmation() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-        className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-forest text-cream"
+        className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-forest text-white"
       >
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />

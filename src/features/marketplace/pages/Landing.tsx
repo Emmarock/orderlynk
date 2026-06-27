@@ -6,6 +6,7 @@ import type { Vendor } from '@/shared/lib/types'
 import { usePagedList } from '@/shared/lib/usePagedList'
 import { titleCase } from '@/shared/lib/format'
 import { LoadMore, PageLoader, SectionTitle } from '@/shared/components/ui'
+import { usePlatformStats } from '@/features/marketplace/usePlatformStats'
 
 const RAILS = [
   { name: 'Discovery', desc: 'Verified storefronts, product pages and marketplace search.' },
@@ -66,6 +67,7 @@ export default function Landing() {
   const [city, setCity] = useState('')
   const [category, setCategory] = useState('')
   const [categories, setCategories] = useState<string[]>([])
+  const stats = usePlatformStats()
 
   // Available product categories for the filter (kept in sync with the backend enum).
   useEffect(() => {
@@ -119,7 +121,7 @@ export default function Landing() {
               transition={{ duration: 0.6, delay: 0.12 }}
               className="mt-6 max-w-md text-lg text-muted"
             >
-              Orderlynk gives African &amp; diaspora vendors structured order links, payment tracking
+              OrderLynk gives African &amp; diaspora vendors structured order links, payment tracking
               and fulfillment visibility — from local pickup to import batches.
             </motion.p>
             <motion.div
@@ -129,7 +131,7 @@ export default function Landing() {
               className="mt-8 flex flex-wrap gap-3"
             >
               <a href="#marketplace" className="btn-primary">Browse the marketplace</a>
-              <Link to="/sell" className="btn-ghost">Sell on Orderlynk →</Link>
+              <Link to="/sell" className="btn-ghost">Sell on OrderLynk →</Link>
             </motion.div>
           </div>
 
@@ -169,6 +171,21 @@ export default function Landing() {
             </div>
           </motion.div>
         </div>
+
+        {/* Live platform stats — KojoForex-style strip backed by /api/platform/stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.28 }}
+          className="mx-auto -mt-2 mb-16 grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4"
+        >
+          {stats.map((s) => (
+            <div key={s.label} className="bg-sand px-6 py-7">
+              <p className="font-display text-3xl font-semibold tracking-tight text-clay">{s.value}</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-muted">{s.label}</p>
+            </div>
+          ))}
+        </motion.div>
       </section>
 
       {/* The rails */}
@@ -260,13 +277,13 @@ export default function Landing() {
               <h3 className="font-display text-3xl font-semibold leading-tight">
                 Already selling on WhatsApp or Instagram?
               </h3>
-              <p className="mt-3 max-w-lg text-cream/80">
+              <p className="mt-3 max-w-lg text-white/80">
                 Bring your next 50 orders into one dashboard. Shareable links, payment tracking and
                 pickup codes — no more chasing screenshots in DMs.
               </p>
             </div>
             <div className="flex md:justify-end">
-              <Link to="/sell" className="btn bg-cream text-forest hover:bg-sand">
+              <Link to="/sell" className="btn bg-white text-forest hover:bg-white/90">
                 Apply to sell →
               </Link>
             </div>

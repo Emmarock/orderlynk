@@ -1,6 +1,15 @@
 import { query, request } from '@/shared/lib/http'
 import type { Page, RatingSummary, Storefront, Vendor } from '@/shared/lib/types'
 
+/** Public, platform-wide headline metrics for the home page stats strip. */
+export interface PlatformStats {
+  ordersProcessed: number
+  verifiedVendors: number
+  citiesServed: number
+  /** Share of completed orders fulfilled rather than cancelled, as a percentage (0–100). */
+  fulfillmentRate: number
+}
+
 /** Public product marketplace + vendor storefront and ratings. */
 export const marketplaceApi = {
   marketplace: (city?: string, category?: string, page = 0, size = 20) =>
@@ -10,4 +19,5 @@ export const marketplaceApi = {
     request<RatingSummary>('POST', `/api/storefronts/${slug}/ratings`, b),
   myVendorRating: (slug: string) =>
     request<RatingSummary>('GET', `/api/storefronts/${slug}/ratings/mine`),
+  platformStats: () => request<PlatformStats>('GET', '/api/platform/stats'),
 }

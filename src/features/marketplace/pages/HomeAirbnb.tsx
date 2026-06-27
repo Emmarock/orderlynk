@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 /**
- * Airbnb.com-style reskin of the Orderlynk home page.
+ * Airbnb.com-style reskin of the OrderLynk home page.
  *
  * Self-contained preview at `/preview/airbnb`. Captures Airbnb's warmth:
  * Rausch coral #FF385C, #222 ink, white surfaces, the big rounded search pill,
  * a category tab row, and a grid of rounded listing cards with images, ratings
- * and a heart — Orderlynk's vendors presented as "stays you'd browse".
+ * and a heart — OrderLynk's vendors presented as "stays you'd browse".
  */
 
 const RAUSCH = '#FF385C'
@@ -97,7 +97,7 @@ function Nav() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
         <Link to="/" className="flex items-center gap-2 text-[22px] font-bold tracking-tight" style={{ color: RAUSCH }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill={RAUSCH}><circle cx="12" cy="12" r="11" /></svg>
-          orderlynk
+          OrderLynk
         </Link>
         <nav className="hidden items-center gap-6 text-[14px] font-medium md:flex" style={{ color: INK }}>
           <a href="#" className="hover:opacity-70">Shop</a>
@@ -223,7 +223,7 @@ export default function HomeAirbnb() {
                 Already selling on WhatsApp?
               </h2>
               <p className="mt-3 max-w-lg text-[17px]" style={{ color: GRAY }}>
-                List your shop on Orderlynk and turn DMs into real orders with tracking, payments and
+                List your shop on OrderLynk and turn DMs into real orders with tracking, payments and
                 pickup codes. No platform fees until your first sale.
               </p>
             </div>
@@ -247,7 +247,7 @@ export default function HomeAirbnb() {
             ['Support', ['Help center', 'Track an order', 'Cancellation', 'Report a vendor']],
             ['Shopping', ['Marketplace', 'Services', 'Batch & Cargo', 'Gift cards']],
             ['Vendors', ['Become a vendor', 'Vendor sign in', 'Resources', 'Community']],
-            ['Orderlynk', ['About', 'Careers', 'Newsroom', 'Privacy']],
+            ['OrderLynk', ['About', 'Careers', 'Newsroom', 'Privacy']],
           ].map(([head, links]) => (
             <div key={head as string}>
               <p className="mb-3 text-[14px] font-bold" style={{ color: INK }}>{head as string}</p>
@@ -260,7 +260,7 @@ export default function HomeAirbnb() {
           ))}
         </div>
         <div className="border-t py-5 text-center text-[13px]" style={{ borderColor: '#dddddd', color: GRAY }}>
-          © {new Date().getFullYear()} Orderlynk · Built for African &amp; diaspora commerce
+          © {new Date().getFullYear()} OrderLynk · Built for African &amp; diaspora commerce
         </div>
       </footer>
     </div>

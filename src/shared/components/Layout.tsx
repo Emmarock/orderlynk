@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useCart } from '@/shared/context/CartContext'
-import { Logo, Rail } from './ui'
+import { Logo, Rail, ThemeToggle } from './ui'
 
 function CartButton() {
   const { count } = useCart()
@@ -56,11 +56,12 @@ export default function Layout({ children }: { children: ReactNode }) {
               </NavLink>
             ) : (
               <NavLink to="/sell" className="link-underline">
-                Sell on Orderlynk
+                Sell on OrderLynk
               </NavLink>
             )}
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <CartButton />
             {user ? (
               <div className="flex items-center gap-2">
@@ -116,13 +117,13 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Vendors</p>
             <ul className="space-y-1.5 text-sm">
-              <li><Link className="hover:text-clay" to="/sell">Sell on Orderlynk</Link></li>
+              <li><Link className="hover:text-clay" to="/sell">Sell on OrderLynk</Link></li>
               <li><Link className="hover:text-clay" to="/login">Vendor sign in</Link></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-line py-5 text-center text-xs text-muted">
-          © {new Date().getFullYear()} Orderlynk · Built for African &amp; diaspora commerce
+          © {new Date().getFullYear()} OrderLynk · Built for African &amp; diaspora commerce
         </div>
       </footer>
     </div>

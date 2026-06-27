@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Orderlynk — Commerce rails for community vendors</title>
+    <title>OrderLynk — Commerce rails for community vendors</title>
     <meta name="description" content="Turn social demand into structured orders, secure payments and reliable fulfillment." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,8 +12,17 @@
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body style="background-color: #0a0a0b">
     <div id="root"></div>
+    <!-- Apply the saved theme before paint so light-mode users don't flash the dark default. -->
+    <script>
+      try {
+        if (localStorage.getItem('orderlynk.theme') === 'light') {
+          document.documentElement.classList.add('light')
+          document.body.style.backgroundColor = '#F4EEE1'
+        }
+      } catch (e) {}
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

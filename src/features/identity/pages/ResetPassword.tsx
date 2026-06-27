@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
 import { validateNewPassword } from '@/shared/lib/password'
-import { ErrorNote, PasswordChecklist, Rail, Spinner } from '@/shared/components/ui'
+import { ErrorNote, PasswordChecklist, Rail, Spinner, ThemeToggle } from '@/shared/components/ui'
 
 export default function ResetPassword() {
   const [params] = useSearchParams()
@@ -37,6 +37,7 @@ export default function ResetPassword() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-16">
+      <div className="mb-3 flex justify-end"><ThemeToggle /></div>
       <div className="card overflow-hidden">
         <Rail />
         <div className="p-8">

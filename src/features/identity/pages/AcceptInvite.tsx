@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
 import { useAuth } from '@/shared/context/AuthContext'
 import { validateNewPassword } from '@/shared/lib/password'
-import { ErrorNote, PasswordChecklist, Rail, Spinner } from '@/shared/components/ui'
+import { ErrorNote, PasswordChecklist, Rail, Spinner, ThemeToggle } from '@/shared/components/ui'
 
 /**
  * Claim an invited account from a guest-order invite email: the customer sets their first password,
@@ -42,6 +42,7 @@ export default function AcceptInvite() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-16">
+      <div className="mb-3 flex justify-end"><ThemeToggle /></div>
       <div className="card overflow-hidden">
         <Rail />
         <div className="p-8">

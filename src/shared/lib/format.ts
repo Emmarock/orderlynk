@@ -45,8 +45,8 @@ export function formatDate(iso: string): string {
 
 const PAYMENT_TONE: Record<PaymentStatus, string> = {
   PAID: 'bg-forest/12 text-forest',
-  PENDING: 'bg-gold/15 text-[#9A6A10]',
-  PARTIAL: 'bg-gold/15 text-[#9A6A10]',
+  PENDING: 'bg-gold/15 text-gold',
+  PARTIAL: 'bg-gold/15 text-gold',
   FAILED: 'bg-clay/12 text-clay-dark',
   REFUNDED: 'bg-ink/8 text-muted',
   CANCELLED: 'bg-ink/8 text-muted',
@@ -75,14 +75,14 @@ export function formatTime(iso: string): string {
 
 const BOOKING_TONE: Record<BookingStatus, string> = {
   DRAFT: 'bg-ink/8 text-muted',
-  REQUESTED: 'bg-gold/15 text-[#9A6A10]',
+  REQUESTED: 'bg-gold/15 text-gold',
   APPROVED: 'bg-clay/15 text-clay-dark',
-  DEPOSIT_PENDING: 'bg-gold/15 text-[#9A6A10]',
+  DEPOSIT_PENDING: 'bg-gold/15 text-gold',
   CONFIRMED: 'bg-forest/12 text-forest',
   REMINDER_SENT: 'bg-forest/12 text-forest',
   IN_PROGRESS: 'bg-clay/15 text-clay-dark',
   COMPLETED: 'bg-forest/12 text-forest',
-  BALANCE_PENDING: 'bg-gold/15 text-[#9A6A10]',
+  BALANCE_PENDING: 'bg-gold/15 text-gold',
   CLOSED: 'bg-ink/8 text-muted',
   CANCELLED: 'bg-clay/12 text-clay-dark',
   NO_SHOW: 'bg-clay/12 text-clay-dark',
@@ -101,7 +101,7 @@ export function cargoTone(status: string): string {
   }
   if (['CANCELLED', 'REJECTED', 'DELAYED'].includes(s)) return 'bg-clay/12 text-clay-dark'
   if (s.includes('PENDING') || s.includes('AWAITING') || s.includes('INVOICE') || s === 'CLOSING_SOON' || s === 'DRAFT') {
-    return 'bg-gold/15 text-[#9A6A10]'
+    return 'bg-gold/15 text-gold'
   }
   if (s === 'READY_FOR_PICKUP') return 'bg-clay/15 text-clay-dark'
   return 'bg-ink/8 text-ink'

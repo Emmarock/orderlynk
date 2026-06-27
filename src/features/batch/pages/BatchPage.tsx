@@ -57,7 +57,7 @@ export default function BatchPage() {
       {b.notes && <p className="mt-4 max-w-2xl text-sm text-muted">{b.notes}</p>}
 
       {!b.openForOrders && (
-        <p className="mt-6 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-[#9A6A10]">
+        <p className="mt-6 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
           This batch is not currently open for new orders or shipment requests.
         </p>
       )}

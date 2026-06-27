@@ -23,7 +23,7 @@ const BENEFITS = [
   'Weekly payout reconciliation with platform & logistics fees',
 ]
 
-export default function SellOnOrderlynk() {
+export default function SellOnOrderLynk() {
   const { user, loading, authenticate, applySession } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({
@@ -139,7 +139,7 @@ export default function SellOnOrderlynk() {
     <div className="mx-auto max-w-5xl px-5 py-12">
       <div className="grid gap-12 md:grid-cols-2">
         <div>
-          <p className="eyebrow">Sell on Orderlynk</p>
+          <p className="eyebrow">Sell on OrderLynk</p>
           <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight">
             Your storefront, your customers — finally organised.
           </h1>

@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 /**
- * Linear.app-style reskin of the Orderlynk home page.
+ * Linear.app-style reskin of the OrderLynk home page.
  *
  * Self-contained preview at `/preview/linear`. Captures Linear's aesthetic:
  * near-black #08090a canvas, indigo #5e6ad2 accent, a soft top gradient glow,
  * gradient headline text, hairline borders, glassy cards and tight refined
- * type — Orderlynk's commerce rails as a sleek "product OS".
+ * type — OrderLynk's commerce rails as a sleek "product OS".
  */
 
 const INDIGO = '#5e6ad2'
@@ -69,7 +69,7 @@ function Nav() {
         style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
         <Link to="/" className="flex items-center gap-2">
           <span className="h-5 w-5 rounded-md" style={{ background: `linear-gradient(135deg, ${INDIGO}, #b794f6)` }} />
-          <span className="text-[15px] font-semibold" style={{ color: INK }}>Orderlynk</span>
+          <span className="text-[15px] font-semibold" style={{ color: INK }}>OrderLynk</span>
         </Link>
         <nav className="hidden items-center gap-7 md:flex">
           {items.map((i) => (
@@ -152,7 +152,7 @@ export default function HomeLinear() {
             className="mx-auto mt-6 max-w-xl text-[18px] leading-relaxed"
             style={{ color: MUTED }}
           >
-            Orderlynk is the system that turns social demand into structured orders, secure payments
+            OrderLynk is the system that turns social demand into structured orders, secure payments
             and reliable fulfillment — purpose-built for African &amp; diaspora commerce.
           </motion.p>
 
@@ -239,7 +239,7 @@ export default function HomeLinear() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-2 py-8 text-[13px] sm:flex-row" style={{ color: MUTED }}>
           <div className="flex items-center gap-2">
             <span className="h-4 w-4 rounded" style={{ background: `linear-gradient(135deg, ${INDIGO}, #b794f6)` }} />
-            <span>© {new Date().getFullYear()} Orderlynk</span>
+            <span>© {new Date().getFullYear()} OrderLynk</span>
           </div>
           <div className="flex gap-6">
             {['Marketplace', 'Sell', 'Pricing', 'Support', 'Privacy'].map((l) => (

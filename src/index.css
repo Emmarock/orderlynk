@@ -2,8 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Default = KojoForex dark/gold theme. Channels are space-separated RGB so Tailwind's
+   `<alpha-value>` (e.g. bg-forest/12) keeps working. The `.light` class on <html> swaps
+   the whole palette to the warm light theme. */
 :root {
+  color-scheme: dark;
+  --c-sand: 10 10 11;
+  --c-cream: 18 19 22;
+  --c-ink: 244 242 236;
+  --c-muted: 154 149 140;
+  --c-clay: 224 178 60;
+  --c-clay-dark: 200 152 44;
+  --c-clay-soft: 240 203 92;
+  --c-forest: 31 122 82;
+  --c-forest-dark: 21 92 61;
+  --c-gold: 224 178 60;
+  --c-plum: 176 106 138;
+  --c-line: 38 39 44;
+}
+
+:root.light {
   color-scheme: light;
+  --c-sand: 244 238 225;
+  --c-cream: 255 253 247;
+  --c-ink: 27 25 21;
+  --c-muted: 110 102 90;
+  --c-clay: 192 82 47;
+  --c-clay-dark: 158 63 34;
+  --c-clay-soft: 231 165 130;
+  --c-forest: 30 74 56;
+  --c-forest-dark: 20 50 40;
+  --c-gold: 154 106 16;
+  --c-plum: 121 50 79;
+  --c-line: 226 217 198;
 }
 
 html {
@@ -12,12 +43,20 @@ html {
 
 body {
   @apply bg-sand text-ink font-sans antialiased;
-  /* Warm paper grain via layered radial gradients. */
+  /* KojoForex near-black canvas with ambient gold glow. */
+  background-image:
+    radial-gradient(circle at 50% -8%, rgba(224, 178, 60, 0.10), transparent 48%),
+    radial-gradient(circle at 12% 22%, rgba(224, 178, 60, 0.05), transparent 40%),
+    radial-gradient(circle at 88% 88%, rgba(31, 122, 82, 0.05), transparent 42%);
+  background-attachment: fixed;
+}
+
+/* Warm "paper grain" glow for the light theme. */
+:root.light body {
   background-image:
     radial-gradient(circle at 12% 18%, rgba(192, 82, 47, 0.05), transparent 38%),
     radial-gradient(circle at 88% 8%, rgba(30, 74, 56, 0.05), transparent 34%),
     radial-gradient(circle at 70% 92%, rgba(217, 154, 43, 0.05), transparent 40%);
-  background-attachment: fixed;
 }
 
 @layer components {
@@ -41,7 +80,7 @@ body {
     @apply btn bg-clay text-cream shadow-card hover:bg-clay-dark hover:-translate-y-0.5 active:translate-y-0;
   }
   .btn-forest {
-    @apply btn bg-forest text-cream shadow-card hover:bg-forest-dark hover:-translate-y-0.5 active:translate-y-0;
+    @apply btn bg-forest text-white shadow-card hover:bg-forest-dark hover:-translate-y-0.5 active:translate-y-0;
   }
   .btn-ghost {
     @apply btn border border-line bg-cream text-ink hover:border-ink/40 hover:bg-sand;
@@ -83,12 +122,20 @@ body {
   height: 11px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(27, 25, 21, 0.18);
+  background: rgba(255, 255, 255, 0.16);
   border-radius: 99px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+  background-clip: content-box;
+}
+:root.light ::-webkit-scrollbar-thumb {
+  background: rgba(27, 25, 21, 0.18);
+  background-clip: content-box;
+}
+:root.light ::-webkit-scrollbar-thumb:hover {
   background: rgba(27, 25, 21, 0.3);
   background-clip: content-box;
 }

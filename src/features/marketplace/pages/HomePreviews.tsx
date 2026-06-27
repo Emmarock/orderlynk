@@ -16,7 +16,7 @@ export default function HomePreviews() {
   return (
     <div className="min-h-screen bg-[#0c0c0d] px-6 py-16 text-white" style={{ fontFamily: 'system-ui, sans-serif' }}>
       <div className="mx-auto max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/40">Orderlynk · home page</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/40">OrderLynk · home page</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">Design experiments</h1>
         <p className="mt-3 text-white/55">Five reference styles, same content. Open each to compare.</p>
 

@@ -11,7 +11,7 @@ const TYPES: BatchType[] = ['PRODUCT_BATCH', 'CARGO_BATCH', 'HYBRID_BATCH']
 
 function badge(b: BatchCard) {
   if (b.batchType === 'CARGO_BATCH') return { label: 'Cargo Batch', cls: 'bg-clay/12 text-clay-dark' }
-  if (b.batchType === 'HYBRID_BATCH') return { label: 'Batch + Cargo', cls: 'bg-gold/15 text-[#9A6A10]' }
+  if (b.batchType === 'HYBRID_BATCH') return { label: 'Batch + Cargo', cls: 'bg-gold/15 text-gold' }
   return { label: 'Batch Order', cls: 'bg-forest/12 text-forest' }
 }
 

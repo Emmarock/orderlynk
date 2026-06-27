@@ -94,7 +94,7 @@ export default function VendorDashboard() {
       }
     >
       {vendor.verificationStatus !== 'APPROVED' && (
-        <div className="mb-6 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-[#8a5d0c]">
+        <div className="mb-6 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
           Your store is <strong>{titleCase(vendor.verificationStatus)}</strong>. It becomes public and can
           take orders once an admin approves it.
         </div>

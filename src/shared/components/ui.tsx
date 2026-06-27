@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { bookingTone, fulfillmentTone, paymentTone, titleCase } from '@/shared/lib/format'
 import type { BookingStatus, FulfillmentStatus, PaymentStatus } from '@/shared/lib/types'
+import { useTheme } from '@/shared/context/ThemeContext'
 import { passwordChecks } from '@/shared/lib/password'
 import { COUNTRIES } from '@/shared/lib/countries'
 
@@ -10,14 +11,44 @@ export function Rail({ className = '' }: { className?: string }) {
   return <div className={`rail ${className}`} aria-hidden />
 }
 
+/** Sun/moon switch that flips between the dark (KojoForex) and light themes. */
+export function ThemeToggle({ className = '' }: { className?: string }) {
+  const { theme, toggle } = useTheme()
+  const isDark = theme === 'dark'
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className={`btn-ghost px-3 ${className}`}
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+    >
+      {isDark ? (
+        // Sun — tapping returns to light
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </svg>
+      ) : (
+        // Moon — tapping switches to dark
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 export function Logo({ className = '' }: { className?: string }) {
   return (
     <Link to="/" className={`group inline-flex items-center gap-2 ${className}`}>
-      <span className="relative grid h-8 w-8 place-items-center rounded-lg bg-ink text-cream">
-        <span className="font-display text-lg font-semibold leading-none">O</span>
-        <span className="absolute -bottom-0.5 left-1 right-1 h-0.5 rounded-full bg-clay" />
+      <span
+        className="grid h-8 w-8 place-items-center rounded-lg text-sm font-black text-black"
+        style={{ background: 'linear-gradient(180deg, #F0CB5C, #E0B23C)' }}
+      >
+        O
       </span>
-      <span className="font-display text-xl font-semibold tracking-tight">Orderlynk</span>
+      <span className="font-display text-xl font-semibold tracking-tight">OrderLynk</span>
     </Link>
   )
 }

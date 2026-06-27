@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
-import { Rail, Spinner } from '@/shared/components/ui'
+import { Rail, Spinner, ThemeToggle } from '@/shared/components/ui'
 
 type State = 'verifying' | 'success' | 'error' | 'missing'
 
@@ -30,6 +30,7 @@ export default function VerifyEmail() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-16">
+      <div className="mb-3 flex justify-end"><ThemeToggle /></div>
       <div className="card overflow-hidden">
         <Rail />
         <div className="p-8 text-center">
@@ -41,7 +42,7 @@ export default function VerifyEmail() {
           )}
           {state === 'success' && (
             <>
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-forest text-cream">✓</div>
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-forest text-white">✓</div>
               <h1 className="mt-4 font-display text-2xl font-semibold">Email verified</h1>
               <p className="mt-2 text-sm text-muted">Thanks — your email address is confirmed.</p>
               <Link to="/login" className="btn-primary mt-6 inline-block">Sign in</Link>

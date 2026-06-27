@@ -12,7 +12,7 @@ import type {
 import { formatDay, money, serviceStartingPrice, titleCase } from '@/shared/lib/format'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useCart } from '@/shared/context/CartContext'
-import { EmptyState, PageLoader, Spinner } from '@/shared/components/ui'
+import { EmptyState, PageLoader, Spinner, ThemeToggle } from '@/shared/components/ui'
 import { PriceTag } from '@/shared/components/PriceTag'
 
 function Stars({ value, onPick }: { value: number; onPick?: (n: number) => void }) {
@@ -201,7 +201,7 @@ function BatchTile({ batch }: { batch: BatchCard }) {
     batch.batchType === 'CARGO_BATCH'
       ? { label: 'Cargo Batch', cls: 'bg-clay/12 text-clay-dark' }
       : batch.batchType === 'HYBRID_BATCH'
-        ? { label: 'Batch + Cargo', cls: 'bg-gold/15 text-[#9A6A10]' }
+        ? { label: 'Batch + Cargo', cls: 'bg-gold/15 text-gold' }
         : { label: 'Batch Order', cls: 'bg-forest/12 text-forest' }
   return (
     <Link to={`/batches/${batch.id}`} className="card group flex flex-col gap-3 p-5 transition-shadow hover:shadow-lg">
@@ -289,6 +289,7 @@ export default function Storefront() {
               {vendor.description && <p className="mt-2 max-w-2xl text-muted">{vendor.description}</p>}
             </div>
             <div className="flex gap-2">
+              <ThemeToggle />
               {vendor.whatsappNumber && (
                 <a
                   href={`https://wa.me/${vendor.whatsappNumber.replace(/[^0-9]/g, '')}`}

@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 /**
- * Stripe.com-style reskin of the Orderlynk home page.
+ * Stripe.com-style reskin of the OrderLynk home page.
  *
  * Self-contained preview at `/preview/stripe`. Captures Stripe's signature:
  * the angled multi-colour gradient hero, blurple (#635bff) accent, deep slate
  * ink (#0a2540), airy #f6f9fc surfaces, three-up feature grids and a mock code
- * snippet — Orderlynk's commerce rails told the "developer-platform" way.
+ * snippet — OrderLynk's commerce rails told the "developer-platform" way.
  */
 
 const BLURPLE = '#635bff'
@@ -54,7 +54,7 @@ function Nav() {
     <header className="absolute inset-x-0 top-0 z-40">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link to="/" className="text-[22px] font-bold tracking-tight text-white">
-          Orderlynk
+          OrderLynk
         </Link>
         <nav className="hidden items-center gap-7 md:flex">
           {items.map((i) => (
@@ -220,7 +220,7 @@ export default function HomeStripe() {
       <footer style={{ background: SLATE }}>
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-14 sm:grid-cols-2 md:grid-cols-4">
           <div>
-            <p className="text-[20px] font-bold text-white">Orderlynk</p>
+            <p className="text-[20px] font-bold text-white">OrderLynk</p>
             <p className="mt-3 max-w-xs text-[14px] text-white/55">
               Commerce rails for community-based vendors, from WhatsApp to your doorstep.
             </p>
@@ -243,7 +243,7 @@ export default function HomeStripe() {
           ))}
         </div>
         <div className="border-t border-white/10 py-6 text-center text-[13px] text-white/40">
-          © {new Date().getFullYear()} Orderlynk · Built for African &amp; diaspora commerce
+          © {new Date().getFullYear()} OrderLynk · Built for African &amp; diaspora commerce
         </div>
       </footer>
     </div>

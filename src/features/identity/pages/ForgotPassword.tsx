@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '@/shared/lib/api'
-import { ErrorNote, Rail, Spinner } from '@/shared/components/ui'
+import { ErrorNote, Rail, Spinner, ThemeToggle } from '@/shared/components/ui'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -27,6 +27,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-16">
+      <div className="mb-3 flex justify-end"><ThemeToggle /></div>
       <div className="card overflow-hidden">
         <Rail />
         <div className="p-8">

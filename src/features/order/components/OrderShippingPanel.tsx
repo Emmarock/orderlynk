@@ -9,7 +9,7 @@ type Busy = 'rates' | 'label' | 'track' | null
 const STATUS_TONE: Record<ShipmentStatus, string> = {
   RATED: 'bg-ink/8 text-muted',
   PURCHASED: 'bg-clay/12 text-clay-dark',
-  IN_TRANSIT: 'bg-gold/15 text-[#9A6A10]',
+  IN_TRANSIT: 'bg-gold/15 text-gold',
   DELIVERED: 'bg-forest/12 text-forest',
   RETURNED: 'bg-clay/12 text-clay-dark',
   FAILED: 'bg-clay/12 text-clay-dark',

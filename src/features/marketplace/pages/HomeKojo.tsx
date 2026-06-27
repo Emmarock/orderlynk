@@ -1,26 +1,20 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { usePlatformStats } from '@/features/marketplace/usePlatformStats'
 
 /**
- * Dark, premium "KojoForex-style" reskin of the Orderlynk home page.
+ * Dark, premium "KojoForex-style" reskin of the OrderLynk home page.
  *
- * This is a self-contained visual preview mounted at `/preview` (outside the
- * global light Layout). It renders its own dark nav + footer so the aesthetic
- * reads end-to-end: near-black canvas, gold accents, big bold display type,
- * stats-led hero, testimonial cards and a results-driven CTA — Orderlynk's
- * real content mapped onto KojoForex's structure.
+ * This is a self-contained preview mounted at `/preview` that renders its own
+ * nav + footer (outside the global Layout) so the aesthetic reads end-to-end:
+ * near-black canvas, gold accents, big bold display type, a live stats-led hero,
+ * testimonial cards and a results-driven CTA — OrderLynk's real content mapped
+ * onto KojoForex's structure. The same dark/gold theme is now the app default.
  */
 
 // ── Theme tokens (local to this preview) ────────────────────────────────────
 const GOLD = '#E0B23C'
-
-const STATS = [
-  { value: '12,400+', label: 'Orders processed' },
-  { value: '450+', label: 'Verified vendors' },
-  { value: '38', label: 'Cities served' },
-  { value: '99.2%', label: 'On-time fulfillment' },
-]
 
 const RAILS = [
   {
@@ -127,7 +121,7 @@ function Nav() {
             O
           </span>
           <span className="text-lg font-bold tracking-tight text-white">
-            Orderlynk
+            OrderLynk
           </span>
         </Link>
         <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
@@ -153,13 +147,14 @@ function Nav() {
 
 // ── Page ────────────────────────────────────────────────────────────────────
 export default function HomeKojo() {
+  const STATS = usePlatformStats()
   const [count, setCount] = useState(0)
 
   // Tiny "live" flourish so the hero feels alive, in the KojoForex spirit.
   useEffect(() => {
     const id = setInterval(() => setCount((c) => (c + 1) % STATS.length), 2200)
     return () => clearInterval(id)
-  }, [])
+  }, [STATS.length])
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] font-sans text-white antialiased">
@@ -210,7 +205,7 @@ export default function HomeKojo() {
             transition={{ duration: 0.6, delay: 0.12 }}
             className="mx-auto mt-6 max-w-2xl text-lg text-white/65"
           >
-            Orderlynk turns social demand into structured orders, secure payments and reliable
+            OrderLynk turns social demand into structured orders, secure payments and reliable
             fulfillment — for African &amp; diaspora vendors, from local pickup to import batches.
           </motion.p>
 
@@ -335,7 +330,7 @@ export default function HomeKojo() {
               One dashboard for every channel you sell on
             </h2>
             <p className="mt-4 text-white/60">
-              WhatsApp, Instagram, in-person — bring it all into Orderlynk. Your customers get a
+              WhatsApp, Instagram, in-person — bring it all into OrderLynk. Your customers get a
               real checkout and live tracking; you get clean payments and zero spreadsheet chaos.
             </p>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -439,7 +434,7 @@ export default function HomeKojo() {
               >
                 O
               </span>
-              <span className="text-lg font-bold tracking-tight">Orderlynk</span>
+              <span className="text-lg font-bold tracking-tight">OrderLynk</span>
             </div>
             <p className="mt-4 max-w-xs text-sm text-white/50">
               Commerce rails for community-based vendors — structured orders, secure payments and
@@ -470,7 +465,7 @@ export default function HomeKojo() {
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/40">Vendors</p>
             <ul className="space-y-2 text-sm text-white/60">
-              {['Sell on Orderlynk', 'Vendor sign in', 'Pricing', 'Support'].map((l) => (
+              {['Sell on OrderLynk', 'Vendor sign in', 'Pricing', 'Support'].map((l) => (
                 <li key={l}>
                   <a href="#" className="transition-colors hover:text-white">{l}</a>
                 </li>
@@ -479,7 +474,7 @@ export default function HomeKojo() {
           </div>
         </div>
         <div className="border-t border-white/10 py-6 text-center text-xs text-white/40">
-          © {new Date().getFullYear()} Orderlynk · Built for African &amp; diaspora commerce
+          © {new Date().getFullYear()} OrderLynk · Built for African &amp; diaspora commerce
         </div>
       </footer>
     </div>

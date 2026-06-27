@@ -122,7 +122,7 @@ export default function VendorSupport() {
                   <p className="text-sm font-medium">{t.subject}</p>
                   <p className="truncate text-xs text-muted">{titleCase(t.category)} · {formatDate(t.createdAt)}</p>
                 </div>
-                <span className={`chip ${t.status === 'OPEN' ? 'bg-gold/15 text-[#9A6A10]' : 'bg-forest/12 text-forest'}`}>
+                <span className={`chip ${t.status === 'OPEN' ? 'bg-gold/15 text-gold' : 'bg-forest/12 text-forest'}`}>
                   {titleCase(t.status)}
                 </span>
               </div>

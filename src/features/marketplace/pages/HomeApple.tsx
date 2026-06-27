@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 /**
- * Apple.com-style reskin of the Orderlynk home page.
+ * Apple.com-style reskin of the OrderLynk home page.
  *
  * Self-contained visual preview mounted at `/preview/apple` (outside the global
  * Layout). Mirrors Apple's system: #f5f5f7 canvas, #1d1d1f ink, the #06c link
  * blue, SF-style system type with huge bold headlines + light subheads,
  * "Learn more ›" chevron links, pill buttons, and full-bleed alternating
- * light/dark product tiles centred text-over-image — Orderlynk's real surfaces
+ * light/dark product tiles centred text-over-image — OrderLynk's real surfaces
  * (Marketplace, Services, Batch & Cargo, Tracking) presented as "products".
  */
 
@@ -251,7 +251,7 @@ function Nav() {
     >
       <div className="mx-auto flex h-11 max-w-5xl items-center justify-between px-5">
         <Link to="/" className="text-[19px] font-semibold tracking-tight" style={{ color: INK }}>
-          Orderlynk
+          OrderLynk
         </Link>
         <nav className="hidden items-center gap-9 md:flex">
           {items.map((i) => (
@@ -298,7 +298,7 @@ export default function HomeApple() {
           transition={{ duration: 0.6 }}
           className="text-[48px] font-semibold leading-[1.05] tracking-tight md:text-[64px]"
         >
-          Orderlynk
+          OrderLynk
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -388,13 +388,13 @@ export default function HomeApple() {
       <footer style={{ background: '#f5f5f7' }}>
         <div className="mx-auto max-w-5xl px-5 py-8" style={{ color: SUBTLE }}>
           <p className="border-b pb-4 text-[12px] leading-relaxed" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
-            Set up takes minutes. No platform fees until your first sale. Orderlynk handles payments,
+            Set up takes minutes. No platform fees until your first sale. OrderLynk handles payments,
             tracking and fulfillment so you can focus on what you make.
           </p>
           <div className="grid gap-8 py-7 sm:grid-cols-3 md:grid-cols-4">
             {[
               ['Shop', ['Marketplace', 'Services', 'Batch & Cargo', 'Track an order']],
-              ['Vendors', ['Sell on Orderlynk', 'Vendor sign in', 'Pricing', 'Support']],
+              ['Vendors', ['Sell on OrderLynk', 'Vendor sign in', 'Pricing', 'Support']],
               ['Company', ['About', 'Careers', 'Contact', 'Press']],
               ['Legal', ['Privacy', 'Terms', 'Cookies', 'Compliance']],
             ].map(([head, links]) => (
@@ -413,7 +413,7 @@ export default function HomeApple() {
             ))}
           </div>
           <p className="border-t pt-5 text-[12px]" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
-            Copyright © {new Date().getFullYear()} Orderlynk. Built for African &amp; diaspora commerce.
+            Copyright © {new Date().getFullYear()} OrderLynk. Built for African &amp; diaspora commerce.
           </p>
         </div>
       </footer>

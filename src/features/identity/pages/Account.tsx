@@ -65,7 +65,7 @@ export default function Account() {
       <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Your account</h1>
 
       {user && !user.emailVerified && (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-[#8a5d0c]">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
           <span>Your email isn't verified yet. Check your inbox for the verification link.</span>
           {resend === 'sent' ? (
             <span className="font-medium">Sent ✓</span>
