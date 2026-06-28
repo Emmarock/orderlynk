@@ -5,14 +5,18 @@ export default {
     extend: {
       colors: {
         // Tokens resolve to CSS variables (space-separated RGB channels) so the whole app
-        // can swap between the default KojoForex dark theme and a warm light theme at runtime
-        // — the values live in index.css under `:root` (dark) and `.light`. Token *roles* are
-        // unchanged: `sand` = page canvas, `cream` = raised surface/cards, `ink` = primary text,
-        // `clay` = primary accent, `forest` = semantic success green.
+        // swaps between the warm cream LIGHT baseline (`:root`) and the tuned dark theme
+        // (`[data-theme="dark"]`) at runtime — values live in index.css. Tailwind name → brief
+        // semantic token: sand=--surface-0, cream=--surface-1, raised=--surface-2,
+        // ink=--text-primary, muted=--text-secondary, faint=--text-muted, clay=--accent
+        // (ONE terracotta, both themes), forest=--green, gold=secondary highlight,
+        // success=Paid/done, line=--border, border-strong=--border-strong.
         sand: 'rgb(var(--c-sand) / <alpha-value>)',
         cream: 'rgb(var(--c-cream) / <alpha-value>)',
+        raised: 'rgb(var(--c-raised) / <alpha-value>)',
         ink: 'rgb(var(--c-ink) / <alpha-value>)',
         muted: 'rgb(var(--c-muted) / <alpha-value>)',
+        faint: 'rgb(var(--c-faint) / <alpha-value>)',
         clay: {
           DEFAULT: 'rgb(var(--c-clay) / <alpha-value>)',
           dark: 'rgb(var(--c-clay-dark) / <alpha-value>)',
@@ -23,8 +27,10 @@ export default {
           dark: 'rgb(var(--c-forest-dark) / <alpha-value>)',
         },
         gold: 'rgb(var(--c-gold) / <alpha-value>)',
+        success: 'rgb(var(--c-success) / <alpha-value>)',
         plum: 'rgb(var(--c-plum) / <alpha-value>)',
         line: 'rgb(var(--c-line) / <alpha-value>)',
+        'border-strong': 'rgb(var(--c-line-strong) / <alpha-value>)',
       },
       fontFamily: {
         display: ['Fraunces', 'Georgia', 'serif'],
@@ -32,8 +38,10 @@ export default {
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       boxShadow: {
-        card: '0 1px 2px rgba(0,0,0,0.4), 0 12px 32px -16px rgba(0,0,0,0.7)',
-        lift: '0 18px 50px -20px rgba(0,0,0,0.85)',
+        // Theme-aware: defined per theme in index.css so light leans on the hairline
+        // border (whisper shadow) and dark conveys depth via the surface ladder.
+        card: 'var(--shadow-card)',
+        lift: 'var(--shadow-lift)',
       },
       borderRadius: {
         xl: '0.9rem',

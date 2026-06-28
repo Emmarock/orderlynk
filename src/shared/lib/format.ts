@@ -44,7 +44,7 @@ export function formatDate(iso: string): string {
 }
 
 const PAYMENT_TONE: Record<PaymentStatus, string> = {
-  PAID: 'bg-forest/12 text-forest',
+  PAID: 'bg-success/15 text-success',
   PENDING: 'bg-gold/15 text-gold',
   PARTIAL: 'bg-gold/15 text-gold',
   FAILED: 'bg-clay/12 text-clay-dark',
@@ -57,7 +57,7 @@ export function paymentTone(status: PaymentStatus): string {
 }
 
 export function fulfillmentTone(status: FulfillmentStatus): string {
-  if (status === 'COMPLETED' || status === 'DELIVERED') return 'bg-forest/12 text-forest'
+  if (status === 'COMPLETED' || status === 'DELIVERED') return 'bg-success/15 text-success'
   if (status === 'CANCELLED') return 'bg-clay/12 text-clay-dark'
   if (status === 'READY_FOR_PICKUP') return 'bg-clay/15 text-clay-dark'
   return 'bg-ink/8 text-ink'
@@ -78,10 +78,10 @@ const BOOKING_TONE: Record<BookingStatus, string> = {
   REQUESTED: 'bg-gold/15 text-gold',
   APPROVED: 'bg-clay/15 text-clay-dark',
   DEPOSIT_PENDING: 'bg-gold/15 text-gold',
-  CONFIRMED: 'bg-forest/12 text-forest',
-  REMINDER_SENT: 'bg-forest/12 text-forest',
+  CONFIRMED: 'bg-success/15 text-success',
+  REMINDER_SENT: 'bg-success/15 text-success',
   IN_PROGRESS: 'bg-clay/15 text-clay-dark',
-  COMPLETED: 'bg-forest/12 text-forest',
+  COMPLETED: 'bg-success/15 text-success',
   BALANCE_PENDING: 'bg-gold/15 text-gold',
   CLOSED: 'bg-ink/8 text-muted',
   CANCELLED: 'bg-clay/12 text-clay-dark',
@@ -97,7 +97,7 @@ export function bookingTone(status: BookingStatus): string {
 export function cargoTone(status: string): string {
   const s = status.toUpperCase()
   if (['COMPLETED', 'PAID', 'DELIVERED', 'ARRIVED', 'CLEARED', 'OPEN', 'ADDED_TO_BATCH'].includes(s)) {
-    return 'bg-forest/12 text-forest'
+    return 'bg-success/15 text-success'
   }
   if (['CANCELLED', 'REJECTED', 'DELAYED'].includes(s)) return 'bg-clay/12 text-clay-dark'
   if (s.includes('PENDING') || s.includes('AWAITING') || s.includes('INVOICE') || s === 'CLOSING_SOON' || s === 'DRAFT') {

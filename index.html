@@ -12,14 +12,17 @@
       rel="stylesheet"
     />
   </head>
-  <body style="background-color: #0a0a0b">
+  <body style="background-color: #F5F1E6">
     <div id="root"></div>
-    <!-- Apply the saved theme before paint so light-mode users don't flash the dark default. -->
+    <!-- Resolve the theme before first paint so there's no flash of the wrong theme.
+         A manual choice (localStorage) wins; otherwise follow the OS prefers-color-scheme. -->
     <script>
       try {
-        if (localStorage.getItem('orderlynk.theme') === 'light') {
-          document.documentElement.classList.add('light')
-          document.body.style.backgroundColor = '#F4EEE1'
+        var saved = localStorage.getItem('orderlynk.theme')
+        var dark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) {
+          document.documentElement.setAttribute('data-theme', 'dark')
+          document.body.style.backgroundColor = '#16140F'
         }
       } catch (e) {}
     </script>

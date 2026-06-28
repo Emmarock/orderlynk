@@ -42,10 +42,9 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
 export function Logo({ className = '' }: { className?: string }) {
   return (
     <Link to="/" className={`group inline-flex items-center gap-2 ${className}`}>
-      <span
-        className="grid h-8 w-8 place-items-center rounded-lg text-sm font-black text-black"
-        style={{ background: 'linear-gradient(180deg, #F0CB5C, #E0B23C)' }}
-      >
+      {/* Brand tile uses the single terracotta --accent in BOTH themes; `text-cream`
+          flips with the theme so the "O" stays legible on the accent fill. */}
+      <span className="grid h-8 w-8 place-items-center rounded-lg bg-clay text-sm font-black text-cream">
         O
       </span>
       <span className="font-display text-xl font-semibold tracking-tight">OrderLynk</span>
@@ -275,7 +274,7 @@ export function LoadMore({
           {loading ? <Spinner className="h-4 w-4" /> : 'Load more'}
         </button>
       )}
-      <p className="text-xs text-muted">
+      <p className="text-xs text-faint">
         Showing {shown} of {total}
       </p>
     </div>
@@ -286,7 +285,7 @@ export function SectionTitle({ eyebrow, title }: { eyebrow?: string; title: stri
   return (
     <div className="mb-6">
       {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
-      <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
+      <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{title}</h2>
     </div>
   )
 }

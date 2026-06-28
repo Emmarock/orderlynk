@@ -2,39 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Default = KojoForex dark/gold theme. Channels are space-separated RGB so Tailwind's
-   `<alpha-value>` (e.g. bg-forest/12) keeps working. The `.light` class on <html> swaps
-   the whole palette to the warm light theme. */
+/*
+ * OrderLynk semantic theming.
+ *
+ * The brand is a warm cream light theme with a tuned dark counterpart. `:root` is
+ * the LIGHT baseline; `[data-theme="dark"]` overrides it. The whole palette is
+ * expressed as the semantic tokens in the design brief (--surface-*, --text-*,
+ * --accent, --green, --gold, --success, --border*). Those public tokens resolve
+ * from the `--c-*` *channel* variables (space-separated RGB) so Tailwind's
+ * `<alpha-value>` (e.g. `bg-clay/12`, `bg-success/15`) keeps working — the channel
+ * vars are the single source of truth, the named tokens are exact aliases.
+ *
+ * Token roles (Tailwind name → brief token):
+ *   sand → --surface-0 (page)      cream → --surface-1 (card)   raised → --surface-2 (modal)
+ *   ink  → --text-primary          muted → --text-secondary     faint  → --text-muted
+ *   clay → --accent (ONE terracotta, both themes — never gold)
+ *   forest → --green (secondary surface)   gold → secondary highlight   success → Paid / done
+ *   line → --border                line-strong → --border-strong
+ */
 :root {
-  color-scheme: dark;
-  --c-sand: 10 10 11;
-  --c-cream: 18 19 22;
-  --c-ink: 244 242 236;
-  --c-muted: 154 149 140;
-  --c-clay: 224 178 60;
-  --c-clay-dark: 200 152 44;
-  --c-clay-soft: 240 203 92;
-  --c-forest: 31 122 82;
-  --c-forest-dark: 21 92 61;
-  --c-gold: 224 178 60;
-  --c-plum: 176 106 138;
-  --c-line: 38 39 44;
+  color-scheme: light;
+
+  /* Channel source of truth (light) */
+  --c-sand: 245 241 230; /* #F5F1E6 */
+  --c-cream: 252 250 243; /* #FCFAF3 */
+  --c-raised: 255 255 255; /* #FFFFFF */
+  --c-line: 224 217 199; /* #E0D9C7 */
+  --c-line-strong: 207 198 175; /* #CFC6AF */
+
+  --c-ink: 33 29 23; /* #211D17 */
+  --c-muted: 90 83 69; /* #5A5345  text-secondary */
+  --c-faint: 118 112 95; /* #76705F  text-muted */
+
+  --c-clay: 177 78 42; /* #B14E2A  accent / terracotta */
+  --c-clay-dark: 150 62 32; /* hover */
+  --c-clay-soft: 231 165 130; /* tint */
+  --c-forest: 47 87 65; /* #2F5741  green */
+  --c-forest-dark: 31 59 44;
+  --c-gold: 201 154 46; /* #C99A2E  secondary highlight only */
+  --c-success: 30 122 77; /* #1E7A4D */
+  --c-plum: 121 50 79;
+
+  /* Public semantic tokens (exact hexes, with alpha-capable channel aliases) */
+  --surface-0: rgb(var(--c-sand)); /* #F5F1E6 */
+  --surface-1: rgb(var(--c-cream)); /* #FCFAF3 */
+  --surface-2: rgb(var(--c-raised)); /* #FFFFFF */
+  --border: rgb(var(--c-line)); /* #E0D9C7 */
+  --border-strong: rgb(var(--c-line-strong)); /* #CFC6AF */
+  --text-primary: rgb(var(--c-ink)); /* #211D17 */
+  --text-secondary: rgb(var(--c-muted)); /* #5A5345 */
+  --text-muted: rgb(var(--c-faint)); /* #76705F */
+  --accent: rgb(var(--c-clay)); /* #B14E2A */
+  --green: rgb(var(--c-forest)); /* #2F5741 */
+  --gold: rgb(var(--c-gold)); /* #C99A2E */
+  --success: rgb(var(--c-success)); /* #1E7A4D */
+
+  /* Elevation: light leans on the hairline border; the shadow is a whisper. */
+  --shadow-card: 0 1px 2px rgba(33, 29, 23, 0.05), 0 12px 30px -20px rgba(33, 29, 23, 0.22);
+  --shadow-lift: 0 20px 50px -24px rgba(33, 29, 23, 0.32);
 }
 
-:root.light {
-  color-scheme: light;
-  --c-sand: 244 238 225;
-  --c-cream: 255 253 247;
-  --c-ink: 27 25 21;
-  --c-muted: 110 102 90;
-  --c-clay: 192 82 47;
-  --c-clay-dark: 158 63 34;
-  --c-clay-soft: 231 165 130;
-  --c-forest: 30 74 56;
-  --c-forest-dark: 20 50 40;
-  --c-gold: 154 106 16;
-  --c-plum: 121 50 79;
-  --c-line: 226 217 198;
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --c-sand: 22 20 15; /* #16140F  surface-0 */
+  --c-cream: 33 30 23; /* #211E17  surface-1 */
+  --c-raised: 42 38 29; /* #2A261D  surface-2 */
+  --c-line: 58 53 42; /* #3A352A */
+  --c-line-strong: 74 68 52; /* #4A4434 */
+
+  --c-ink: 242 237 224; /* #F2EDE0 */
+  --c-muted: 194 186 166; /* #C2BAA6 */
+  --c-faint: 156 148 127; /* #9C947F */
+
+  --c-clay: 224 112 63; /* #E0703F  same hue, lightened for dark */
+  --c-clay-dark: 200 92 46; /* hover */
+  --c-clay-soft: 240 168 131;
+  --c-forest: 95 163 124; /* #5FA37C */
+  --c-forest-dark: 78 138 104;
+  --c-gold: 229 184 77; /* #E5B84D */
+  --c-success: 79 184 126; /* #4FB87E */
+  --c-plum: 176 106 138;
+
+  /* Elevation: dark conveys depth through the surface ladder + border, with a
+     deeper shadow to lift cards/modals off the near-black page. */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 40px -24px rgba(0, 0, 0, 0.8);
+  --shadow-lift: 0 22px 56px -22px rgba(0, 0, 0, 0.85);
 }
 
 html {
@@ -43,20 +96,20 @@ html {
 
 body {
   @apply bg-sand text-ink font-sans antialiased;
-  /* KojoForex near-black canvas with ambient gold glow. */
+  /* Warm "paper grain" glow — terracotta + forest, gold as a faint accent only. */
   background-image:
-    radial-gradient(circle at 50% -8%, rgba(224, 178, 60, 0.10), transparent 48%),
-    radial-gradient(circle at 12% 22%, rgba(224, 178, 60, 0.05), transparent 40%),
-    radial-gradient(circle at 88% 88%, rgba(31, 122, 82, 0.05), transparent 42%);
+    radial-gradient(circle at 12% 18%, rgba(177, 78, 42, 0.05), transparent 38%),
+    radial-gradient(circle at 88% 8%, rgba(47, 87, 65, 0.05), transparent 34%),
+    radial-gradient(circle at 70% 92%, rgba(201, 154, 46, 0.04), transparent 40%);
   background-attachment: fixed;
 }
 
-/* Warm "paper grain" glow for the light theme. */
-:root.light body {
+/* Dark canvas: near-black with the same terracotta-led ambient glow (never gold-led). */
+[data-theme='dark'] body {
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(192, 82, 47, 0.05), transparent 38%),
-    radial-gradient(circle at 88% 8%, rgba(30, 74, 56, 0.05), transparent 34%),
-    radial-gradient(circle at 70% 92%, rgba(217, 154, 43, 0.05), transparent 40%);
+    radial-gradient(circle at 50% -8%, rgba(224, 112, 63, 0.10), transparent 48%),
+    radial-gradient(circle at 12% 22%, rgba(224, 112, 63, 0.05), transparent 40%),
+    radial-gradient(circle at 88% 88%, rgba(95, 163, 124, 0.05), transparent 42%);
 }
 
 @layer components {
@@ -76,27 +129,32 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold
       transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 select-none;
   }
+  /* Primary CTA: terracotta accent in BOTH themes. `text-cream` flips with the
+     theme (near-white in light, near-black in dark) so the label keeps WCAG-AA
+     contrast on the accent fill either way. */
   .btn-primary {
     @apply btn bg-clay text-cream shadow-card hover:bg-clay-dark hover:-translate-y-0.5 active:translate-y-0;
   }
   .btn-forest {
-    @apply btn bg-forest text-white shadow-card hover:bg-forest-dark hover:-translate-y-0.5 active:translate-y-0;
+    @apply btn bg-forest text-cream shadow-card hover:bg-forest-dark hover:-translate-y-0.5 active:translate-y-0;
   }
   .btn-ghost {
-    @apply btn border border-line bg-cream text-ink hover:border-ink/40 hover:bg-sand;
+    @apply btn border border-line bg-cream text-ink hover:border-border-strong hover:bg-sand;
   }
   .btn-quiet {
     @apply btn text-muted hover:text-ink;
   }
 
+  /* Cards: a consistent 1px border in BOTH themes (the primary separator in
+     light), elevation via the surface ladder + theme-aware shadow in dark. */
   .card {
     @apply rounded-2xl border border-line bg-cream shadow-card;
   }
 
   .field {
     @apply w-full rounded-xl border border-line bg-cream px-4 py-2.5 text-sm text-ink
-      placeholder:text-muted/70 outline-none transition-colors
-      focus:border-clay focus:ring-2 focus:ring-clay/20;
+      placeholder:text-faint outline-none transition-colors
+      focus:border-clay focus:ring-2 focus:ring-clay/25;
   }
   .label {
     @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted;
@@ -104,6 +162,15 @@ body {
 
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+
+  /* Filter pill: visible resting border + readable label; pair with `.pill-active`
+     for the selected (accent-filled) state. */
+  .pill {
+    @apply chip border border-line bg-cream text-muted transition-colors hover:border-border-strong hover:text-ink;
+  }
+  .pill-active {
+    @apply chip border border-clay bg-clay text-cream;
   }
 
   .eyebrow {
@@ -122,20 +189,20 @@ body {
   height: 11px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(33, 25, 21, 0.18);
   border-radius: 99px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(33, 25, 21, 0.3);
+  background-clip: content-box;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  background-clip: content-box;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.28);
-  background-clip: content-box;
-}
-:root.light ::-webkit-scrollbar-thumb {
-  background: rgba(27, 25, 21, 0.18);
-  background-clip: content-box;
-}
-:root.light ::-webkit-scrollbar-thumb:hover {
-  background: rgba(27, 25, 21, 0.3);
   background-clip: content-box;
 }

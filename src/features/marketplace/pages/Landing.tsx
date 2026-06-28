@@ -27,7 +27,9 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
       className="card group flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift"
     >
       {vendor.bannerUrl && (
-        <div className="h-24 w-full overflow-hidden bg-sand">
+        // Consistent aspect-ratio crop + inset hairline so photographic banners sit
+        // cleanly (not as floating rectangles) on the card in both themes.
+        <div className="relative aspect-[16/6] w-full overflow-hidden bg-sand ring-1 ring-inset ring-line">
           <img src={vendor.bannerUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
         </div>
       )}
@@ -53,7 +55,7 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
       )}
       <div className="mt-auto flex flex-wrap gap-1.5">
         {vendor.fulfillmentTypes.slice(0, 3).map((t) => (
-          <span key={t} className="chip bg-sand text-muted">
+          <span key={t} className="chip border border-line bg-sand text-muted">
             {titleCase(t)}
           </span>
         ))}
@@ -105,7 +107,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.05 }}
-              className="mt-3 font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl"
+              className="mt-3 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl md:text-6xl"
             >
               Turn WhatsApp orders into a real{' '}
               <span className="relative whitespace-nowrap text-clay">
@@ -145,10 +147,11 @@ export default function Landing() {
             <div className="rail absolute inset-x-0 top-0" />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted">Order</p>
-                <p className="font-mono text-lg font-semibold">OB-260601-4821</p>
+                <p className="text-xs uppercase tracking-wider text-faint">Order</p>
+                <p className="font-mono text-lg font-semibold text-ink">OB-260601-4821</p>
               </div>
-              <span className="chip bg-forest/12 text-forest">Paid</span>
+              {/* Paid uses the per-theme --success (lighter on the dark card so it stays legible). */}
+              <span className="chip bg-success/15 text-success">Paid</span>
             </div>
             <div className="mt-6 space-y-4">
               {[
@@ -158,15 +161,16 @@ export default function Landing() {
                 ['Ready for pickup', false],
               ].map(([label, done], i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <span className={`grid h-6 w-6 place-items-center rounded-full text-[11px] ${done ? 'bg-clay text-cream' : 'border border-line text-muted'}`}>
+                  {/* Completed steps: --success fill; cream check flips with the theme. */}
+                  <span className={`grid h-6 w-6 place-items-center rounded-full text-[11px] ${done ? 'bg-success text-cream' : 'border border-line text-faint'}`}>
                     {done ? '✓' : i + 1}
                   </span>
-                  <span className={done ? 'font-medium' : 'text-muted'}>{label as string}</span>
+                  <span className={done ? 'font-medium text-ink' : 'text-muted'}>{label as string}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-6 rounded-xl bg-sand p-4">
-              <p className="text-xs uppercase tracking-wider text-muted">Pickup code</p>
+            <div className="mt-6 rounded-xl border border-line bg-sand p-4">
+              <p className="text-xs uppercase tracking-wider text-faint">Pickup code</p>
               <p className="font-mono text-2xl font-semibold tracking-[0.3em] text-clay">5821</p>
             </div>
           </motion.div>
@@ -182,7 +186,7 @@ export default function Landing() {
           {stats.map((s) => (
             <div key={s.label} className="bg-sand px-6 py-7">
               <p className="font-display text-3xl font-semibold tracking-tight text-clay">{s.value}</p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-muted">{s.label}</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-faint">{s.label}</p>
             </div>
           ))}
         </motion.div>
@@ -210,18 +214,11 @@ export default function Landing() {
           <SectionTitle eyebrow="Verified vendors" title="Shop the marketplace" />
           {cities.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setCity('')}
-                className={`chip ${city === '' ? 'bg-ink text-cream' : 'bg-cream text-muted hover:text-ink'}`}
-              >
+              <button onClick={() => setCity('')} className={city === '' ? 'pill-active' : 'pill'}>
                 All cities
               </button>
               {cities.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCity(c)}
-                  className={`chip ${city === c ? 'bg-ink text-cream' : 'bg-cream text-muted hover:text-ink'}`}
-                >
+                <button key={c} onClick={() => setCity(c)} className={city === c ? 'pill-active' : 'pill'}>
                   {c}
                 </button>
               ))}
@@ -234,7 +231,7 @@ export default function Landing() {
           <div className="mb-8 flex flex-wrap gap-2">
             <button
               onClick={() => { setCategory(''); setCity('') }}
-              className={`chip ${category === '' ? 'bg-clay text-cream' : 'bg-sand text-muted hover:text-ink'}`}
+              className={category === '' ? 'pill-active' : 'pill'}
             >
               All categories
             </button>
@@ -242,7 +239,7 @@ export default function Landing() {
               <button
                 key={c}
                 onClick={() => { setCategory(c); setCity('') }}
-                className={`chip ${category === c ? 'bg-clay text-cream' : 'bg-sand text-muted hover:text-ink'}`}
+                className={category === c ? 'pill-active' : 'pill'}
               >
                 {titleCase(c)}
               </button>
@@ -270,6 +267,9 @@ export default function Landing() {
 
       {/* Vendor CTA */}
       <section className="mx-auto max-w-6xl px-5 pb-20">
+        {/* Secondary --green surface. `text-cream` flips with the theme (near-white on the
+            dark-green light-mode block; near-black on the lighter dark-mode green) so copy
+            and the CTA stay legible in both themes. */}
         <div className="relative overflow-hidden rounded-2xl bg-forest px-8 py-12 text-cream md:px-14">
           <div className="rail absolute inset-x-0 top-0" />
           <div className="grid items-center gap-6 md:grid-cols-[1.4fr_1fr]">
@@ -277,13 +277,13 @@ export default function Landing() {
               <h3 className="font-display text-3xl font-semibold leading-tight">
                 Already selling on WhatsApp or Instagram?
               </h3>
-              <p className="mt-3 max-w-lg text-white/80">
+              <p className="mt-3 max-w-lg text-cream/85">
                 Bring your next 50 orders into one dashboard. Shareable links, payment tracking and
                 pickup codes — no more chasing screenshots in DMs.
               </p>
             </div>
             <div className="flex md:justify-end">
-              <Link to="/sell" className="btn bg-white text-forest hover:bg-white/90">
+              <Link to="/sell" className="btn bg-sand text-ink hover:bg-sand/85">
                 Apply to sell →
               </Link>
             </div>
