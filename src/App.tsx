@@ -50,6 +50,9 @@ import AdminVendors from '@/features/admin/pages/AdminVendors'
 import AdminOrders from '@/features/admin/pages/AdminOrders'
 import AdminBookings from '@/features/admin/pages/AdminBookings'
 import AdminBatches from '@/features/admin/pages/AdminBatches'
+import AdminFeeSettings from '@/features/admin/pages/AdminFeeSettings'
+import AdminSubscriptions from '@/features/admin/pages/AdminSubscriptions'
+import AdminPromotions from '@/features/admin/pages/AdminPromotions'
 import NotFound from '@/shared/components/NotFound'
 
 function ScrollToTop() {
@@ -325,6 +328,30 @@ function MainApp() {
           element={
             <ProtectedRoute role="ADMIN">
               <AdminBatches />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/fees"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminFeeSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/subscriptions"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminSubscriptions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/promotions"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminPromotions />
             </ProtectedRoute>
           }
         />

@@ -1,5 +1,8 @@
 import { query, request } from '@/shared/lib/http'
-import type { AdminSummary, Batch, BatchSummary, Booking, Order, Page, Payout, Vendor } from '@/shared/lib/types'
+import type {
+  AdminSummary, Batch, BatchSummary, Booking, FeaturedPlacement, FeeSettings, Order, Page, Payout,
+  SubscriptionInvoice, SubscriptionPlanInfo, Vendor, VendorPlan,
+} from '@/shared/lib/types'
 
 /** Platform admin: vendor moderation, order/payout oversight, booking + batch management. */
 export const adminApi = {
@@ -27,4 +30,31 @@ export const adminApi = {
     request<Page<BatchSummary>>('GET', `/api/admin/batches${query({ page, size })}`),
   adminUpdateBatchStatus: (id: string, status: string) =>
     request<Batch>('PATCH', `/api/admin/batches/${id}/status`, { status }),
+
+  // ---- Fee settings (#5) ----
+  adminFeeSettings: () => request<FeeSettings>('GET', '/api/admin/fee-settings'),
+  adminUpdateFeeSettings: (b: FeeSettings) => request<FeeSettings>('PUT', '/api/admin/fee-settings', b),
+
+  // ---- Subscriptions (#6) ----
+  adminPlans: () => request<SubscriptionPlanInfo[]>('GET', '/api/admin/subscriptions/plans'),
+  adminUpdatePlan: (plan: VendorPlan, b: { displayName: string; monthlyFee: number; commissionRate: number; currency: string }) =>
+    request<SubscriptionPlanInfo>('PUT', `/api/admin/subscriptions/plans/${plan}`, b),
+  adminAssignPlan: (vendorId: string, plan: VendorPlan) =>
+    request<Vendor>('POST', `/api/admin/subscriptions/vendors/${vendorId}/plan?plan=${plan}`),
+  adminInvoices: (status?: string, page = 0, size = 20) =>
+    request<Page<SubscriptionInvoice>>('GET', `/api/admin/subscriptions/invoices${query({ status, page, size })}`),
+  adminGenerateInvoices: (period?: string) =>
+    request<{ period: string; generated: number }>('POST', `/api/admin/subscriptions/invoices/generate${query({ period })}`),
+  adminMarkInvoicePaid: (id: string, reference?: string) =>
+    request<SubscriptionInvoice>('POST', `/api/admin/subscriptions/invoices/${id}/mark-paid${query({ reference })}`),
+  adminWaiveInvoice: (id: string) =>
+    request<SubscriptionInvoice>('POST', `/api/admin/subscriptions/invoices/${id}/waive`),
+
+  // ---- Promotions / featured placement (#7) ----
+  adminPromotions: (status?: string, page = 0, size = 20) =>
+    request<Page<FeaturedPlacement>>('GET', `/api/admin/promotions/featured${query({ status, page, size })}`),
+  adminMarkPromotionPaid: (id: string, reference?: string) =>
+    request<FeaturedPlacement>('POST', `/api/admin/promotions/featured/${id}/mark-paid${query({ reference })}`),
+  adminWaivePromotion: (id: string) =>
+    request<FeaturedPlacement>('POST', `/api/admin/promotions/featured/${id}/waive`),
 }

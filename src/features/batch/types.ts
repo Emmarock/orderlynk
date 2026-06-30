@@ -197,6 +197,7 @@ export interface ShipmentRequest {
   ratePerKg: number
   handlingFee: number
   deliveryFee: number
+  platformCargoFee: number
   totalCharge: number
   amountPaid: number
   balanceDue: number

@@ -248,6 +248,7 @@ export interface ProviderCard {
   currency: string
   categories: ServiceCategory[]
   acceptsDeposits: boolean
+  featured: boolean
 }
 
 export interface ServiceStorefront {

@@ -8,6 +8,8 @@ import { validateNewPassword } from '@/shared/lib/password'
 import { applyDialCode, countryCode, countryDialCode } from '@/shared/lib/countries'
 import { CountrySelect, ErrorNote, PageLoader, PasswordChecklist, Spinner } from '@/shared/components/ui'
 import StripeOnboardingCard from '@/features/vendor/components/StripeOnboardingCard'
+import BillingCard from '@/features/vendor/components/BillingCard'
+import PlanCard from '@/features/vendor/components/PlanCard'
 import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
 
 const FULFILLMENT: FulfillmentType[] = ['LOCAL_PICKUP', 'LOCAL_DELIVERY', 'DOMESTIC_SHIPPING', 'IMPORT_BATCH']
@@ -372,6 +374,12 @@ export default function VendorSettings() {
 
         {/* Stripe Connect onboarding — accept card payments */}
         <StripeOnboardingCard />
+
+        {/* Subscription plan — self-serve tier change */}
+        <PlanCard />
+
+        {/* Card on file — pay for plan, featured placement and instant payouts */}
+        <BillingCard />
 
         {/* Manual bank-transfer details (currency-aware). Stripe Connect above handles card payouts. */}
         <SettingsCard

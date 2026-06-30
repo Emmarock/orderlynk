@@ -91,4 +91,7 @@ export const ADMIN_TABS: ConsoleTab[] = [
   { to: '/admin/orders', label: 'Orders' },
   { to: '/admin/bookings', label: 'Bookings' },
   { to: '/admin/batches', label: 'Batches' },
+  { to: '/admin/fees', label: 'Fees' },
+  { to: '/admin/subscriptions', label: 'Subscriptions' },
+  { to: '/admin/promotions', label: 'Promotions' },
 ]

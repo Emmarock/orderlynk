@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { api } from '@/shared/lib/api'
+import { Link } from 'react-router-dom'
+import { api, apiMessage } from '@/shared/lib/api'
 import type { EarningsSummary } from '@/shared/lib/types'
 import { formatDate, money, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, StatCard, VENDOR_TABS } from '@/shared/components/Console'
-import { CopyOrderId, PageLoader, PaymentBadge } from '@/shared/components/ui'
+import { CopyOrderId, ErrorNote, PageLoader, PaymentBadge, Spinner } from '@/shared/components/ui'
 
 export default function VendorEarnings() {
   const [data, setData] = useState<EarningsSummary | null>(null)
@@ -59,6 +60,8 @@ export default function VendorEarnings() {
             </dl>
           </div>
 
+          <InstantPayoutCard currency={data.currency} />
+
           {/* Order-level breakdown */}
           <h2 className="mb-3 mt-8 font-display text-lg font-semibold">Order-level earnings</h2>
           {data.orders.length === 0 ? (
@@ -105,6 +108,79 @@ function Row({ label, value, muted, bold }: { label: string; value: string; mute
     <div className="flex items-center justify-between">
       <dt className={muted ? 'text-muted' : ''}>{label}</dt>
       <dd className={`font-mono ${bold ? 'text-base font-semibold' : ''}`}>{value}</dd>
+    </div>
+  )
+}
+
+/**
+ * Move the vendor's own Stripe balance to their bank instantly, for a small platform fee charged to
+ * their card on file (the platform never holds vendor funds). Requires a card on file; the small fee is
+ * shown after collection. A Stripe instant-payout fee may also apply on the vendor's account.
+ */
+function InstantPayoutCard({ currency }: { currency: string }) {
+  const [hasCard, setHasCard] = useState<boolean | null>(null)
+  const [amount, setAmount] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<{ amount: number; fee: number } | null>(null)
+
+  useEffect(() => {
+    api.vendorBillingStatus().then((s) => setHasCard(s.hasPaymentMethod)).catch(() => setHasCard(false))
+  }, [])
+
+  const value = Number(amount)
+  const valid = Number.isFinite(value) && value > 0
+
+  const submit = async () => {
+    if (!valid) return
+    setBusy(true)
+    setError(null)
+    try {
+      const p = await api.vendorInstantPayout(value, currency)
+      setDone({ amount: p.netPayout, fee: p.instantPayoutFee ?? 0 })
+      setAmount('')
+    } catch (e) {
+      setError(apiMessage(e, 'Instant payout could not be completed. Check your card and Stripe account.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mt-6 card max-w-md p-6">
+      <h2 className="font-display text-lg font-semibold">Instant payout</h2>
+      <p className="mt-1 text-sm text-muted">
+        Send your available balance to your bank now. A small platform fee applies, charged to your card on file.
+      </p>
+
+      {done && (
+        <div className="mt-4 rounded-xl border border-forest/30 bg-forest/5 p-4 text-sm">
+          <p className="font-semibold text-forest">✓ Instant payout started</p>
+          <p className="mt-1 text-muted">
+            {money(done.amount, currency)} is on its way to your bank. Fee charged: {money(done.fee, currency)}.
+          </p>
+        </div>
+      )}
+
+      {hasCard === false ? (
+        <p className="mt-4 text-sm text-muted">
+          Add a card in <Link to="/vendor/manage/settings" className="underline">Settings</Link> to enable instant payouts.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <input
+              type="number" min="0" step="0.01" inputMode="decimal" placeholder={`Amount (${currency})`}
+              value={amount} onChange={(e) => setAmount(e.target.value)}
+              className="field h-10 w-44" aria-label="Instant payout amount"
+            />
+            <button onClick={submit} disabled={!valid || busy || hasCard === null} className="btn-primary">
+              {busy ? <Spinner /> : 'Pay out now'}
+            </button>
+          </div>
+          {error && <ErrorNote message={error} />}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,8 @@
 import { dateRangeQuery, query, request, upload } from '@/shared/lib/http'
 import type {
-  AuthResponse, BroadcastResult, ConnectStatus, CustomerSummary, EarningsSummary,
-  FulfillmentType, OnboardingResult, Page, Payout, ShareLink, SupportTicket, Vendor, VendorAnalytics,
+  AuthResponse, BillingStatus, BroadcastResult, CardSetupResult, ConnectStatus, CustomerSummary,
+  EarningsSummary, FeaturedPlacement, FeaturedPricing, FulfillmentType, OnboardingResult, Page, Payout,
+  ShareLink, SubscriptionPlanInfo, SupportTicket, Vendor, VendorAnalytics, VendorPlan,
 } from '@/shared/lib/types'
 
 /** Vendor account/profile, signup, customers, analytics, earnings, support, payouts and Connect. */
@@ -53,4 +54,19 @@ export const vendorApi = {
   vendorConnectStatus: () => request<ConnectStatus>('GET', '/api/vendor/connect/status'),
   vendorConnectRefresh: () => request<ConnectStatus>('POST', '/api/vendor/connect/refresh'),
   vendorConnectOnboard: () => request<OnboardingResult>('POST', '/api/vendor/connect/onboard'),
+  // Card on file — used to collect platform fees (subscriptions, featured placement, instant payouts).
+  vendorBillingStatus: () => request<BillingStatus>('GET', '/api/vendor/billing'),
+  vendorStartCardSetup: () => request<CardSetupResult>('POST', '/api/vendor/billing/card'),
+  vendorConfirmCard: (setupIntentId: string) =>
+    request<BillingStatus>('POST', `/api/vendor/billing/card/confirm?setupIntentId=${encodeURIComponent(setupIntentId)}`),
+  // Instant payout: move the vendor's own Stripe balance to their bank now, for a fee on the card on file.
+  vendorInstantPayout: (amount: number, currency: string) =>
+    request<Payout>('POST', `/api/vendor/payouts/instant${query({ amount, currency })}`),
+  // Featured placement: promote the store at the top of the marketplace, charged to the card on file.
+  vendorFeaturedPricing: () => request<FeaturedPricing>('GET', '/api/vendor/featured/pricing'),
+  vendorPurchaseFeatured: () => request<FeaturedPlacement>('POST', '/api/vendor/featured/purchase'),
+  vendorFeaturedHistory: () => request<FeaturedPlacement[]>('GET', '/api/vendor/featured'),
+  // Subscription tiers (self-serve plan change).
+  vendorPlans: () => request<SubscriptionPlanInfo[]>('GET', '/api/vendor/plans'),
+  vendorChangePlan: (plan: VendorPlan) => request<Vendor>('POST', `/api/vendor/plan?plan=${plan}`),
 }

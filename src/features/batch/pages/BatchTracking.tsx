@@ -95,6 +95,11 @@ function ShipmentView({ shipment, contact, onPaid }: { shipment: ShipmentRequest
       </div>
       <dl className="mt-4 grid grid-cols-2 gap-y-1 text-sm">
         <dt className="text-muted">Weight</dt><dd className="text-right">{shipment.actualWeight != null ? `${shipment.actualWeight}kg` : shipment.estimatedWeight != null ? `${shipment.estimatedWeight}kg (est.)` : '—'}</dd>
+        {shipment.platformCargoFee > 0 && (
+          <>
+            <dt className="text-muted">Handling fee</dt><dd className="text-right font-mono">{money(shipment.platformCargoFee, shipment.currency)}</dd>
+          </>
+        )}
         <dt className="text-muted">Charge</dt><dd className="text-right font-mono">{money(shipment.totalCharge, shipment.currency)}</dd>
         <dt className="text-muted">Paid</dt><dd className="text-right font-mono">{money(shipment.amountPaid, shipment.currency)}</dd>
         <dt className="text-muted">Balance</dt><dd className="text-right font-mono">{money(shipment.balanceDue, shipment.currency)}</dd>

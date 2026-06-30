@@ -66,7 +66,12 @@ export default function Services() {
         <>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {providers.map((p) => (
-            <Link key={p.vendorId} to={`/services/${p.storeSlug}`} className="card group overflow-hidden transition-shadow hover:shadow-lg">
+            <Link key={p.vendorId} to={`/services/${p.storeSlug}`} className="card group relative overflow-hidden transition-shadow hover:shadow-lg">
+              {p.featured && (
+                <span className="absolute left-3 top-3 z-10 rounded-full bg-gold px-2.5 py-1 text-xs font-semibold text-ink shadow">
+                  ★ Featured
+                </span>
+              )}
               <div className="h-28 bg-sand bg-cover bg-center" style={p.bannerUrl ? { backgroundImage: `url(${p.bannerUrl})` } : undefined} />
               <div className="p-5">
                 <div className="flex items-center gap-3">

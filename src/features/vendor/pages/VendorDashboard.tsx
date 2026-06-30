@@ -6,6 +6,7 @@ import { money, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, StatCard, VENDOR_TABS } from '@/shared/components/Console'
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 import { CopyOrderId, PageLoader, Rail } from '@/shared/components/ui'
+import FeaturedPromoCard from '@/features/vendor/components/FeaturedPromoCard'
 
 const SOURCES = ['whatsapp', 'tiktok', 'facebook', 'instagram', 'marketplace', 'vendor_link']
 
@@ -143,6 +144,11 @@ export default function VendorDashboard() {
         </div>
 
         <ShareLinkPanel />
+      </div>
+
+      {/* Featured placement — promote the store at the top of the marketplace */}
+      <div className="mt-6">
+        <FeaturedPromoCard />
       </div>
 
       {/* Analytics: top customers & top products */}

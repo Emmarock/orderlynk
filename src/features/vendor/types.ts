@@ -22,6 +22,8 @@ export interface Vendor {
   active: boolean
   rating?: number
   ratingCount: number
+  plan?: VendorPlan
+  featuredUntil?: string | null
   commissionRate: number
   payoutMethod?: string
   payoutAccountName?: string
@@ -138,6 +140,75 @@ export interface Payout {
   netPayout: number
   payoutStatus: string
   paidDate?: string
+  instantPayout?: boolean
+  instantPayoutFee?: number
+}
+
+export type VendorPlan = 'STARTER' | 'GROWTH' | 'PRO'
+
+/** A subscription tier and its pricing (from /api/vendor/plans). */
+export interface SubscriptionPlanInfo {
+  plan: VendorPlan
+  displayName: string
+  monthlyFee: number
+  commissionRate: number
+  currency: string
+}
+
+export type FeaturedPlacementStatus = 'DUE' | 'PAID' | 'WAIVED' | 'FAILED'
+
+/** A featured-placement purchase (promotes the store at the top of marketplace discovery). */
+export interface FeaturedPlacement {
+  id: string
+  vendorId: string
+  days: number
+  amount: number
+  currency: string
+  startsAt: string
+  endsAt: string
+  status: FeaturedPlacementStatus
+  paidAt?: string | null
+  createdAt: string
+}
+
+/** Current price of one featured-placement slot (/api/vendor/featured/pricing). */
+export interface FeaturedPricing {
+  fee: number
+  days: number
+  currency: string
+}
+
+/** Platform-wide fee policy (admin: GET/PUT /api/admin/fee-settings). */
+export interface FeeSettings {
+  serviceFeeRate: number
+  processingRate: number
+  processingFixed: number
+  processingBufferRate: number
+  grossUpProcessing: boolean
+  logisticsMarginRate: number
+  logisticsMarkupFlat: number
+  taxRate: number
+  instantPayoutFeeRate: number
+  cargoHandlingFeeRate: number
+  featuredPlacementFee: number
+  featuredPlacementDays: number
+  featuredPlacementCurrency: string
+  logistics: Record<string, number>
+  updatedAt?: string | null
+}
+
+/** A monthly vendor subscription invoice (admin). */
+export interface SubscriptionInvoice {
+  id: string
+  vendorId: string
+  plan: VendorPlan
+  periodStart: string
+  periodEnd: string
+  amount: number
+  currency: string
+  status: FeaturedPlacementStatus
+  paidAt?: string | null
+  createdAt: string
 }
 
 export interface ShareLink {
@@ -160,4 +231,15 @@ export interface OnboardingResult {
   url: string
   expiresAt?: string | null
   account: ConnectStatus
+}
+
+/** Start of card capture (/api/vendor/billing/card) — Stripe SetupIntent client secret. */
+export interface CardSetupResult {
+  clientSecret: string
+  setupIntentId: string
+}
+
+/** Whether the vendor has a usable card on file for platform-fee collection. */
+export interface BillingStatus {
+  hasPaymentMethod: boolean
 }
