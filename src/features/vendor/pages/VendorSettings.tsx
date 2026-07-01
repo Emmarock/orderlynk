@@ -255,7 +255,9 @@ export default function VendorSettings() {
 
   return (
     <ConsoleShell title="Settings" subtitle="Manage your business, account, payout and preferences" tabs={VENDOR_TABS}>
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Masonry columns so short cards (User info, Email, Password) keep their natural height and pack
+          tightly instead of stretching to match the tall Business-details card in a stretched grid row. */}
+      <div className="columns-1 gap-6 lg:columns-2 [&>*]:mb-6 [&>*]:break-inside-avoid">
         {/* Business details */}
         <SettingsCard
           title="Business details"
