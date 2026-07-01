@@ -43,6 +43,7 @@ export interface Vendor {
   lowStockAlerts: boolean
   alternativePaymentsEnabled: boolean
   chatOrderEnabled: boolean
+  featured: boolean
 }
 
 export interface RatingSummary {
