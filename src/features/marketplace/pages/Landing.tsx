@@ -24,13 +24,8 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
   return (
     <Link
       to={`/vendor/${vendor.storeSlug}`}
-      className="card group relative flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift"
+      className="card group flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift"
     >
-      {vendor.featured && (
-        <span className="absolute left-3 top-3 z-10 rounded-full bg-gold px-2.5 py-1 text-xs font-semibold text-ink shadow">
-          ★ Featured
-        </span>
-      )}
       {vendor.bannerUrl && (
         // Consistent aspect-ratio crop + inset hairline so photographic banners sit
         // cleanly (not as floating rectangles) on the card in both themes.
@@ -54,6 +49,11 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
             {vendor.rating ? ` · ★ ${vendor.rating} (${vendor.ratingCount})` : ' · No ratings yet'}
           </p>
         </div>
+        {vendor.featured && (
+          <span className="ml-auto shrink-0 self-start rounded-full bg-gold px-2 py-0.5 text-xs font-semibold text-ink">
+            ★ Featured
+          </span>
+        )}
       </div>
       {vendor.description && (
         <p className="line-clamp-2 text-sm text-muted">{vendor.description}</p>

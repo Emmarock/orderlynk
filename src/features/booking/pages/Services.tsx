@@ -66,12 +66,7 @@ export default function Services() {
         <>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {providers.map((p) => (
-            <Link key={p.vendorId} to={`/services/${p.storeSlug}`} className="card group relative overflow-hidden transition-shadow hover:shadow-lg">
-              {p.featured && (
-                <span className="absolute left-3 top-3 z-10 rounded-full bg-gold px-2.5 py-1 text-xs font-semibold text-ink shadow">
-                  ★ Featured
-                </span>
-              )}
+            <Link key={p.vendorId} to={`/services/${p.storeSlug}`} className="card group overflow-hidden transition-shadow hover:shadow-lg">
               <div className="h-28 bg-sand bg-cover bg-center" style={p.bannerUrl ? { backgroundImage: `url(${p.bannerUrl})` } : undefined} />
               <div className="p-5">
                 <div className="flex items-center gap-3">
@@ -84,6 +79,11 @@ export default function Services() {
                     <p className="truncate font-display text-lg font-semibold group-hover:text-clay">{p.businessName}</p>
                     <p className="truncate text-xs text-muted">{p.city || p.serviceArea || (p.locationType ? titleCase(p.locationType) : '')}</p>
                   </div>
+                  {p.featured && (
+                    <span className="ml-auto shrink-0 self-start rounded-full bg-gold px-2 py-0.5 text-xs font-semibold text-ink">
+                      ★ Featured
+                    </span>
+                  )}
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <Stars rating={p.rating} count={p.ratingCount} />
