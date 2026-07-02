@@ -320,7 +320,9 @@ export default function Checkout() {
             </div>
           </section>
 
-          {/* Delivery address */}
+          {/* Delivery address — only needed for carrier shipping. Pickup and local delivery
+              are arranged directly with the vendor, so we don't collect an address for them. */}
+          {isShipping && (
           <section className="card p-6">
             <h2 className="font-display text-xl font-semibold">Delivery address</h2>
             <p className="mt-1 text-sm text-muted">Helps the vendor get your order to the right place.</p>
@@ -393,6 +395,7 @@ export default function Checkout() {
               </label>
             )}
           </section>
+          )}
 
           {/* Fulfillment */}
           <section className="card p-6">
@@ -549,7 +552,7 @@ export default function Checkout() {
 
           {error && <div className="mt-4"><ErrorNote message={error} /></div>}
 
-          <button type="submit" disabled={submitting || !quote || !form.customerName.trim() || !form.customerPhone.trim() || ((fulfillmentType === 'LOCAL_DELIVERY' || fulfillmentType === 'DOMESTIC_SHIPPING') && (!form.customerStreet.trim() || !form.customerCity.trim()))} className="btn-primary mt-6 w-full">
+          <button type="submit" disabled={submitting || !quote || !form.customerName.trim() || !form.customerPhone.trim() || (isShipping && (!form.customerStreet.trim() || !form.customerCity.trim()))} className="btn-primary mt-6 w-full">
             {submitting ? <Spinner /> : paymentMethod === 'CARD' ? 'Continue to payment' : 'Place order'}
           </button>
         </aside>
