@@ -68,6 +68,10 @@ export default function Checkout() {
   useEffect(() => { if (!altPay && paymentMethod !== 'CARD') setPaymentMethod('CARD') }, [altPay, paymentMethod])
 
   const isShipping = fulfillmentType === 'DOMESTIC_SHIPPING'
+  // Local pickup is collected from the vendor, so no delivery address is needed; delivery and
+  // shipping need one (shipping also requires it for live carrier rates).
+  const showAddress = fulfillmentType !== 'LOCAL_PICKUP'
+  const addressRequired = fulfillmentType === 'LOCAL_DELIVERY' || fulfillmentType === 'DOMESTIC_SHIPPING'
   const destinationReady =
     form.customerCountry.trim() !== '' &&
     (form.customerPostcode.trim() !== '' || form.customerCity.trim() !== '')
@@ -320,9 +324,9 @@ export default function Checkout() {
             </div>
           </section>
 
-          {/* Delivery address — only needed for carrier shipping. Pickup and local delivery
-              are arranged directly with the vendor, so we don't collect an address for them. */}
-          {isShipping && (
+          {/* Delivery address — needed for local delivery and shipping. Local pickup is
+              collected from the vendor, so no address is required there. */}
+          {showAddress && (
           <section className="card p-6">
             <h2 className="font-display text-xl font-semibold">Delivery address</h2>
             <p className="mt-1 text-sm text-muted">Helps the vendor get your order to the right place.</p>
@@ -552,7 +556,7 @@ export default function Checkout() {
 
           {error && <div className="mt-4"><ErrorNote message={error} /></div>}
 
-          <button type="submit" disabled={submitting || !quote || !form.customerName.trim() || !form.customerPhone.trim() || (isShipping && (!form.customerStreet.trim() || !form.customerCity.trim()))} className="btn-primary mt-6 w-full">
+          <button type="submit" disabled={submitting || !quote || !form.customerName.trim() || !form.customerPhone.trim() || (addressRequired && (!form.customerStreet.trim() || !form.customerCity.trim()))} className="btn-primary mt-6 w-full">
             {submitting ? <Spinner /> : paymentMethod === 'CARD' ? 'Continue to payment' : 'Place order'}
           </button>
         </aside>

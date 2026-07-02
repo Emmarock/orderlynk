@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useCart } from '@/shared/context/CartContext'
@@ -13,9 +14,16 @@ function CartButton() {
         <circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" />
       </svg>
       {count > 0 && (
-        <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-clay px-1 text-[11px] font-bold text-cream">
+        // Re-key on count so the badge pops each time an item is added.
+        <motion.span
+          key={count}
+          initial={{ scale: 0.4 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+          className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-clay px-1 text-[11px] font-bold text-cream"
+        >
           {count}
-        </span>
+        </motion.span>
       )}
     </Link>
   )
