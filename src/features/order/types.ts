@@ -3,6 +3,8 @@ import type { FulfillmentStatus, FulfillmentType, PaymentStatus, SourceChannel }
 export interface OrderItem {
   productId: string
   productName: string
+  selectedColor?: string | null
+  selectedSize?: string | null
   quantity: number
   unitPrice: number
   lineTotal: number

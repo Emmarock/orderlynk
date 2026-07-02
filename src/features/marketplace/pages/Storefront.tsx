@@ -120,6 +120,8 @@ function ProductTile({
   to: string
 }) {
   const soldOut = product.quantityAvailable <= 0
+  // Products with colour/size options can't be quick-added — the shopper picks a variant on the detail page.
+  const hasOptions = (product.colors?.length ?? 0) > 0 || (product.sizes?.length ?? 0) > 0
   return (
     <div className="card group flex flex-col overflow-hidden">
       <Link to={to} className="relative block aspect-[4/3] overflow-hidden bg-sand">
@@ -145,9 +147,15 @@ function ProductTile({
         {product.description && <p className="line-clamp-2 text-sm text-muted">{product.description}</p>}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <PriceTag product={product} className="text-lg" />
-          <button onClick={onAdd} disabled={soldOut} className="btn-forest px-4 py-2">
-            {soldOut ? 'Sold out' : 'Add'}
-          </button>
+          {hasOptions ? (
+            <Link to={to} className={`btn-forest px-4 py-2 ${soldOut ? 'pointer-events-none opacity-50' : ''}`}>
+              {soldOut ? 'Sold out' : 'Select'}
+            </Link>
+          ) : (
+            <button onClick={onAdd} disabled={soldOut} className="btn-forest px-4 py-2">
+              {soldOut ? 'Sold out' : 'Add'}
+            </button>
+          )}
         </div>
         <p className="text-xs text-muted">{titleCase(product.fulfillmentType)}</p>
       </div>

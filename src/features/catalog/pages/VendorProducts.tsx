@@ -5,6 +5,7 @@ import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
 import { EmptyState, ErrorNote, LoadMore, PageLoader, Spinner } from '@/shared/components/ui'
+import { swatch } from '@/shared/lib/swatch'
 
 const CATEGORIES: ProductCategory[] = [
   'GROCERIES', 'BEAUTY', 'FASHION', 'HOUSEHOLD', 'ELECTRONICS', 'BABY_AND_KIDS', 'EVENT_ITEMS', 'OTHER',
@@ -25,6 +26,8 @@ interface FormState {
   lowStockThreshold: string
   imageUrls: string[]
   videoUrl: string
+  colors: string[]
+  sizes: string[]
   fulfillmentType: FulfillmentType
   originCountry: string
   weight: string
@@ -45,6 +48,8 @@ const EMPTY: FormState = {
   lowStockThreshold: '0',
   imageUrls: [],
   videoUrl: '',
+  colors: [],
+  sizes: [],
   fulfillmentType: 'LOCAL_PICKUP',
   originCountry: '',
   weight: '',
@@ -71,6 +76,8 @@ function fromProduct(p: Product): FormState {
     lowStockThreshold: String(p.lowStockThreshold),
     imageUrls: p.imageUrls?.length ? p.imageUrls : p.productImageUrl ? [p.productImageUrl] : [],
     videoUrl: p.videoUrl ?? '',
+    colors: p.colors ?? [],
+    sizes: p.sizes ?? [],
     fulfillmentType: p.fulfillmentType,
     originCountry: p.originCountry ?? '',
     weight: p.weight != null ? String(p.weight) : '',
@@ -80,6 +87,84 @@ function fromProduct(p: Product): FormState {
     height: p.height != null ? String(p.height) : '',
     dimensionUnit: p.dimensionUnit ?? 'CM',
   }
+}
+
+/**
+ * Free-text tag editor for a product's variant options (colours or sizes). The vendor types a
+ * value and presses Enter / comma to add it; duplicates (case-insensitive) are ignored. When
+ * {@code swatches} is set, a colour chip preview is shown beside each value.
+ */
+function OptionEditor({
+  label,
+  hint,
+  placeholder,
+  values,
+  swatches,
+  onChange,
+}: {
+  label: string
+  hint: string
+  placeholder: string
+  values: string[]
+  swatches?: boolean
+  onChange: (next: string[]) => void
+}) {
+  const [draft, setDraft] = useState('')
+
+  const commit = (raw: string) => {
+    const value = raw.trim()
+    if (!value) return
+    if (values.some((v) => v.toLowerCase() === value.toLowerCase())) {
+      setDraft('')
+      return
+    }
+    onChange([...values, value.slice(0, 64)])
+    setDraft('')
+  }
+
+  const remove = (i: number) => onChange(values.filter((_, idx) => idx !== i))
+
+  return (
+    <div>
+      <label className="label">{label} <span className="font-normal text-muted">(optional)</span></label>
+      {values.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {values.map((v, i) => (
+            <span key={v} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-cream px-2.5 py-1 text-sm">
+              {swatches && (
+                <span className="h-3.5 w-3.5 rounded-full border border-line" style={{ backgroundColor: swatch(v) }} />
+              )}
+              {v}
+              <button
+                type="button"
+                className="text-muted hover:text-clay"
+                onClick={() => remove(i)}
+                aria-label={`Remove ${v}`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <input
+        className="field"
+        placeholder={placeholder}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault()
+            commit(draft)
+          } else if (e.key === 'Backspace' && !draft && values.length) {
+            remove(values.length - 1)
+          }
+        }}
+        onBlur={() => commit(draft)}
+      />
+      <p className="mt-1 text-xs text-muted">{hint}</p>
+    </div>
+  )
 }
 
 function ProductForm({
@@ -182,6 +267,8 @@ function ProductForm({
       lowStockThreshold: Number(form.lowStockThreshold),
       imageUrls: form.imageUrls,
       videoUrl: form.videoUrl || undefined,
+      colors: form.colors,
+      sizes: form.sizes,
       fulfillmentType: form.fulfillmentType,
       originCountry: form.originCountry || undefined,
       weight: numOrUndefined(form.weight),
@@ -307,6 +394,32 @@ function ProductForm({
             {form.imageUrls.length === 0 && (
               <p className="mt-1 text-xs text-muted">Add at least one image (front, side, back…). Up to {MAX_IMAGES}.</p>
             )}
+          </div>
+
+          {/* Variant options — colours & sizes (e.g. for clothing). Optional; when set, customers
+              must pick one of each at checkout. */}
+          <div className="rounded-xl border border-line bg-sand/40 p-4">
+            <div className="flex items-center justify-between">
+              <p className="label !mb-0">Options</p>
+              <span className="text-xs text-muted">Colours &amp; sizes for clothing and variants</span>
+            </div>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <OptionEditor
+                label="Colours"
+                placeholder="e.g. Black, then Enter"
+                hint="Type a colour and press Enter. Customers pick one at checkout."
+                values={form.colors}
+                swatches
+                onChange={(colors) => setForm((f) => ({ ...f, colors }))}
+              />
+              <OptionEditor
+                label="Sizes"
+                placeholder="e.g. M, then Enter"
+                hint="Type a size and press Enter (S, M, L, or 38, 40…)."
+                values={form.sizes}
+                onChange={(sizes) => setForm((f) => ({ ...f, sizes }))}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

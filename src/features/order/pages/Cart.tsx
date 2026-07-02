@@ -31,7 +31,7 @@ export default function Cart() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-3">
           {cart.lines.map((line) => (
-            <div key={line.product.id} className="card flex items-center gap-4 p-4">
+            <div key={line.id} className="card flex items-center gap-4 p-4">
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-sand">
                 {line.product.productImageUrl ? (
                   <img src={line.product.productImageUrl} alt="" className="h-full w-full object-cover" />
@@ -43,6 +43,11 @@ export default function Cart() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{line.product.name}</p>
+                {(line.selectedColor || line.selectedSize) && (
+                  <p className="text-xs text-muted">
+                    {[line.selectedColor, line.selectedSize].filter(Boolean).join(' · ')}
+                  </p>
+                )}
                 <p className="text-sm text-muted">
                   {money(effectivePrice(line.product), line.product.currency)} each
                   {line.product.discountPercent > 0 && (
@@ -55,14 +60,14 @@ export default function Cart() {
                 </p>
               </div>
               <div className="flex items-center rounded-full border border-line">
-                <button className="px-3 py-1.5" onClick={() => setQuantity(line.product.id, line.quantity - 1)}>
+                <button className="px-3 py-1.5" onClick={() => setQuantity(line.id, line.quantity - 1)}>
                   −
                 </button>
                 <span className="w-7 text-center text-sm font-medium">{line.quantity}</span>
                 <button
                   className="px-3 py-1.5"
                   onClick={() =>
-                    setQuantity(line.product.id, Math.min(line.product.quantityAvailable, line.quantity + 1))
+                    setQuantity(line.id, Math.min(line.product.quantityAvailable, line.quantity + 1))
                   }
                 >
                   +
@@ -71,7 +76,7 @@ export default function Cart() {
               <span className="w-20 text-right font-mono font-semibold">
                 {money(effectivePrice(line.product) * line.quantity, line.product.currency)}
               </span>
-              <button onClick={() => remove(line.product.id)} className="text-muted hover:text-clay" aria-label="Remove">
+              <button onClick={() => remove(line.id)} className="text-muted hover:text-clay" aria-label="Remove">
                 ✕
               </button>
             </div>

@@ -81,6 +81,11 @@ export function OrderItems({ order }: { order: Order }) {
         <div key={i} className="flex justify-between">
           <span className="text-muted">
             {it.quantity} × {it.productName}
+            {(it.selectedColor || it.selectedSize) && (
+              <span className="block text-xs">
+                {[it.selectedColor, it.selectedSize].filter(Boolean).join(' · ')}
+              </span>
+            )}
           </span>
           <span className="font-mono">{money(it.lineTotal, order.currency)}</span>
         </div>

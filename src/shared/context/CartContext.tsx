@@ -2,9 +2,22 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Product } from '@/shared/lib/types'
 import { effectivePrice } from '@/shared/lib/format'
 
-export interface CartLine {
+/** A selected product variant (colour and/or size). Either field may be absent. */
+export interface VariantSelection {
+  selectedColor?: string
+  selectedSize?: string
+}
+
+export interface CartLine extends VariantSelection {
+  /** Stable line identity: same product with a different colour/size is a separate line. */
+  id: string
   product: Product
   quantity: number
+}
+
+/** Composite key so the same product in different colours/sizes occupies distinct cart lines. */
+export function lineId(productId: string, sel?: VariantSelection): string {
+  return `${productId}|${sel?.selectedColor ?? ''}|${sel?.selectedSize ?? ''}`
 }
 
 interface CartData {
@@ -18,9 +31,15 @@ interface CartState {
   cart: CartData | null
   count: number
   subtotal: number
-  add: (product: Product, vendorName: string, vendorSlug: string, quantity?: number) => void
-  setQuantity: (productId: string, quantity: number) => void
-  remove: (productId: string) => void
+  add: (
+    product: Product,
+    vendorName: string,
+    vendorSlug: string,
+    quantity?: number,
+    variant?: VariantSelection,
+  ) => void
+  setQuantity: (id: string, quantity: number) => void
+  remove: (id: string) => void
   clear: () => void
 }
 
@@ -30,7 +49,11 @@ const KEY = 'orderlynk.cart'
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartData | null>(() => {
     const raw = localStorage.getItem(KEY)
-    return raw ? (JSON.parse(raw) as CartData) : null
+    if (!raw) return null
+    const data = JSON.parse(raw) as CartData
+    // Backfill line ids for carts persisted before variants existed.
+    data.lines = data.lines.map((l) => ({ ...l, id: l.id ?? lineId(l.product.id, l) }))
+    return data
   })
 
   useEffect(() => {
@@ -38,33 +61,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem(KEY)
   }, [cart])
 
-  const add: CartState['add'] = (product, vendorName, vendorSlug, quantity = 1) => {
+  const add: CartState['add'] = (product, vendorName, vendorSlug, quantity = 1, variant = {}) => {
+    const id = lineId(product.id, variant)
+    const line: CartLine = { id, product, quantity, ...variant }
     setCart((prev) => {
       // Carts are single-vendor (orders are per-vendor); switching vendor resets the cart.
       if (!prev || prev.vendorId !== product.vendorId) {
-        return { vendorId: product.vendorId, vendorName, vendorSlug, lines: [{ product, quantity }] }
+        return { vendorId: product.vendorId, vendorName, vendorSlug, lines: [line] }
       }
-      const existing = prev.lines.find((l) => l.product.id === product.id)
+      const existing = prev.lines.find((l) => l.id === id)
       const lines = existing
-        ? prev.lines.map((l) =>
-            l.product.id === product.id ? { ...l, quantity: l.quantity + quantity } : l,
-          )
-        : [...prev.lines, { product, quantity }]
+        ? prev.lines.map((l) => (l.id === id ? { ...l, quantity: l.quantity + quantity } : l))
+        : [...prev.lines, line]
       return { ...prev, lines }
     })
   }
 
-  const setQuantity: CartState['setQuantity'] = (productId, quantity) => {
+  const setQuantity: CartState['setQuantity'] = (id, quantity) => {
     setCart((prev) => {
       if (!prev) return prev
       const lines = prev.lines
-        .map((l) => (l.product.id === productId ? { ...l, quantity } : l))
+        .map((l) => (l.id === id ? { ...l, quantity } : l))
         .filter((l) => l.quantity > 0)
       return lines.length ? { ...prev, lines } : null
     })
   }
 
-  const remove: CartState['remove'] = (productId) => setQuantity(productId, 0)
+  const remove: CartState['remove'] = (id) => setQuantity(id, 0)
   const clear = () => setCart(null)
 
   const count = useMemo(() => cart?.lines.reduce((n, l) => n + l.quantity, 0) ?? 0, [cart])

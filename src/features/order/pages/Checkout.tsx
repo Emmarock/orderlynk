@@ -105,7 +105,12 @@ export default function Checkout() {
     }
     const body = {
       vendorId: cart.vendorId,
-      items: cart.lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
+      items: cart.lines.map((l) => ({
+        productId: l.product.id,
+        quantity: l.quantity,
+        selectedColor: l.selectedColor,
+        selectedSize: l.selectedSize,
+      })),
       fulfillmentType,
       paymentMethod,
       customerHouseNumber: form.customerHouseNumber || undefined,
@@ -137,7 +142,12 @@ export default function Checkout() {
       api
         .shippingRates({
           vendorId: cart.vendorId,
-          items: cart.lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
+          items: cart.lines.map((l) => ({
+        productId: l.product.id,
+        quantity: l.quantity,
+        selectedColor: l.selectedColor,
+        selectedSize: l.selectedSize,
+      })),
           destination: {
             houseNumber: form.customerHouseNumber || undefined,
             street: form.customerStreet || undefined,
@@ -191,7 +201,12 @@ export default function Checkout() {
     try {
       const order = await api.checkout({
         vendorId: cart.vendorId,
-        items: cart.lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
+        items: cart.lines.map((l) => ({
+        productId: l.product.id,
+        quantity: l.quantity,
+        selectedColor: l.selectedColor,
+        selectedSize: l.selectedSize,
+      })),
         customerName: form.customerName,
         customerPhone: form.customerPhone,
         customerEmail: form.customerEmail || undefined,
@@ -494,9 +509,14 @@ export default function Checkout() {
           <h2 className="font-display text-xl font-semibold">Order summary</h2>
           <div className="mt-4 space-y-2 text-sm">
             {cart.lines.map((l) => (
-              <div key={l.product.id} className="flex justify-between">
+              <div key={l.id} className="flex justify-between">
                 <span className="text-muted">
                   {l.quantity} × {l.product.name}
+                  {(l.selectedColor || l.selectedSize) && (
+                    <span className="block text-xs">
+                      {[l.selectedColor, l.selectedSize].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
                 </span>
                 <span className="font-mono">{money(effectivePrice(l.product) * l.quantity)}</span>
               </div>

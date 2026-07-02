@@ -18,6 +18,10 @@ export interface Product {
   productImageUrl?: string
   imageUrls?: string[]
   videoUrl?: string
+  /** Selectable colour options (e.g. clothing). Empty/absent means no colour choice. */
+  colors?: string[]
+  /** Selectable size options (e.g. S/M/L). Empty/absent means no size choice. */
+  sizes?: string[]
   fulfillmentType: FulfillmentType
   originCountry?: string
   weight?: number | null

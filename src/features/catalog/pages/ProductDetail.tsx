@@ -5,6 +5,7 @@ import type { Product, Vendor } from '@/shared/lib/types'
 import { titleCase } from '@/shared/lib/format'
 import { PriceTag } from '@/shared/components/PriceTag'
 import { useCart } from '@/shared/context/CartContext'
+import { swatch } from '@/shared/lib/swatch'
 import { PageLoader } from '@/shared/components/ui'
 
 export default function ProductDetail() {
@@ -13,6 +14,8 @@ export default function ProductDetail() {
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [active, setActive] = useState(0)
   const [qty, setQty] = useState(1)
+  const [selectedColor, setSelectedColor] = useState<string>('')
+  const [selectedSize, setSelectedSize] = useState<string>('')
   const [notFound, setNotFound] = useState(false)
   const { add } = useCart()
   const navigate = useNavigate()
@@ -39,6 +42,12 @@ export default function ProductDetail() {
   if (!product || !vendor) return <PageLoader />
 
   const soldOut = product.quantityAvailable <= 0
+  const colors = product.colors ?? []
+  const sizes = product.sizes ?? []
+  // When a product defines options, the shopper must choose before adding to cart.
+  const needsColor = colors.length > 0 && !selectedColor
+  const needsSize = sizes.length > 0 && !selectedSize
+  const selectionIncomplete = needsColor || needsSize
   const images = product.imageUrls?.length
     ? product.imageUrls
     : product.productImageUrl
@@ -114,6 +123,50 @@ export default function ProductDetail() {
           <div className="mt-3"><PriceTag product={product} className="text-2xl" /></div>
           {product.description && <p className="mt-4 text-muted">{product.description}</p>}
 
+          {colors.length > 0 && (
+            <div className="mt-6">
+              <p className="label">Colour{needsColor && <span className="text-clay"> *</span>}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {colors.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setSelectedColor(c)}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                      selectedColor === c ? 'border-forest bg-forest/8 text-forest' : 'border-line bg-cream hover:border-ink/30'
+                    }`}
+                  >
+                    <span
+                      className="h-4 w-4 rounded-full border border-line"
+                      style={{ backgroundColor: swatch(c) }}
+                    />
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sizes.length > 0 && (
+            <div className="mt-4">
+              <p className="label">Size{needsSize && <span className="text-clay"> *</span>}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {sizes.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSelectedSize(s)}
+                    className={`min-w-[3rem] rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                      selectedSize === s ? 'border-forest bg-forest/8 text-forest' : 'border-line bg-cream hover:border-ink/30'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-xl bg-cream p-3">
               <dt className="text-xs uppercase tracking-wider text-muted">Fulfillment</dt>
@@ -145,14 +198,25 @@ export default function ProductDetail() {
               </button>
             </div>
             <button
-              disabled={soldOut}
+              disabled={soldOut || selectionIncomplete}
               className="btn-primary flex-1"
               onClick={() => {
-                add(product, vendor.businessName, vendor.storeSlug, qty)
+                add(product, vendor.businessName, vendor.storeSlug, qty, {
+                  selectedColor: selectedColor || undefined,
+                  selectedSize: selectedSize || undefined,
+                })
                 navigate('/cart')
               }}
             >
-              {soldOut ? 'Sold out' : 'Add to cart'}
+              {soldOut
+                ? 'Sold out'
+                : needsColor && needsSize
+                  ? 'Select colour & size'
+                  : needsColor
+                    ? 'Select a colour'
+                    : needsSize
+                      ? 'Select a size'
+                      : 'Add to cart'}
             </button>
           </div>
         </div>
