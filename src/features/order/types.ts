@@ -26,6 +26,8 @@ export interface Order {
   vendorName: string
   items: OrderItem[]
   productSubtotal: number
+  vatAmount: number
+  vatCollector?: 'VENDOR' | 'PLATFORM' | null
   logisticsFee: number
   platformFee: number
   processingFee: number
@@ -52,6 +54,7 @@ export interface Order {
 
 export interface Quote {
   productSubtotal: number
+  vatAmount: number
   logisticsFee: number
   platformFee: number
   processingFee: number

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { api, ApiError, tokenStore } from '@/shared/lib/api'
 import { useAuth } from '@/shared/context/AuthContext'
-import type { FulfillmentType, Vendor } from '@/shared/lib/types'
+import type { FulfillmentType, VatCollector, Vendor } from '@/shared/lib/types'
 import { titleCase } from '@/shared/lib/format'
 import { ConsoleShell, VENDOR_TABS } from '@/shared/components/Console'
 import { validateNewPassword } from '@/shared/lib/password'
@@ -220,6 +220,7 @@ export default function VendorSettings() {
   const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '', confirm: '' })
   const [payout, setPayout] = useState<PayoutForm>(EMPTY_PAYOUT)
   const [prefs, setPrefs] = useState({ notifyByEmail: true, notifyByWhatsapp: false, lowStockAlerts: true })
+  const [vatCollector, setVatCollector] = useState<VatCollector>('VENDOR')
 
   useEffect(() => {
     api.myVendor().then((v) => {
@@ -241,6 +242,7 @@ export default function VendorSettings() {
         payoutBic: v.payoutBic ?? '', payoutBankCode: v.payoutBankCode ?? '', payoutEmail: v.payoutEmail ?? '',
       })
       setPrefs({ notifyByEmail: v.notifyByEmail, notifyByWhatsapp: v.notifyByWhatsapp, lowStockAlerts: v.lowStockAlerts })
+      setVatCollector(v.vatCollector ?? 'VENDOR')
     }).catch(() => setVendor(null))
   }, [])
 
@@ -471,6 +473,40 @@ export default function VendorSettings() {
             <label key={key} className="flex items-center gap-3 text-sm">
               <input type="checkbox" checked={prefs[key]} onChange={(e) => setPrefs({ ...prefs, [key]: e.target.checked })} />
               {label}
+            </label>
+          ))}
+        </SettingsCard>
+
+        {/* VAT collection */}
+        <SettingsCard
+          title="VAT collection"
+          desc="Who remits VAT to the government for your sales. Set a VAT rate per product in your catalogue."
+          onSave={async () => {
+            const v = await api.updateVendor({ vatCollector })
+            setVendor(v)
+          }}
+        >
+          {([
+            ['VENDOR', 'I collect & remit VAT', 'VAT is added to your payout; you remit it to the government.'],
+            ['PLATFORM', 'Platform collects VAT', 'OrderLynk holds the VAT and remits it on your behalf.'],
+          ] as [VatCollector, string, string][]).map(([value, label, hint]) => (
+            <label
+              key={value}
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${
+                vatCollector === value ? 'border-clay bg-clay/8' : 'border-line hover:border-ink/30'
+              }`}
+            >
+              <input
+                type="radio"
+                name="vat-collector"
+                className="mt-1"
+                checked={vatCollector === value}
+                onChange={() => setVatCollector(value)}
+              />
+              <span>
+                <span className="block font-medium">{label}</span>
+                <span className="block text-xs text-muted">{hint}</span>
+              </span>
             </label>
           ))}
         </SettingsCard>

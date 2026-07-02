@@ -25,6 +25,7 @@ export interface Vendor {
   plan?: VendorPlan
   featuredUntil?: string | null
   commissionRate: number
+  vatCollector?: VatCollector
   payoutMethod?: string
   payoutAccountName?: string
   payoutAccountNumber?: string
@@ -146,6 +147,32 @@ export interface Payout {
 }
 
 export type VendorPlan = 'STARTER' | 'GROWTH' | 'PRO'
+
+/** Who collects VAT on behalf of the government for a vendor's sales. */
+export type VatCollector = 'VENDOR' | 'PLATFORM'
+
+export interface VatLedgerEntry {
+  id: string
+  orderId: string
+  publicOrderId?: string | null
+  vendorId: string
+  collector: VatCollector
+  taxableAmount: number
+  amount: number
+  currency: string
+  remitted: boolean
+  remittedAt?: string | null
+  createdAt?: string | null
+}
+
+export interface VatLedgerSummary {
+  currency: string
+  totalCollected: number
+  totalRemitted: number
+  outstanding: number
+  entryCount: number
+  entries: VatLedgerEntry[]
+}
 
 /** A subscription tier and its pricing (from /api/vendor/plans). */
 export interface SubscriptionPlanInfo {

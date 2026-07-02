@@ -11,6 +11,8 @@ export interface Product {
   price: number
   discountPercent: number
   discountedPrice: number
+  /** VAT rate for this product as a percentage (0–100) of the discounted price; 0 = no VAT. */
+  vatRatePercent: number
   currency: string
   quantityAvailable: number
   lowStockThreshold: number

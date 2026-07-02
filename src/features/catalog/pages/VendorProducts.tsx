@@ -22,6 +22,7 @@ interface FormState {
   category: ProductCategory
   price: string
   discountPercent: string
+  vatRatePercent: string
   quantityAvailable: string
   lowStockThreshold: string
   imageUrls: string[]
@@ -44,6 +45,7 @@ const EMPTY: FormState = {
   category: 'GROCERIES',
   price: '',
   discountPercent: '0',
+  vatRatePercent: '0',
   quantityAvailable: '0',
   lowStockThreshold: '0',
   imageUrls: [],
@@ -72,6 +74,7 @@ function fromProduct(p: Product): FormState {
     category: p.category,
     price: String(p.price),
     discountPercent: String(p.discountPercent),
+    vatRatePercent: String(p.vatRatePercent ?? 0),
     quantityAvailable: String(p.quantityAvailable),
     lowStockThreshold: String(p.lowStockThreshold),
     imageUrls: p.imageUrls?.length ? p.imageUrls : p.productImageUrl ? [p.productImageUrl] : [],
@@ -263,6 +266,7 @@ function ProductForm({
       category: form.category,
       price: Number(form.price),
       discountPercent: Number(form.discountPercent) || 0,
+      vatRatePercent: Number(form.vatRatePercent) || 0,
       quantityAvailable: Number(form.quantityAvailable),
       lowStockThreshold: Number(form.lowStockThreshold),
       imageUrls: form.imageUrls,
@@ -328,6 +332,15 @@ function ProductForm({
               {Number(form.discountPercent) > 0 && Number(form.price) > 0 && (
                 <p className="mt-1 text-xs text-muted">
                   Sells for {money(Number(form.price) * (1 - Number(form.discountPercent) / 100))}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="label">VAT %</label>
+              <input className="field" type="number" step="0.01" min="0" max="100" value={form.vatRatePercent} onChange={set('vatRatePercent')} />
+              {Number(form.vatRatePercent) > 0 && Number(form.price) > 0 && (
+                <p className="mt-1 text-xs text-muted">
+                  +{money(Number(form.price) * (1 - Number(form.discountPercent) / 100) * Number(form.vatRatePercent) / 100)} VAT per item
                 </p>
               )}
             </div>

@@ -2,7 +2,7 @@ import { dateRangeQuery, query, request, upload } from '@/shared/lib/http'
 import type {
   AuthResponse, BillingStatus, BroadcastResult, CardSetupResult, ConnectStatus, CustomerSummary,
   EarningsSummary, FeaturedPlacement, FeaturedPricing, FulfillmentType, OnboardingResult, Page, Payout,
-  ShareLink, SubscriptionPlanInfo, SupportTicket, Vendor, VendorAnalytics, VendorPlan,
+  ShareLink, SubscriptionPlanInfo, SupportTicket, VatLedgerEntry, VatLedgerSummary, Vendor, VendorAnalytics, VendorPlan,
 } from '@/shared/lib/types'
 
 /** Vendor account/profile, signup, customers, analytics, earnings, support, payouts and Connect. */
@@ -45,6 +45,11 @@ export const vendorApi = {
     request<BroadcastResult>('POST', `/api/vendor/customers/broadcast${dateRangeQuery(from, to)}`, b),
   vendorEarnings: (from?: string, to?: string) =>
     request<EarningsSummary>('GET', `/api/vendor/earnings${dateRangeQuery(from, to)}`),
+  /** VAT this vendor has collected and must remit to the government. */
+  vendorVat: (from?: string, to?: string) =>
+    request<VatLedgerSummary>('GET', `/api/vendor/vat${dateRangeQuery(from, to)}`),
+  /** Mark one of the vendor's own VAT entries as remitted to the government. */
+  vendorRemitVat: (id: string) => request<VatLedgerEntry>('POST', `/api/vendor/vat/${id}/remit`),
   vendorSupportTickets: (page = 0, size = 20) =>
     request<Page<SupportTicket>>('GET', `/api/vendor/support${query({ page, size })}`),
   createSupportTicket: (b: { category: string; subject: string; message: string }) =>

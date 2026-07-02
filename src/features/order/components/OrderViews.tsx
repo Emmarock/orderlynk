@@ -63,6 +63,12 @@ export function OrderFeeBreakdown({ order }: { order: Order }) {
   return (
     <div className="space-y-2 text-sm">
       <Row label="Product subtotal" value={money(order.productSubtotal, order.currency)} />
+      {order.vatAmount > 0 && (
+        <Row
+          label={`VAT${order.vatCollector === 'PLATFORM' ? ' (collected by platform)' : ''}`}
+          value={money(order.vatAmount, order.currency)}
+        />
+      )}
       <Row label="Logistics fee" value={money(order.logisticsFee, order.currency)} />
       <Row label="Platform fee" value={money(order.platformFee, order.currency)} />
       <Row label="Processing fee" value={money(order.processingFee, order.currency)} />

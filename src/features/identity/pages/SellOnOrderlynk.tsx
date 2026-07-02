@@ -5,6 +5,7 @@ import { useAuth } from '@/shared/context/AuthContext'
 import { validateNewPassword } from '@/shared/lib/password'
 import { titleCase } from '@/shared/lib/format'
 import type { FulfillmentType } from '@/shared/lib/types'
+import type { VatCollector } from '@/features/vendor/types'
 import { CountrySelect, ErrorNote, PageLoader, PasswordChecklist, Rail, Spinner } from '@/shared/components/ui'
 import AddressAutocomplete from '@/shared/components/AddressAutocomplete'
 import { applyDialCode, countryCode, countryDialCode } from '@/shared/lib/countries'
@@ -45,6 +46,8 @@ export default function SellOnOrderLynk() {
     instagramHandle: '',
     tiktokHandle: '',
     facebookPage: '',
+    // VAT collector: the vendor collects & remits VAT by default; can switch to the platform.
+    vatCollector: 'VENDOR' as VatCollector,
   })
   const [types, setTypes] = useState<Set<FulfillmentType>>(new Set(['LOCAL_PICKUP']))
   const [error, setError] = useState<string | null>(null)
@@ -92,6 +95,7 @@ export default function SellOnOrderLynk() {
       instagramHandle: form.instagramHandle || undefined,
       tiktokHandle: form.tiktokHandle || undefined,
       facebookHandle: form.facebookPage || undefined,
+      vatCollector: form.vatCollector,
       fulfillmentTypes: Array.from(types),
     }
 
@@ -261,6 +265,31 @@ export default function SellOnOrderLynk() {
                   ))}
                 </div>
               </div>
+
+              {/* VAT collection: who remits VAT to the government for this store. */}
+              <div>
+                <label className="label">VAT collection</label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {([
+                    ['VENDOR', 'I collect & remit VAT', 'VAT is added to your payout; you remit it to the government.'],
+                    ['PLATFORM', 'Platform collects VAT', 'OrderLynk holds the VAT and remits it on your behalf.'],
+                  ] as [VatCollector, string, string][]).map(([value, label, hint]) => (
+                    <button
+                      type="button"
+                      key={value}
+                      onClick={() => setForm((f) => ({ ...f, vatCollector: value }))}
+                      className={`rounded-xl border p-3 text-left transition-colors ${
+                        form.vatCollector === value ? 'border-clay bg-clay/8' : 'border-line hover:border-ink/30'
+                      }`}
+                    >
+                      <p className="text-sm font-medium">{label}</p>
+                      <p className="mt-0.5 text-xs text-muted">{hint}</p>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-muted">You can change this later, and set a VAT rate per product.</p>
+              </div>
+
               {error && <ErrorNote message={error} />}
               <button className="btn-primary w-full" disabled={submitting || !canSubmit}>
                 {submitting ? <Spinner /> : user ? 'Submit application' : 'Create account & apply'}

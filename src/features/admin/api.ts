@@ -1,7 +1,7 @@
-import { query, request } from '@/shared/lib/http'
+import { dateRangeQuery, query, request } from '@/shared/lib/http'
 import type {
   AdminSummary, Batch, BatchSummary, Booking, FeaturedPlacement, FeeSettings, Order, Page, Payout,
-  SubscriptionInvoice, SubscriptionPlanInfo, Vendor, VendorPlan,
+  SubscriptionInvoice, SubscriptionPlanInfo, VatLedgerEntry, VatLedgerSummary, Vendor, VendorPlan,
 } from '@/shared/lib/types'
 
 /** Platform admin: vendor moderation, order/payout oversight, booking + batch management. */
@@ -30,6 +30,11 @@ export const adminApi = {
     request<Page<BatchSummary>>('GET', `/api/admin/batches${query({ page, size })}`),
   adminUpdateBatchStatus: (id: string, status: string) =>
     request<Batch>('PATCH', `/api/admin/batches/${id}/status`, { status }),
+
+  // ---- VAT ledger (platform-collected VAT to remit) ----
+  adminVat: (from?: string, to?: string) =>
+    request<VatLedgerSummary>('GET', `/api/admin/vat${dateRangeQuery(from, to)}`),
+  adminRemitVat: (id: string) => request<VatLedgerEntry>('POST', `/api/admin/vat/${id}/remit`),
 
   // ---- Fee settings (#5) ----
   adminFeeSettings: () => request<FeeSettings>('GET', '/api/admin/fee-settings'),

@@ -51,6 +51,7 @@ import AdminOrders from '@/features/admin/pages/AdminOrders'
 import AdminBookings from '@/features/admin/pages/AdminBookings'
 import AdminBatches from '@/features/admin/pages/AdminBatches'
 import AdminFeeSettings from '@/features/admin/pages/AdminFeeSettings'
+import AdminVat from '@/features/admin/pages/AdminVat'
 import AdminSubscriptions from '@/features/admin/pages/AdminSubscriptions'
 import AdminPromotions from '@/features/admin/pages/AdminPromotions'
 import NotFound from '@/shared/components/NotFound'
@@ -336,6 +337,14 @@ function MainApp() {
           element={
             <ProtectedRoute role="ADMIN">
               <AdminFeeSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/vat"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminVat />
             </ProtectedRoute>
           }
         />

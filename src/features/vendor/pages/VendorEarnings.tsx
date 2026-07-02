@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, apiMessage } from '@/shared/lib/api'
-import type { EarningsSummary } from '@/shared/lib/types'
+import type { EarningsSummary, VatLedgerSummary } from '@/shared/lib/types'
 import { formatDate, money, titleCase } from '@/shared/lib/format'
 import { ConsoleShell, StatCard, VENDOR_TABS } from '@/shared/components/Console'
 import { CopyOrderId, ErrorNote, PageLoader, PaymentBadge, Spinner } from '@/shared/components/ui'
 
 export default function VendorEarnings() {
   const [data, setData] = useState<EarningsSummary | null>(null)
+  const [vat, setVat] = useState<VatLedgerSummary | null>(null)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
+  const loadVat = () =>
+    api.vendorVat(from || undefined, to || undefined).then(setVat).catch(() => setVat(null))
+
   useEffect(() => {
     api.vendorEarnings(from || undefined, to || undefined).then(setData).catch(() => setData(null))
+    loadVat()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to])
 
   return (
@@ -59,6 +65,8 @@ export default function VendorEarnings() {
               </p>
             </dl>
           </div>
+
+          {vat && vat.entryCount > 0 && <VatLedgerCard vat={vat} onReload={loadVat} />}
 
           <InstantPayoutCard currency={data.currency} />
 
@@ -108,6 +116,70 @@ function Row({ label, value, muted, bold }: { label: string; value: string; mute
     <div className="flex items-center justify-between">
       <dt className={muted ? 'text-muted' : ''}>{label}</dt>
       <dd className={`font-mono ${bold ? 'text-base font-semibold' : ''}`}>{value}</dd>
+    </div>
+  )
+}
+
+/**
+ * VAT the vendor has collected on the platform and is responsible for remitting to the government.
+ * VAT is a pass-through tax — it is added to the vendor's payout but is not earnings; this ledger is
+ * the record of what has been collected, remitted, and what remains outstanding.
+ */
+function VatLedgerCard({ vat, onReload }: { vat: VatLedgerSummary; onReload: () => Promise<unknown> }) {
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const remit = async (id: string) => {
+    setBusyId(id)
+    try { await api.vendorRemitVat(id); await onReload() } finally { setBusyId(null) }
+  }
+  return (
+    <div className="mt-6 card p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="font-display text-lg font-semibold">VAT ledger</h2>
+        <span className="text-xs text-muted">VAT you collect on behalf of the government — remit this to the tax authority.</span>
+      </div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <StatCard label="Collected" value={money(vat.totalCollected, vat.currency)} hint={`${vat.entryCount} orders`} />
+        <StatCard label="Remitted" value={money(vat.totalRemitted, vat.currency)} />
+        <StatCard label="Outstanding" value={money(vat.outstanding, vat.currency)} hint="Yet to remit" />
+      </div>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
+            <tr>
+              <th className="py-2 pr-3">Order</th>
+              <th className="py-2 pr-3">Date</th>
+              <th className="py-2 pr-3 text-right">Taxable</th>
+              <th className="py-2 pr-3 text-right">VAT</th>
+              <th className="py-2 pr-3 text-right">Status</th>
+              <th className="py-2 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {vat.entries.slice(0, 25).map((e) => (
+              <tr key={e.id}>
+                <td className="py-2 pr-3 font-mono">{e.publicOrderId ?? e.orderId.slice(0, 8)}</td>
+                <td className="py-2 pr-3 text-muted">{e.createdAt ? formatDate(e.createdAt) : '—'}</td>
+                <td className="py-2 pr-3 text-right font-mono text-muted">{money(e.taxableAmount, e.currency)}</td>
+                <td className="py-2 pr-3 text-right font-mono font-semibold">{money(e.amount, e.currency)}</td>
+                <td className="py-2 pr-3 text-right">
+                  <span className={`chip ${e.remitted ? 'bg-forest/12 text-forest' : 'bg-clay/12 text-clay-dark'}`}>
+                    {e.remitted ? 'Remitted' : 'Outstanding'}
+                  </span>
+                </td>
+                <td className="py-2 text-right">
+                  {e.remitted ? (
+                    <span className="text-xs text-muted">{e.remittedAt ? formatDate(e.remittedAt) : '—'}</span>
+                  ) : (
+                    <button disabled={busyId === e.id} onClick={() => remit(e.id)} className="btn-quiet text-xs disabled:opacity-50">
+                      Mark remitted
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

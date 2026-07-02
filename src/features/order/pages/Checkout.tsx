@@ -533,6 +533,7 @@ export default function Checkout() {
           {quote ? (
             <div className="space-y-2 text-sm">
               <Row label="Product subtotal" value={money(quote.productSubtotal)} />
+              {quote.vatAmount > 0 && <Row label="VAT" value={money(quote.vatAmount)} />}
               <Row
                 label={
                   quote.liveShippingRate && quote.shippingCarrier
