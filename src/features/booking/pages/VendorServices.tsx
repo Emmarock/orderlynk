@@ -537,7 +537,7 @@ function TeamSection() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-xl">
           <h3 className="font-display text-lg font-semibold">Team members</h3>
-          <p className="text-sm text-muted">Add the barbers, stylists or specialists in your shop. Customers can book a specific person, and each has their own calendar.</p>
+          <p className="text-sm text-muted">Add the specialists in your shop, customers can book a specific person, and each has their own calendar.</p>
         </div>
         <button className="btn-primary" onClick={() => setEditing('new')}>+ Add member</button>
       </div>
