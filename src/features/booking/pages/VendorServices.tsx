@@ -12,6 +12,7 @@ import type {
   ServiceOffering,
   ServiceProviderProfile,
   ServiceVariant,
+  StaffMember,
 } from '@/shared/lib/types'
 import { usePagedList } from '@/shared/lib/usePagedList'
 import { money, titleCase, formatDay, formatTime } from '@/shared/lib/format'
@@ -63,15 +64,15 @@ const KNOWN_TIMEZONES = TIMEZONE_GROUPS.flatMap((g) => g.zones.map((z) => z.id))
 const num = (v: string): number => (v.trim() === '' || Number.isNaN(Number(v)) ? 0 : Number(v))
 const numOrNull = (v: string): number | null => (v.trim() === '' ? null : num(v))
 
-type Section = 'catalog' | 'availability' | 'settings'
+type Section = 'catalog' | 'team' | 'availability' | 'settings'
 
 export default function VendorServices() {
   const [section, setSection] = useState<Section>('catalog')
 
   return (
-    <ConsoleShell title="Services" subtitle="Your bookable service menu, availability and policies" tabs={VENDOR_TABS}>
+    <ConsoleShell title="Services" subtitle="Your bookable service menu, team, availability and policies" tabs={VENDOR_TABS}>
       <div className="mb-6 inline-flex rounded-xl border border-line bg-cream p-1">
-        {(['catalog', 'availability', 'settings'] as Section[]).map((s) => (
+        {(['catalog', 'team', 'availability', 'settings'] as Section[]).map((s) => (
           <button
             key={s}
             onClick={() => setSection(s)}
@@ -84,6 +85,7 @@ export default function VendorServices() {
         ))}
       </div>
       {section === 'catalog' && <CatalogSection />}
+      {section === 'team' && <TeamSection />}
       {section === 'availability' && <AvailabilitySection />}
       {section === 'settings' && <SettingsSection />}
     </ConsoleShell>
@@ -507,31 +509,255 @@ function VariantEditor({ serviceId, variants, onChange }: { serviceId: string; v
   )
 }
 
+// ============================= Team members =============================
+
+function TeamSection() {
+  const [staff, setStaff] = useState<StaffMember[] | null>(null)
+  const [services, setServices] = useState<ServiceOffering[]>([])
+  const [editing, setEditing] = useState<StaffMember | 'new' | null>(null)
+  const [calendarFor, setCalendarFor] = useState<string | null>(null)
+
+  const load = () => { api.vendorStaff().then(setStaff).catch(() => setStaff([])) }
+  useEffect(() => {
+    load()
+    api.vendorServices(0, 100).then((p) => setServices(p.content)).catch(() => setServices([]))
+  }, [])
+
+  if (staff === null) return <PageLoader />
+
+  const serviceName = (id: string) => services.find((s) => s.id === id)?.name ?? 'a service'
+  const remove = (m: StaffMember) => {
+    if (window.confirm(`Remove ${m.name} from your team? Their upcoming appointments keep their name.`)) {
+      api.deleteStaff(m.id).then(load)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-xl">
+          <h3 className="font-display text-lg font-semibold">Team members</h3>
+          <p className="text-sm text-muted">Add the barbers, stylists or specialists in your shop. Customers can book a specific person, and each has their own calendar.</p>
+        </div>
+        <button className="btn-primary" onClick={() => setEditing('new')}>+ Add member</button>
+      </div>
+
+      {staff.length === 0 ? (
+        <EmptyState
+          title="No team members yet"
+          hint="Add your workers so customers can pick and book their preferred one."
+          action={<button className="btn-primary" onClick={() => setEditing('new')}>Add a member</button>}
+        />
+      ) : (
+        <div className="space-y-3">
+          {staff.map((m) => (
+            <div key={m.id} className="card p-4">
+              <div className="flex items-start gap-3">
+                {m.photoUrl ? (
+                  <img src={m.photoUrl} alt={m.name} className="h-12 w-12 shrink-0 rounded-full object-cover" />
+                ) : (
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink text-cream">{m.name.charAt(0)}</span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{m.name}</p>
+                    {!m.active && <span className="chip bg-ink/8 text-muted">Hidden</span>}
+                    {m.active && !m.acceptsBookings && <span className="chip bg-clay/12 text-clay-dark">Not bookable</span>}
+                  </div>
+                  {m.title && <p className="text-xs uppercase tracking-wider text-muted">{m.title}</p>}
+                  <p className="mt-1 text-sm text-muted">
+                    {m.serviceIds.length === 0 ? 'Offers all services' : m.serviceIds.map(serviceName).join(', ')}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1.5 text-sm">
+                  <button className="text-ink hover:underline" onClick={() => setEditing(m)}>Edit</button>
+                  <button className="text-ink hover:underline" onClick={() => setCalendarFor(calendarFor === m.id ? null : m.id)}>
+                    {calendarFor === m.id ? 'Hide calendar' : 'Calendar'}
+                  </button>
+                  <button className="text-clay hover:text-clay-dark" onClick={() => remove(m)}>Remove</button>
+                </div>
+              </div>
+              {calendarFor === m.id && (
+                <div className="mt-4 border-t border-line pt-4">
+                  <p className="mb-3 text-sm text-muted">
+                    {m.name}'s working hours and time off. Leave hours empty to inherit the shop's hours.
+                  </p>
+                  <AvailabilityEditor staffId={m.id} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editing && (
+        <StaffForm
+          initial={editing === 'new' ? null : editing}
+          services={services}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); load() }}
+        />
+      )}
+    </div>
+  )
+}
+
+function StaffForm({ initial, services, onClose, onSaved }: {
+  initial: StaffMember | null
+  services: ServiceOffering[]
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [name, setName] = useState(initial?.name ?? '')
+  const [title, setTitle] = useState(initial?.title ?? '')
+  const [bio, setBio] = useState(initial?.bio ?? '')
+  const [photoUrl, setPhotoUrl] = useState(initial?.photoUrl ?? '')
+  const [acceptsBookings, setAcceptsBookings] = useState(initial?.acceptsBookings ?? true)
+  const [active, setActive] = useState(initial?.active ?? true)
+  // Empty set = offers all services.
+  const [serviceIds, setServiceIds] = useState<string[]>(initial?.serviceIds ?? [])
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const toggleService = (id: string) =>
+    setServiceIds((ids) => ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])
+
+  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploading(true); setError(null)
+    try {
+      const { url } = await api.uploadStaffImage(file)
+      setPhotoUrl(url)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not upload photo')
+    } finally { setUploading(false) }
+  }
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true); setError(null)
+    const body = {
+      name, title: title || undefined, bio: bio || undefined, photoUrl: photoUrl || undefined,
+      acceptsBookings, active, serviceIds,
+    }
+    try {
+      if (initial) await api.updateStaff(initial.id, body)
+      else await api.createStaff(body)
+      onSaved()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not save team member')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="card max-h-[90vh] w-full max-w-lg overflow-auto p-6" onClick={(e) => e.stopPropagation()}>
+        <h2 className="font-display text-xl font-semibold">{initial ? 'Edit team member' : 'New team member'}</h2>
+        <form onSubmit={submit} className="mt-4 space-y-4">
+          <div className="flex items-center gap-4">
+            {photoUrl ? (
+              <img src={photoUrl} alt={name} className="h-16 w-16 rounded-full object-cover" />
+            ) : (
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-sand text-2xl text-muted">{name.charAt(0) || '?'}</span>
+            )}
+            <label className="btn-ghost cursor-pointer">
+              {uploading ? <Spinner /> : photoUrl ? 'Change photo' : 'Upload photo'}
+              <input type="file" accept="image/*" className="hidden" onChange={pickImage} disabled={uploading} />
+            </label>
+            {photoUrl && <button type="button" className="text-sm text-clay hover:text-clay-dark" onClick={() => setPhotoUrl('')}>Remove</button>}
+          </div>
+
+          <div>
+            <label className="label">Name</label>
+            <input className="field" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ada" />
+          </div>
+          <div>
+            <label className="label">Title (optional)</label>
+            <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Senior Barber" />
+          </div>
+          <div>
+            <label className="label">Bio (optional)</label>
+            <textarea className="field min-h-16" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="A short intro customers will see." />
+          </div>
+
+          <div className="rounded-xl border border-line bg-sand/40 p-4">
+            <p className="label !mb-2">Services this member offers</p>
+            {services.length === 0 ? (
+              <p className="text-sm text-muted">Add services first, then choose which ones this member offers.</p>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  {services.map((s) => (
+                    <label key={s.id} className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" className="h-4 w-4 accent-clay" checked={serviceIds.includes(s.id)} onChange={() => toggleService(s.id)} />
+                      <span>{s.name}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted">Leave all unchecked to offer every service.</p>
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" className="h-4 w-4 accent-clay" checked={acceptsBookings} onChange={(e) => setAcceptsBookings(e.target.checked)} />
+              <span>Bookable by customers</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" className="h-4 w-4 accent-clay" checked={active} onChange={(e) => setActive(e.target.checked)} />
+              <span>Shown on storefront</span>
+            </label>
+          </div>
+
+          {error && <ErrorNote message={error} />}
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
+            <button className="btn-primary" disabled={saving || uploading || !name.trim()}>{saving ? <Spinner /> : 'Save'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ============================= Availability =============================
 
 function AvailabilitySection() {
+  return <AvailabilityEditor />
+}
+
+/**
+ * Working-hours + blocked-dates editor. With no {@code staffId} it edits the shop-wide calendar;
+ * pass a worker's id to edit that team member's personal hours and time off (reused by the Team tab).
+ */
+function AvailabilityEditor({ staffId }: { staffId?: string }) {
   const [rules, setRules] = useState<AvailabilityRule[] | null>(null)
   const [blocks, setBlocks] = useState<BlockedSlot[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = () => {
-    api.availabilityRules().then(setRules).catch(() => setRules([]))
-    api.blockedSlots().then(setBlocks).catch(() => setBlocks([]))
+    api.availabilityRules(staffId).then(setRules).catch(() => setRules([]))
+    api.blockedSlots(staffId).then(setBlocks).catch(() => setBlocks([]))
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [staffId])
 
   if (rules === null || blocks === null) return <PageLoader />
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <RuleCard rules={rules} onChanged={load} setError={setError} />
-      <BlockCard blocks={blocks} onChanged={load} />
+      <RuleCard rules={rules} staffId={staffId} onChanged={load} setError={setError} />
+      <BlockCard blocks={blocks} staffId={staffId} onChanged={load} />
       {error && <div className="lg:col-span-2"><ErrorNote message={error} /></div>}
     </div>
   )
 }
 
-function RuleCard({ rules, onChanged, setError }: { rules: AvailabilityRule[]; onChanged: () => void; setError: (s: string | null) => void }) {
+function RuleCard({ rules, staffId, onChanged, setError }: { rules: AvailabilityRule[]; staffId?: string; onChanged: () => void; setError: (s: string | null) => void }) {
   const [day, setDay] = useState<DayOfWeek>('MONDAY')
   const [start, setStart] = useState('09:00')
   const [end, setEnd] = useState('17:00')
@@ -542,6 +768,7 @@ function RuleCard({ rules, onChanged, setError }: { rules: AvailabilityRule[]; o
     setBusy(true); setError(null)
     try {
       await api.addAvailabilityRule({
+        staffId: staffId || undefined,
         dayOfWeek: day, startTime: start, endTime: end, capacity: numOrNull(capacity), active: true,
       })
       setCapacity('')
@@ -572,14 +799,15 @@ function RuleCard({ rules, onChanged, setError }: { rules: AvailabilityRule[]; o
         </div>
         <div><label className="label">From</label><input className="field" type="time" value={start} onChange={(e) => setStart(e.target.value)} /></div>
         <div><label className="label">To</label><input className="field" type="time" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
-        <div><label className="label">Capacity (optional)</label><input className="field" type="number" min="1" placeholder="default" value={capacity} onChange={(e) => setCapacity(e.target.value)} /></div>
+        {/* Per-worker slots are always one-at-a-time; capacity only applies to shop-wide hours. */}
+        {!staffId && <div><label className="label">Capacity (optional)</label><input className="field" type="number" min="1" placeholder="default" value={capacity} onChange={(e) => setCapacity(e.target.value)} /></div>}
         <div className="flex items-end"><button className="btn-primary w-full" onClick={add} disabled={busy || !start || !end}>{busy ? <Spinner /> : 'Add hours'}</button></div>
       </div>
     </div>
   )
 }
 
-function BlockCard({ blocks, onChanged }: { blocks: BlockedSlot[]; onChanged: () => void }) {
+function BlockCard({ blocks, staffId, onChanged }: { blocks: BlockedSlot[]; staffId?: string; onChanged: () => void }) {
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [reason, setReason] = useState('')
@@ -591,6 +819,7 @@ function BlockCard({ blocks, onChanged }: { blocks: BlockedSlot[]; onChanged: ()
     setBusy(true); setError(null)
     try {
       await api.addBlockedSlot({
+        staffId: staffId || undefined,
         startDatetime: new Date(start).toISOString(), endDatetime: new Date(end).toISOString(), reason: reason || undefined,
       })
       setStart(''); setEnd(''); setReason('')

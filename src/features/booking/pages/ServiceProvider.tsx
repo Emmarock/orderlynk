@@ -95,6 +95,29 @@ export default function ServiceProvider() {
           )}
         </div>
 
+        {store.staff.length > 0 && (
+          <div className="pb-4">
+            <SectionTitle title="Our team" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {store.staff.map((m) => (
+                <div key={m.id} className="card flex items-start gap-3 p-4">
+                  {m.photoUrl ? (
+                    <img src={m.photoUrl} alt={m.name} className="h-14 w-14 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-ink text-lg text-cream">{m.name.charAt(0)}</span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-display font-semibold">{m.name}</p>
+                    {m.title && <p className="text-xs uppercase tracking-wider text-muted">{m.title}</p>}
+                    {m.bio && <p className="mt-1 text-sm text-muted">{m.bio}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-sm text-muted">Choose your preferred team member when you book a service.</p>
+          </div>
+        )}
+
         {store.reviews.length > 0 && (
           <div className="pb-16">
             <SectionTitle title="Reviews" />
@@ -161,6 +184,12 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
   const [paid, setPaid] = useState(false)
   // For HYBRID providers the customer chooses where the service happens; default to the provider.
   const [atCustomer, setAtCustomer] = useState(false)
+  // Team members who can perform this service ('' = "any available", the shop auto-assigns one).
+  const teamForService = useMemo(
+    () => store.staff.filter((m) => m.serviceIds.length === 0 || m.serviceIds.includes(service.id)),
+    [store.staff, service.id],
+  )
+  const [staffId, setStaffId] = useState('')
   // Sub-services: when the service defines variants the customer must pick one; it sets the base price.
   const activeVariants = useMemo(() => (service.variants ?? []).filter((v) => v.active), [service.variants])
   const [variantId, setVariantId] = useState(activeVariants[0]?.id ?? '')
@@ -176,7 +205,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
   useEffect(() => {
     let cancelled = false
     setSlots(null); setSlot(null); setSlotsError(false)
-    api.bookingAvailability(service.id, date)
+    api.bookingAvailability(service.id, date, staffId || undefined)
       .then((d) => {
         if (cancelled) return
         // No openings on this date — quietly roll forward to the next day until we find some.
@@ -195,7 +224,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
         setSlotsError(true)
       })
     return () => { cancelled = true }
-  }, [service.id, date, maxScanDays])
+  }, [service.id, date, maxScanDays, staffId])
 
   const estimate = useMemo(() => {
     let price = basePrice
@@ -224,6 +253,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
         vendorId: store.vendorId,
         serviceId: service.id,
         serviceVariantId: variant ? variant.id : undefined,
+        staffId: staffId || undefined,
         customerName: name,
         customerPhone: phone,
         customerEmail: email || undefined,
@@ -259,6 +289,7 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
             <p className="mt-1 text-muted">Reference <span className="font-mono">{confirmed.publicBookingId}</span></p>
             <div className="mt-4 rounded-xl border border-line bg-sand/40 p-4 text-left text-sm">
               <p>{service.name}{confirmed.variantName ? ` — ${confirmed.variantName}` : ''} · {formatDay(confirmed.appointmentStart)}, {formatTime(confirmed.appointmentStart)}</p>
+              {confirmed.staffName && <p className="mt-1 text-muted">with {confirmed.staffName}</p>}
               <p className="mt-1 text-muted">Total {money(confirmed.totalAmount, confirmed.currency)}</p>
               {confirmed.status === 'REQUESTED' && <p className="mt-2">We've sent your request to {store.businessName}. You'll hear back once it's approved.</p>}
               {confirmed.status === 'DEPOSIT_PENDING' && !paid && <p className="mt-2">Please pay the {money(confirmed.depositAmount, confirmed.currency)} deposit to lock your time.</p>}
@@ -336,6 +367,25 @@ function BookingModal({ store, service, onClose }: { store: ServiceStorefront; s
                     </label>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {teamForService.length > 0 && (
+              <div>
+                <label className="label">Team member</label>
+                <div className="flex flex-wrap gap-2">
+                  {[{ id: '', name: 'Any available', title: undefined as string | undefined }, ...teamForService].map((m) => (
+                    <button
+                      type="button"
+                      key={m.id || 'any'}
+                      onClick={() => { auto.current = { active: true, tries: 0 }; setDate(todayISO()); setStaffId(m.id) }}
+                      className={`chip ${staffId === m.id ? 'bg-ink text-cream' : 'bg-ink/8 text-ink hover:bg-sand'}`}
+                    >
+                      {m.name}{m.title ? ` · ${m.title}` : ''}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-muted">Times below are {staffId ? 'this team member’s' : 'the first available team member’s'} openings.</p>
               </div>
             )}
 

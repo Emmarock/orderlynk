@@ -115,9 +115,26 @@ export interface ServiceOffering {
   addOns: ServiceAddOn[]
 }
 
+/** A team member / worker at a provider (e.g. a specific barber or braider). */
+export interface StaffMember {
+  id: string
+  vendorId: string
+  name: string
+  title?: string
+  bio?: string
+  photoUrl?: string
+  active: boolean
+  acceptsBookings: boolean
+  displayOrder: number
+  /** Service ids this worker offers; empty = offers all of the shop's services. */
+  serviceIds: string[]
+}
+
 export interface AvailabilityRule {
   id: string
   vendorId: string
+  /** Worker these hours belong to; null/absent = shop-wide hours. */
+  staffId?: string | null
   dayOfWeek: DayOfWeek
   startTime: string
   endTime: string
@@ -130,6 +147,8 @@ export interface AvailabilityRule {
 export interface BlockedSlot {
   id: string
   vendorId: string
+  /** Worker this block belongs to; null/absent = shop-wide block. */
+  staffId?: string | null
   startDatetime: string
   endDatetime: string
   reason?: string
@@ -190,6 +209,9 @@ export interface Booking {
   serviceName: string
   serviceVariantId?: string | null
   variantName?: string | null
+  /** Assigned team member, when the customer picked (or was auto-assigned) a specific worker. */
+  staffId?: string | null
+  staffName?: string | null
   addOns: BookingAddOn[]
   appointmentStart: string
   appointmentEnd: string
@@ -265,5 +287,7 @@ export interface ServiceStorefront {
   rating?: number | null
   ratingCount: number
   services: ServiceOffering[]
+  /** Bookable team members customers can choose from. */
+  staff: StaffMember[]
   reviews: Review[]
 }

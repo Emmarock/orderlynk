@@ -105,7 +105,7 @@ export default function VendorBookings() {
                 <tr key={b.id} className="cursor-pointer hover:bg-sand/40" onClick={() => setSelected(b)}>
                   <td className="px-5 py-3 font-mono text-xs">{b.publicBookingId}</td>
                   <td className="px-5 py-3 font-medium">{b.customerName}</td>
-                  <td className="px-5 py-3 text-muted">{b.serviceName}{b.variantName ? ` — ${b.variantName}` : ''}</td>
+                  <td className="px-5 py-3 text-muted">{b.serviceName}{b.variantName ? ` — ${b.variantName}` : ''}{b.staffName && <span className="block text-xs text-muted">with {b.staffName}</span>}</td>
                   <td className="px-5 py-3">{formatDay(b.appointmentStart)}<span className="block text-xs text-muted">{formatTime(b.appointmentStart)}</span></td>
                   <td className="px-5 py-3"><BookingBadge status={b.status} /></td>
                   <td className="px-5 py-3"><PaymentBadge status={b.paymentStatus} /></td>
@@ -330,6 +330,7 @@ function BookingDetail({ booking, onClose, onChanged, alternativePayments }: { b
           <div><dt className="text-muted">Contact</dt><dd>{booking.customerPhone}{booking.customerEmail ? ` · ${booking.customerEmail}` : ''}</dd></div>
           <div><dt className="text-muted">When</dt><dd>{formatDay(booking.appointmentStart)}, {formatTime(booking.appointmentStart)}–{formatTime(booking.appointmentEnd)}</dd></div>
           <div><dt className="text-muted">Approval</dt><dd>{titleCase(booking.approvalMode)}</dd></div>
+          {booking.staffName && <div><dt className="text-muted">Team member</dt><dd className="font-medium">{booking.staffName}</dd></div>}
           {booking.locationType === 'CUSTOMER_LOCATION' && (booking.customerStreet || booking.customerCity) && (
             <div className="col-span-2"><dt className="text-muted">Address</dt><dd>{[booking.customerHouseNumber, booking.customerStreet, booking.customerCity, booking.customerState, booking.customerPostcode].filter(Boolean).join(', ')}</dd></div>
           )}
