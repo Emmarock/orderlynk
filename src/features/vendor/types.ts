@@ -45,6 +45,10 @@ export interface Vendor {
   alternativePaymentsEnabled: boolean
   chatOrderEnabled: boolean
   featured: boolean
+  /** Whether the owner account's email is verified (absent on public views). */
+  emailVerified?: boolean
+  /** Whether the vendor has verified their WhatsApp number. */
+  whatsappVerified: boolean
 }
 
 export interface RatingSummary {

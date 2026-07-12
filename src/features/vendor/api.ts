@@ -29,6 +29,9 @@ export const vendorApi = {
   applyVendor: (b: unknown) => request<{ token: string; vendor: Vendor }>('POST', '/api/vendor/apply', b),
   myVendor: () => request<Vendor>('GET', '/api/vendor/me'),
   updateVendor: (b: unknown) => request<Vendor>('PUT', '/api/vendor/me', b),
+  // WhatsApp number verification (required, with email, before an admin can approve the vendor).
+  sendWhatsappCode: () => request<void>('POST', '/api/vendor/whatsapp/send-code'),
+  verifyWhatsapp: (code: string) => request<Vendor>('POST', '/api/vendor/whatsapp/verify', { code }),
   shareLink: (source?: string, campaign?: string) => {
     const qs = new URLSearchParams()
     if (source) qs.set('source', source)

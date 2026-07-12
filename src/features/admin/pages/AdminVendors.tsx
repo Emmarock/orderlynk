@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { api } from '@/shared/lib/api'
+import { api, apiMessage } from '@/shared/lib/api'
 import type { Vendor, VendorStatus } from '@/shared/lib/types'
 import { usePagedList } from '@/shared/lib/usePagedList'
 import { titleCase } from '@/shared/lib/format'
 import { ADMIN_TABS, ConsoleShell } from '@/shared/components/Console'
-import { EmptyState, LoadMore, PageLoader } from '@/shared/components/ui'
+import { EmptyState, ErrorNote, LoadMore, PageLoader } from '@/shared/components/ui'
 
 const FILTERS: (VendorStatus | 'ALL')[] = ['ALL', 'SUBMITTED', 'APPROVED', 'REJECTED', 'SUSPENDED']
 
@@ -18,6 +18,7 @@ function statusTone(s: VendorStatus): string {
 export default function AdminVendors() {
   const [filter, setFilter] = useState<VendorStatus | 'ALL'>('ALL')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Status filter is server-side now: it composes with pagination so "Approved" pages through
   // every approved vendor, not just the ones already loaded.
@@ -29,9 +30,14 @@ export default function AdminVendors() {
 
   const act = async (id: string, fn: (id: string) => Promise<Vendor>) => {
     setBusyId(id)
+    setError(null)
     try {
       await fn(id)
       reload()
+    } catch (e) {
+      // Surface backend guards (e.g. "vendor must verify their email address and WhatsApp number")
+      // instead of failing silently.
+      setError(apiMessage(e, 'Action failed'))
     } finally {
       setBusyId(null)
     }
@@ -59,6 +65,7 @@ export default function AdminVendors() {
         </div>
       }
     >
+      {error && <div className="mb-4"><ErrorNote message={error} /></div>}
       {filtered.length === 0 ? (
         <EmptyState title="No vendors" hint="No vendors match this filter." />
       ) : (
@@ -75,7 +82,13 @@ export default function AdminVendors() {
                   {v.whatsappNumber ? ` · ${v.whatsappNumber}` : ''}
                 </p>
                 {v.description && <p className="mt-1 max-w-xl text-sm text-muted">{v.description}</p>}
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className={`chip ${v.emailVerified ? 'bg-forest/12 text-forest' : 'bg-clay/12 text-clay-dark'}`}>
+                    {v.emailVerified ? 'Email ✓' : 'Email unverified'}
+                  </span>
+                  <span className={`chip ${v.whatsappVerified ? 'bg-forest/12 text-forest' : 'bg-clay/12 text-clay-dark'}`}>
+                    {v.whatsappVerified ? 'WhatsApp ✓' : 'WhatsApp unverified'}
+                  </span>
                   <span className={`chip ${v.alternativePaymentsEnabled ? 'bg-forest/12 text-forest' : 'bg-ink/8 text-muted'}`}>
                     {v.alternativePaymentsEnabled ? 'Card + transfers' : 'Card only'}
                   </span>

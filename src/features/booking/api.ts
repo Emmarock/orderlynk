@@ -19,6 +19,12 @@ export const bookingApi = {
   payBooking: (publicBookingId: string, contact?: string) =>
     request<PaymentInit>('POST', `/api/bookings/${publicBookingId}/pay`, { contact }),
   myBookings: (page = 0, size = 20) => request<Page<Booking>>('GET', `/api/bookings/mine${query({ page, size })}`),
+  // Customer self-service: cancel or reschedule up to 12h before the appointment. `contact` authenticates
+  // a guest booking (omit it when the customer is signed in).
+  customerCancelBooking: (publicBookingId: string, reason?: string, contact?: string) =>
+    request<Booking>('POST', `/api/bookings/${publicBookingId}/cancel${query({ contact })}`, { reason }),
+  customerRescheduleBooking: (publicBookingId: string, appointmentStart: string, contact?: string) =>
+    request<Booking>('POST', `/api/bookings/${publicBookingId}/reschedule${query({ contact })}`, { appointmentStart }),
   reviewBooking: (publicBookingId: string, b: { rating: number; comment?: string }, contact?: string) =>
     request<Review>('POST', `/api/bookings/${publicBookingId}/review${contact ? `?contact=${encodeURIComponent(contact)}` : ''}`, b),
 

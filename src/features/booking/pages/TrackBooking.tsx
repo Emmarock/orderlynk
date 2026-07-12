@@ -4,6 +4,7 @@ import type { Booking } from '@/shared/lib/types'
 import { money, formatDay, formatTime } from '@/shared/lib/format'
 import { BookingBadge, ErrorNote, PaymentBadge, SectionTitle, Spinner } from '@/shared/components/ui'
 import { BookingPayment } from '@/features/booking/components/BookingPayment'
+import CustomerBookingActions from '@/features/booking/components/CustomerBookingActions'
 import { stripePromise } from '@/shared/lib/stripe'
 import type { PaymentInit } from '@/shared/lib/types'
 
@@ -59,6 +60,7 @@ export default function TrackBooking() {
 
           <PayablePanel booking={booking} contact={contact} onPaid={() => api.trackBooking(booking.publicBookingId, contact).then(setBooking).catch(() => {})} />
 
+          <CustomerBookingActions booking={booking} contact={contact} onChange={setBooking} />
 
           {reviewable && (
             booking.review

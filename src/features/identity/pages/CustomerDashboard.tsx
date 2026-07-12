@@ -7,6 +7,7 @@ import { cargoTone, formatDate, money, titleCase } from '@/shared/lib/format'
 import { usePagedList } from '@/shared/lib/usePagedList'
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 import { BookingBadge, EmptyState, ErrorNote, LoadMore, PageLoader, PaymentBadge, Rail } from '@/shared/components/ui'
+import CustomerBookingActions from '@/features/booking/components/CustomerBookingActions'
 
 /**
  * Customer hub: a single place to see everything they've transacted on OrderLynk — product orders,
@@ -76,13 +77,7 @@ export default function CustomerDashboard() {
             <Section title="Service bookings" subtitle="Appointments you've booked." count={bookings.total} error={bookings.error}
               footer={<LoadMore shown={bookings.items.length} total={bookings.total} hasNext={bookings.hasNext} loading={bookings.loadingMore} onLoadMore={bookings.loadMore} />}>
               {bookings.items.map((b) => (
-                <Row
-                  key={b.id}
-                  id={b.publicBookingId}
-                  subtitle={`${b.serviceName} · ${b.vendorName} · ${formatDate(b.appointmentStart)}`}
-                  badges={<><BookingBadge status={b.status} /><PaymentBadge status={b.paymentStatus} /></>}
-                  amount={money(b.totalAmount, b.currency)}
-                />
+                <BookingRow key={b.id} booking={b} onChanged={bookings.reload} />
               ))}
             </Section>
 
@@ -130,6 +125,26 @@ function StatCard({ label, value }: { label: string; value: number }) {
 /** Batch/cargo status chip (no shared badge component exists for cargo statuses). */
 function CargoBadge({ status }: { status: string }) {
   return <span className={`chip ${cargoTone(status)}`}>{titleCase(status)}</span>
+}
+
+/**
+ * A booking row with inline self-service actions: cancel or reschedule up to 12h before the
+ * appointment (the actions render themselves only while the booking is still changeable).
+ */
+function BookingRow({ booking: b, onChanged }: { booking: Booking; onChanged: () => void }) {
+  return (
+    <div className="-mx-2 px-2 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-mono text-sm font-semibold">{b.publicBookingId}</p>
+          <p className="truncate text-xs text-muted">{b.serviceName} · {b.vendorName} · {formatDate(b.appointmentStart)}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5"><BookingBadge status={b.status} /><PaymentBadge status={b.paymentStatus} /></div>
+        <span className="font-mono text-sm font-semibold">{money(b.totalAmount, b.currency)}</span>
+      </div>
+      <CustomerBookingActions booking={b} onChange={onChanged} />
+    </div>
+  )
 }
 
 /** A section card; renders nothing when the customer has none of this kind. */

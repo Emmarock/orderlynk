@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '@/shared/lib/api'
+import { api, apiMessage } from '@/shared/lib/api'
 import type { AdminSummary, Order } from '@/shared/lib/types'
 import { money, titleCase } from '@/shared/lib/format'
 import { ADMIN_TABS, ConsoleShell, StatCard } from '@/shared/components/Console'
-import { CopyOrderId, PageLoader } from '@/shared/components/ui'
+import { CopyOrderId, ErrorNote, PageLoader } from '@/shared/components/ui'
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 
 export default function AdminDashboard() {
@@ -12,8 +12,23 @@ export default function AdminDashboard() {
   const [summary, setSummary] = useState<AdminSummary | null>(null)
   // Recent-orders list only — its newest-first first page is correct for the preview.
   const [orders, setOrders] = useState<Order[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
 
   const loadSummary = () => api.adminSummary().then(setSummary).catch(() => setSummary(null))
+
+  const approve = async (id: string) => {
+    setBusyId(id); setError(null)
+    try {
+      await api.approveVendor(id)
+      await loadSummary()
+    } catch (e) {
+      // Show the backend guard (unverified email / WhatsApp) rather than doing nothing.
+      setError(apiMessage(e, 'Could not approve vendor'))
+    } finally {
+      setBusyId(null)
+    }
+  }
 
   useEffect(() => {
     loadSummary()
@@ -39,15 +54,24 @@ export default function AdminDashboard() {
             <h2 className="font-display text-xl font-semibold">Awaiting approval</h2>
             <Link to="/admin/vendors" className="link-underline text-sm">Manage</Link>
           </div>
+          {error && <div className="mt-4"><ErrorNote message={error} /></div>}
           <div className="mt-4 divide-y divide-line">
             {pending.length === 0 && <p className="py-6 text-sm text-muted">No vendors awaiting review.</p>}
             {pending.map((v) => (
-              <div key={v.id} className="flex items-center justify-between py-3">
-                <div>
+              <div key={v.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
                   <p className="font-medium">{v.businessName}</p>
                   <p className="text-xs text-muted">{v.city ?? '—'} · {titleCase(v.verificationStatus)}</p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    <span className={`chip ${v.emailVerified ? 'bg-forest/12 text-forest' : 'bg-clay/12 text-clay-dark'}`}>
+                      {v.emailVerified ? 'Email ✓' : 'Email ✗'}
+                    </span>
+                    <span className={`chip ${v.whatsappVerified ? 'bg-forest/12 text-forest' : 'bg-clay/12 text-clay-dark'}`}>
+                      {v.whatsappVerified ? 'WhatsApp ✓' : 'WhatsApp ✗'}
+                    </span>
+                  </div>
                 </div>
-                <button className="btn-forest px-4 py-1.5" onClick={() => api.approveVendor(v.id).then(loadSummary)}>
+                <button className="btn-forest px-4 py-1.5" disabled={busyId === v.id} onClick={() => approve(v.id)}>
                   Approve
                 </button>
               </div>

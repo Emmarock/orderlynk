@@ -7,6 +7,7 @@ import { ConsoleShell, StatCard, VENDOR_TABS } from '@/shared/components/Console
 import { OrderStatusRow } from '@/features/order/components/OrderViews'
 import { CopyOrderId, PageLoader, Rail } from '@/shared/components/ui'
 import FeaturedPromoCard from '@/features/vendor/components/FeaturedPromoCard'
+import VendorVerificationCard from '@/features/vendor/components/VendorVerificationCard'
 
 const SOURCES = ['whatsapp', 'tiktok', 'facebook', 'instagram', 'marketplace', 'vendor_link']
 
@@ -94,10 +95,19 @@ export default function VendorDashboard() {
         </Link>
       }
     >
+      {(vendor.emailVerified === false || !vendor.whatsappVerified) && (
+        <div className="mb-6">
+          <VendorVerificationCard vendor={vendor} onChange={setVendor} />
+        </div>
+      )}
+
       {vendor.verificationStatus !== 'APPROVED' && (
         <div className="mb-6 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
           Your store is <strong>{titleCase(vendor.verificationStatus)}</strong>. It becomes public and can
-          take orders once an admin approves it.
+          take orders once an admin approves it
+          {vendor.emailVerified === false || !vendor.whatsappVerified
+            ? ' — verify your email and WhatsApp number above first.'
+            : '.'}
         </div>
       )}
 
