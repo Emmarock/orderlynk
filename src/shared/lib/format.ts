@@ -25,8 +25,12 @@ export function money(amount: number, currency = 'CAD'): string {
 }
 
 /** Turns ENUM_CASE into Title Case. */
-export function titleCase(value: string): string {
-  return value
+export function titleCase(value: string | null | undefined): string {
+  // A display formatter must never throw the app down on a missing/malformed
+  // value — several callers pass fields straight off an API response (e.g. a
+  // vendor's verificationStatus) that can be absent.
+  if (!value) return ''
+  return String(value)
     .toLowerCase()
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))

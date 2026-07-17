@@ -1,8 +1,9 @@
 import { type ReactNode } from 'react'
 import { motion } from 'framer-motion'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useCart } from '@/shared/context/CartContext'
+import ErrorBoundary from './ErrorBoundary'
 import { Logo, Rail, ThemeToggle } from './ui'
 
 function CartButton() {
@@ -32,6 +33,7 @@ function CartButton() {
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   // Logged-in customers get their own orders hub; admins/vendors get their console.
   const dashboardLink =
@@ -100,7 +102,13 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      {/* Contain page-level render crashes to the content area and reset on
+          navigation: the header/footer stay interactive, and clicking any link
+          (which changes pathname) remounts a fresh boundary so a crashed page
+          recovers without a manual URL refresh. */}
+      <main className="flex-1">
+        <ErrorBoundary key={pathname}>{children}</ErrorBoundary>
+      </main>
 
       <footer className="mt-20 border-t border-line bg-cream">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 md:grid-cols-4">

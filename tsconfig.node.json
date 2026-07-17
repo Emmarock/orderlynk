@@ -5,7 +5,13 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    // This project only exists to type-check vite.config.ts. Composite projects
+    // must emit, so send the emitted .js/.d.ts and build info to a gitignored
+    // temp dir instead of polluting the repo root (which used to leave a stale
+    // compiled vite.config.js that shadowed the .ts as Vite's actual config).
+    "outDir": "./node_modules/.tmp/tsconfig-node",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig-node/tsconfig.node.tsbuildinfo"
   },
   "include": ["vite.config.ts"]
 }
