@@ -49,6 +49,8 @@ export interface Vendor {
   emailVerified?: boolean
   /** Whether the vendor has verified their WhatsApp number. */
   whatsappVerified: boolean
+  /** Whether the business address is a complete pickup address (every field a carrier needs to ship). */
+  addressShippable: boolean
 }
 
 export interface RatingSummary {
