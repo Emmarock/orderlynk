@@ -31,20 +31,21 @@ export function OrderTimeline({ order }: { order: Order }) {
       {flow.map((step, i) => {
         const done = i < currentIdx
         const current = i === currentIdx
+        const next = i === currentIdx + 1
         return (
           <li key={step} className="relative pb-6 pl-6 last:pb-0">
             <span
               className={`absolute -left-[9px] grid h-4 w-4 place-items-center rounded-full border-2 ${
-                current
-                  ? 'border-clay bg-clay'
-                  : done
-                    ? 'border-forest bg-forest'
+                done || current
+                  ? 'border-forest bg-forest'
+                  : next
+                    ? 'border-clay bg-clay'
                     : 'border-line bg-cream'
               }`}
             >
-              {(done || current) && <span className="h-1.5 w-1.5 rounded-full bg-cream" />}
+              {(done || current || next) && <span className="h-1.5 w-1.5 rounded-full bg-cream" />}
             </span>
-            <p className={`text-sm ${current ? 'font-semibold text-clay-dark' : done ? 'text-ink' : 'text-muted'}`}>
+            <p className={`text-sm ${current ? 'font-semibold text-forest-dark' : next ? 'font-semibold text-clay-dark' : done ? 'text-ink' : 'text-muted'}`}>
               {titleCase(step)}
             </p>
             {current && step === 'READY_FOR_PICKUP' && order.pickupCode && (
