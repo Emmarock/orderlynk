@@ -111,6 +111,16 @@ export default function VendorDashboard() {
         </div>
       )}
 
+      {vendor.addressShippable === false && (
+        <div className="mb-6 rounded-xl border border-clay/30 bg-clay/8 px-4 py-3 text-sm text-clay-dark">
+          <strong>Your pickup address is incomplete.</strong> Carriers can't rate shipments or sell labels
+          until your business address has a street, city, postcode, country{' '}
+          {vendor.country && /^(us|usa|ca|can|united states|canada)$/i.test(vendor.country) ? '& state/province ' : ''}
+          on file.{' '}
+          <Link to="/vendor/manage/settings" className="link-underline">Update your address</Link>.
+        </div>
+      )}
+
       {lowStock.length > 0 && (
         <div className="mb-6 rounded-xl border border-clay/30 bg-clay/8 px-4 py-3 text-sm text-clay-dark">
           <strong>{lowStock.length} product{lowStock.length === 1 ? '' : 's'} low on stock:</strong>{' '}
