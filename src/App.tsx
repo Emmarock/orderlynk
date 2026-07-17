@@ -58,7 +58,15 @@ import NotFound from '@/shared/components/NotFound'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  // Block body (not an expression arrow) so the effect returns undefined.
+  // `() => window.scrollTo(0, 0)` would return whatever scrollTo() returns;
+  // some browser extensions / smooth-scroll polyfills override scrollTo to
+  // return a non-undefined value, which React then tries to invoke as the
+  // effect's cleanup ("destroy is not a function"), crashing on every route
+  // change since this runs on each navigation.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
   return null
 }
 
