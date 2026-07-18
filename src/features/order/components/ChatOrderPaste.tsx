@@ -371,7 +371,7 @@ export default function ChatOrderPaste({ onCreated }: { onCreated?: (order: Orde
                         label={
                           quote.liveShippingRate && quote.shippingCarrier
                             ? `Shipping (${quote.shippingCarrier}${quote.shippingService ? ' · ' + quote.shippingService : ''})`
-                            : fulfillmentType === 'LOCAL_PICKUP' ? 'Delivery/handling' : 'Shipping (flat rate)'
+                            : fulfillmentType === 'LOCAL_PICKUP' ? 'Delivery/Handling' : 'Shipping (flat rate)'
                         }
                         value={money(quote.logisticsFee, quote.currency)}
                       />
