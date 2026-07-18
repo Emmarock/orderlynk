@@ -542,8 +542,7 @@ export default function Checkout() {
                 }
                 value={money(quote.logisticsFee)}
               />
-              <Row label="Platform fee" value={money(quote.platformFee)} />
-              <Row label="Processing fee" value={money(quote.processingFee)} />
+              <Row label="Service fee" value={money(quote.platformFee + quote.processingFee)} />
               <div className="mt-3 flex justify-between border-t border-line pt-3 text-base font-semibold">
                 <span>Total</span>
                 <span className="font-mono">{money(quote.totalAmount)}</span>
