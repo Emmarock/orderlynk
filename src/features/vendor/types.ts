@@ -121,6 +121,8 @@ export interface EarningsSummary {
   taxRate: number
   tax: number
   netPayout: number
+  /** Vendor-collected VAT on paid orders, paid out on top of netPayout (a liability to remit). */
+  vatInPayout: number
   totalOrders: number
   paidOrders: number
   currency: string

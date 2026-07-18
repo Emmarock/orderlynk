@@ -59,10 +59,22 @@ export default function VendorEarnings() {
               <Row label="Refunds" value={`– ${money(data.refunds, data.currency)}`} muted />
               <Row label={`Tax (${(data.taxRate * 100).toFixed(1)}%)`} value={`– ${money(data.tax, data.currency)}`} muted />
               <div className="my-2 border-t border-line" />
-              <Row label="Net payout" value={money(data.netPayout, data.currency)} bold />
+              <Row label="Net earnings" value={money(data.netPayout, data.currency)} bold={data.vatInPayout <= 0} />
+              {data.vatInPayout > 0 && (
+                <>
+                  <Row label="VAT collected (paid to you)" value={`+ ${money(data.vatInPayout, data.currency)}`} accent />
+                  <div className="my-2 border-t border-line" />
+                  <Row label="Total to your account" value={money(data.netPayout + data.vatInPayout, data.currency)} bold />
+                </>
+              )}
               <p className="pt-1 text-xs text-muted">
                 Processing fees of {money(data.processingFees, data.currency)} were collected from customers (not deducted from you).
               </p>
+              {data.vatInPayout > 0 && (
+                <p className="text-xs text-muted">
+                  The VAT you collect is transferred to you with your earnings — it isn't income, so set it aside to remit. See the VAT ledger below.
+                </p>
+              )}
             </dl>
           </div>
 
@@ -111,11 +123,11 @@ export default function VendorEarnings() {
   )
 }
 
-function Row({ label, value, muted, bold }: { label: string; value: string; muted?: boolean; bold?: boolean }) {
+function Row({ label, value, muted, bold, accent }: { label: string; value: string; muted?: boolean; bold?: boolean; accent?: boolean }) {
   return (
     <div className="flex items-center justify-between">
       <dt className={muted ? 'text-muted' : ''}>{label}</dt>
-      <dd className={`font-mono ${bold ? 'text-base font-semibold' : ''}`}>{value}</dd>
+      <dd className={`font-mono ${bold ? 'text-base font-semibold' : ''} ${accent ? 'text-forest' : ''}`}>{value}</dd>
     </div>
   )
 }
@@ -135,7 +147,7 @@ function VatLedgerCard({ vat, onReload }: { vat: VatLedgerSummary; onReload: () 
     <div className="mt-6 card p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-lg font-semibold">VAT ledger</h2>
-        <span className="text-xs text-muted">VAT you collect on behalf of the government — remit this to the tax authority.</span>
+        <span className="text-xs text-muted">Paid to you with your earnings — remit this to the tax authority.</span>
       </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <StatCard label="Collected" value={money(vat.totalCollected, vat.currency)} hint={`${vat.entryCount} orders`} />
