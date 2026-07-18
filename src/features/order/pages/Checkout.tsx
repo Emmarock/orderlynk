@@ -538,7 +538,7 @@ export default function Checkout() {
                 label={
                   quote.liveShippingRate && quote.shippingCarrier
                     ? `Shipping (${quote.shippingCarrier}${quote.shippingService ? ' · ' + quote.shippingService : ''})`
-                    : 'Logistics fee'
+                    : 'Delivery/handling fee'
                 }
                 value={money(quote.logisticsFee)}
               />
