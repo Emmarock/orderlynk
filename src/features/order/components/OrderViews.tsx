@@ -71,8 +71,7 @@ export function OrderFeeBreakdown({ order }: { order: Order }) {
         />
       )}
       <Row label="Logistics fee" value={money(order.logisticsFee, order.currency)} />
-      <Row label="Platform fee" value={money(order.platformFee, order.currency)} />
-      <Row label="Processing fee" value={money(order.processingFee, order.currency)} />
+      <Row label="Service fee" value={money(order.platformFee + order.processingFee, order.currency)} />
       <div className="mt-2 flex justify-between border-t border-line pt-2 text-base font-semibold">
         <span>Total</span>
         <span className="font-mono">{money(order.totalAmount, order.currency)}</span>

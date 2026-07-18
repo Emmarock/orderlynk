@@ -375,8 +375,7 @@ export default function ChatOrderPaste({ onCreated }: { onCreated?: (order: Orde
                         }
                         value={money(quote.logisticsFee, quote.currency)}
                       />
-                      <Row label="Platform fee" value={money(quote.platformFee, quote.currency)} />
-                      <Row label="Processing fee" value={money(quote.processingFee, quote.currency)} />
+                      <Row label="Service fee" value={money(quote.platformFee + quote.processingFee, quote.currency)} />
                       <div className="mt-2 flex justify-between border-t border-line pt-2 text-base font-semibold">
                         <span>Total</span>
                         <span className="font-mono">{money(quote.totalAmount, quote.currency)}</span>

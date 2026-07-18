@@ -90,7 +90,7 @@ export default function Cart() {
             <span className="font-mono font-semibold">{money(subtotal)}</span>
           </div>
           <p className="mt-2 text-xs text-muted">
-            Logistics, platform and processing fees are calculated at checkout.
+            Logistics and service fees are calculated at checkout.
           </p>
           <Link to="/checkout" className="btn-primary mt-6 w-full">
             Proceed to checkout
