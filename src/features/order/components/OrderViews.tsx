@@ -66,11 +66,11 @@ export function OrderFeeBreakdown({ order }: { order: Order }) {
       <Row label="Product subtotal" value={money(order.productSubtotal, order.currency)} />
       {order.vatAmount > 0 && (
         <Row
-          label={`VAT${order.vatCollector === 'PLATFORM' ? ' (collected by platform)' : ''}`}
+          label={`Taxes${order.vatCollector === 'PLATFORM' ? ' (collected by platform)' : ''}`}
           value={money(order.vatAmount, order.currency)}
         />
       )}
-      <Row label="Delivery/handling fee" value={money(order.logisticsFee, order.currency)} />
+      <Row label="Delivery/Handling Fee" value={money(order.logisticsFee, order.currency)} />
       <Row label="Service fee" value={money(order.platformFee + order.processingFee, order.currency)} />
       <div className="mt-2 flex justify-between border-t border-line pt-2 text-base font-semibold">
         <span>Total</span>

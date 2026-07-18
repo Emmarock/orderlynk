@@ -533,12 +533,12 @@ export default function Checkout() {
           {quote ? (
             <div className="space-y-2 text-sm">
               <Row label="Product subtotal" value={money(quote.productSubtotal)} />
-              {quote.vatAmount > 0 && <Row label="VAT" value={money(quote.vatAmount)} />}
+              {quote.vatAmount > 0 && <Row label="Taxes" value={money(quote.vatAmount)} />}
               <Row
                 label={
                   quote.liveShippingRate && quote.shippingCarrier
                     ? `Shipping (${quote.shippingCarrier}${quote.shippingService ? ' · ' + quote.shippingService : ''})`
-                    : 'Delivery/handling fee'
+                    : 'Delivery/Handling Fee'
                 }
                 value={money(quote.logisticsFee)}
               />
